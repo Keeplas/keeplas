@@ -6,11 +6,11 @@
  * Content-Security-Policy plus the standard hardening headers shrink the
  * attack surface (XSS, clickjacking, MIME sniffing, referrer leakage).
  *
- * The CSP is hash-based: the request middleware (src/start.ts) computes the
- * SHA-256 hash of every inline `<script>` in the rendered document and passes
- * the `'sha256-...'` tokens here. Every other script is bundled by Vite and
- * served same-origin, so `'self'` covers it — no inline script ever needs
- * `'unsafe-inline'`.
+ * The CSP is nonce-based: the request middleware (src/start.ts) draws a fresh
+ * nonce per response and hands it to TanStack Router (src/router.tsx), which
+ * stamps it on the scripts the framework itself emits. Nothing else in the
+ * document is allow-listed, so markup injected into the HTML stays inert.
+ * Every other script is bundled by Vite and served same-origin (`'self'`).
  *
  * WASM note: `hash-wasm` compiles/instantiates a WebAssembly module at
  * runtime, which the CSP treats as script execution. `'wasm-unsafe-eval'`
@@ -19,65 +19,73 @@
  * blob URL. Dropping either would break key derivation on login/unlock.
  */
 
-/** Convex URL used to scope `connect-src`; falls back to the wildcard host. */
-function convexConnectSources(): string[] {
-  const sources = ["https://*.convex.cloud", "wss://*.convex.cloud"];
-  const url = process.env.NEXT_PUBLIC_CONVEX_URL;
-  if (url) {
-    try {
-      const origin = new URL(url).origin;
-      if (!sources.includes(origin)) sources.unshift(origin);
-    } catch {
-      // Malformed URL — rely on the wildcard hosts above.
-    }
-  }
-  return sources;
+/**
+ * True only under `vite dev`: TanStack Start defines `TSS_DEV_SERVER` from the
+ * Vite command. NODE_ENV is not a safe signal: a `.env` file holding
+ * `NODE_ENV=development` makes `vite build` fold "development" into the
+ * production bundle.
+ */
+export function isDevServer(): boolean {
+  return process.env.TSS_DEV_SERVER === "true";
 }
 
 /**
- * Builds the Content-Security-Policy value. `scriptHashes` are the
- * `'sha256-...'` tokens for the inline scripts present in the rendered
- * document (computed per response by the request middleware). Pure function so
- * it can be unit-tested without a request context.
+ * Origins of the configured Convex deployment (`https:` + `wss:`, or `http:` +
+ * `ws:` for a local self-hosted backend). Any `*.convex.cloud` host would let
+ * an injected script send data to a deployment anyone can create, so the
+ * wildcard is only a fallback for the dev server without a URL.
  */
-export function buildContentSecurityPolicy(
-  scriptHashes: string[] = [],
-  scriptNonces: string[] = [],
-): string {
-  const convexSources = convexConnectSources();
+function convexSources(): string[] {
+  try {
+    const { protocol, host } = new URL(
+      process.env.NEXT_PUBLIC_CONVEX_URL ?? "",
+    );
+    if (protocol === "https:") return [`https://${host}`, `wss://${host}`];
+    if (protocol === "http:") return [`http://${host}`, `ws://${host}`];
+  } catch {
+    // Unset or malformed: the app cannot reach Convex anyway.
+  }
+  return isDevServer()
+    ? ["https://*.convex.cloud", "wss://*.convex.cloud"]
+    : [];
+}
+
+/**
+ * Builds the Content-Security-Policy value. `scriptNonce` is the per-response
+ * nonce the router stamps on its own scripts. Pure function so it can be
+ * unit-tested without a request context.
+ */
+export function buildContentSecurityPolicy(scriptNonce?: string): string {
+  const convex = convexSources();
   const scriptSrc = ["'self'", "'wasm-unsafe-eval'"];
-  if (process.env.NODE_ENV === "development") {
-    // Dev only: Vite/HMR + React Refresh inject inline scripts and rely on
-    // eval(), and the per-request streamed SSR document is not buffered (so we
-    // can't hash its inline scripts without breaking hydration). Allow inline +
-    // eval here. The strict hash-based policy applies in production, where the
-    // SPA shell is a static prerender. ('unsafe-inline' is ignored by browsers
-    // when hashes are present, so we deliberately emit no hashes in dev.)
+  if (isDevServer()) {
+    // Dev server only: Vite/HMR + React Refresh inject inline scripts without
+    // the nonce and rely on eval(). No nonce here: browsers ignore
+    // 'unsafe-inline' as soon as a nonce is present.
     scriptSrc.push("'unsafe-inline'", "'unsafe-eval'");
-  } else {
-    scriptSrc.push(...scriptNonces.map((nonce) => `'nonce-${nonce}'`));
-    scriptSrc.push(...scriptHashes);
+  } else if (scriptNonce) {
+    scriptSrc.push(`'nonce-${scriptNonce}'`);
   }
 
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     // 'wasm-unsafe-eval' is required by hash-wasm (Argon2id). Inline framework
-    // scripts are allow-listed by their SHA-256 hash; bundled scripts are
-    // same-origin, covered by 'self'.
+    // scripts carry the response nonce; bundled scripts are same-origin,
+    // covered by 'self'.
     "script-src": scriptSrc,
     // Chrome reports blocked <script> elements against script-src-elem. Keep it
-    // explicit so hash allow-listing applies consistently to framework scripts.
+    // explicit so the nonce applies consistently to framework scripts.
     "script-src-elem": scriptSrc,
     // Tailwind / Vite inject runtime <style> tags; hashing them is impractical.
     "style-src": ["'self'", "'unsafe-inline'"],
-    "connect-src": ["'self'", ...convexSources],
+    "connect-src": ["'self'", ...convex],
     // Convex storage serves uploaded avatars as plain <img> URLs (vault
     // attachments are decrypted into blob: URLs instead).
     "img-src": [
       "'self'",
       "data:",
       "blob:",
-      ...convexSources.filter((source) => source.startsWith("https:")),
+      ...convex.filter((source) => source.startsWith("http")),
     ],
     // Decrypted vault attachments (audio/video) are played from in-memory
     // `blob:` object URLs. Without an explicit media-src the browser falls back
@@ -108,19 +116,16 @@ export function buildContentSecurityPolicy(
 }
 
 /**
- * Builds the full set of security headers (CSP + hardening headers) for the
- * given inline-script SHA-256 hashes. Pure and order-stable so it is
- * straightforward to assert in tests. The caller applies these to the response.
+ * Builds the full set of security headers (CSP + hardening headers) for a
+ * document whose framework scripts carry `scriptNonce`. Pure and order-stable
+ * so it is straightforward to assert in tests. The caller applies these to the
+ * response.
  */
 export function buildSecurityHeaders(
-  scriptHashes: string[] = [],
-  scriptNonces: string[] = [],
+  scriptNonce?: string,
 ): Record<string, string> {
   return {
-    "Content-Security-Policy": buildContentSecurityPolicy(
-      scriptHashes,
-      scriptNonces,
-    ),
+    "Content-Security-Policy": buildContentSecurityPolicy(scriptNonce),
     // Defines the `csp-endpoint` group referenced by the CSP `report-to`
     // directive. Same-origin collector route logs violations server-side.
     "Reporting-Endpoints": 'csp-endpoint="/api/csp-report"',
@@ -142,5 +147,10 @@ export function buildSecurityHeaders(
     ].join(", "),
     // Legacy clickjacking defense; superseded by frame-ancestors but harmless.
     "X-Frame-Options": "DENY",
+    // A cross-origin page that opens the app keeps no handle on its window
+    // (no tab swap to a lookalike, fewer XS-Leaks), and no other origin can
+    // embed the document as a resource. WebAuthn is unaffected.
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Resource-Policy": "same-origin",
   };
 }

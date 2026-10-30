@@ -3,7 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
-import { toWrapRecipient } from "@/lib/verify-contact-key";
+import { contactKeyMaterial } from "@keeplas/crypto/sig";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 
 /**
@@ -50,7 +50,7 @@ export function useBackfillPendingShares() {
           });
           const { recipientWraps } = await wrapExistingDek(
             dek,
-            item.readyContacts.map(toWrapRecipient),
+            item.readyContacts.map(contactKeyMaterial),
           );
           if (recipientWraps.length === 0) continue;
           await addRecipientKeys({

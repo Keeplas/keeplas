@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Linking,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { CameraView } from "expo-camera";
 import { useRouter } from "expo-router";
 import { useConvex } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { pairingKeyHash } from "@keeplas/crypto/pairing";
+import {
+  pairingCode,
+  pairingKeyHash,
+  type PairingQr,
+} from "@keeplas/crypto/pairing";
 
 import { AppHeader } from "@/components/app-header";
 import { Icon } from "@/components/icon";
@@ -20,14 +18,19 @@ import { StateMessage, StateSheet } from "@/components/state-message";
 import { Text } from "@/components/text";
 import { draftStore } from "@/features/capture/draft-store";
 import { claimCaptureQr } from "@/features/link/capture-qr";
+import { PairingApproval } from "@/features/link/pairing-approval";
 import { takePendingLink } from "@/features/link/pending-link";
-import { evaluatePairingQr } from "@/features/link/qr-flow";
+import {
+  evaluatePairingQr,
+  type PairingSession,
+} from "@/features/link/qr-flow";
 import {
   PairingKeyMismatch,
   PresenceDeclined,
   useApprovePairing,
 } from "@/features/link/use-approve-pairing";
 import { env } from "@/lib/env";
+import { useCameraAccess } from "@/lib/use-camera-access";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -38,14 +41,15 @@ import { draftHref } from "@/features/capture/draft-route";
  * M03-4 Scan the QR code. A web "Scan with my phone" code (W06-7) opens the
  * document scanner; any other scan (or universal link) goes through
  * `evaluatePairingQr`: invalid QR, expired session, key mismatch (M09-3,
- * reported to Convex) or M03-5 to approve.
+ * reported to Convex) or M03-5, where only an explicit Approve (then the
+ * biometric prompt) logs the browser in. A link never approves on its own.
  */
 export default function Scan() {
   const router = useRouter();
   const convex = useConvex();
   const { t } = useI18n();
   const { colors } = useTheme();
-  const [permission, requestPermission] = useCameraPermissions();
+  const camera = useCameraAccess();
   const reject = useAuditedMutation(api.pairing.reject);
   const claimHandoff = useAuditedMutation(api.capture_handoffs.claim);
   const [torch, setTorch] = useState(false);
@@ -53,6 +57,13 @@ export default function Scan() {
   const [problem, setProblem] = useState<
     "invalid" | "expired" | "failed" | null
   >(null);
+  // M03-5: a checked pairing QR waiting for Approve or Decline.
+  const [pending, setPending] = useState<{
+    qr: PairingQr;
+    session: PairingSession;
+    code: string;
+  } | null>(null);
+  const [approving, setApproving] = useState(false);
   const approvePairing = useApprovePairing();
   const busy = useRef(false);
 
@@ -100,53 +111,84 @@ export default function Scan() {
           });
           return;
         }
-        try {
-          await approvePairing(qr, outcome.session.browserPublicKey);
-        } catch (error) {
-          if (error instanceof PairingKeyMismatch) {
-            await reject({
-              sessionId: qr.sessionId as Id<"pairing_sessions">,
-              reason: "key_mismatch",
-            }).catch(() => undefined);
-            router.replace({
-              pathname: "/link-blocked",
-              params: { expected: qr.keyHash, received: error.receivedHash },
-            });
-          } else if (!(error instanceof PresenceDeclined)) {
-            setProblem("failed");
-          }
-          return;
-        }
-        router.replace({
-          pathname: "/link-connected",
-          params: {
-            ua: outcome.session.userAgent,
-            country: outcome.session.approxLocation,
-            at: String(Date.now()),
-          },
+        setPending({
+          qr,
+          session: outcome.session,
+          code: await pairingCode(qr),
         });
       } finally {
         busy.current = false;
         setChecking(false);
       }
     },
-    [convex, reject, claimHandoff, router, approvePairing],
+    [convex, reject, claimHandoff, router],
   );
+
+  async function approve() {
+    if (!pending) return;
+    const { qr, session } = pending;
+    setApproving(true);
+    try {
+      await approvePairing(qr, session.browserPublicKey);
+    } catch (error) {
+      if (error instanceof PairingKeyMismatch) {
+        await reject({
+          sessionId: qr.sessionId as Id<"pairing_sessions">,
+          reason: "key_mismatch",
+        }).catch(() => undefined);
+        router.replace({
+          pathname: "/link-blocked",
+          params: { expected: qr.keyHash, received: error.receivedHash },
+        });
+      } else if (!(error instanceof PresenceDeclined)) {
+        setPending(null);
+        setProblem("failed");
+      }
+      return;
+    } finally {
+      setApproving(false);
+    }
+    router.replace({
+      pathname: "/link-connected",
+      params: {
+        ua: session.userAgent,
+        country: session.approxLocation,
+        at: String(Date.now()),
+      },
+    });
+  }
+
+  async function decline() {
+    if (!pending) return;
+    await reject({
+      sessionId: pending.qr.sessionId as Id<"pairing_sessions">,
+      reason: "declined",
+    }).catch(() => undefined); // The session expires in 2 minutes anyway.
+    router.back();
+  }
 
   useEffect(() => {
     const link = takePendingLink();
     if (link) void handle(link);
   }, [handle]);
 
-  useEffect(() => {
-    if (permission && !permission.granted && permission.canAskAgain) {
-      void requestPermission();
-    }
-  }, [permission, requestPermission]);
-
   const header = <AppHeader onBack={router.back} />;
 
-  if (permission && !permission.granted && !permission.canAskAgain) {
+  if (pending) {
+    return (
+      <PairingApproval
+        sessionId={pending.qr.sessionId}
+        session={pending.session}
+        code={pending.code}
+        busy={approving}
+        onApprove={() => void approve()}
+        onDecline={() => void decline()}
+        onClose={() => setPending(null)}
+      />
+    );
+  }
+
+  if (camera.denied) {
     return (
       <Screen header={header}>
         <StateMessage
@@ -154,10 +196,7 @@ export default function Scan() {
           tone="neutral"
           title={t("scan.cameraOffTitle")}
           body={t("scan.cameraOffBody")}
-          primary={{
-            label: t("common.openSettings"),
-            onPress: () => Linking.openSettings(),
-          }}
+          primary={camera.allow}
           secondary={{ label: t("common.notNow"), onPress: router.back }}
         />
       </Screen>
@@ -171,7 +210,7 @@ export default function Scan() {
         {t("scan.body")}
       </Text>
       <View style={[styles.camera, { backgroundColor: palette.navy["700"] }]}>
-        {permission?.granted ? (
+        {camera.granted ? (
           <CameraView
             style={StyleSheet.absoluteFill}
             facing="back"
@@ -201,7 +240,7 @@ export default function Scan() {
           <Icon name="flash" size={22} tint={palette.white} />
         </Pressable>
       </View>
-      {permission?.granted ? (
+      {camera.granted ? (
         <View style={[styles.allowed, { backgroundColor: colors["bg.info"] }]}>
           <Icon name="camera" size={18} />
           <Text variant="body-sm">{t("scan.cameraAllowed")}</Text>

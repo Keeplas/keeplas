@@ -6,7 +6,9 @@ import { auditedMutation, createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
 import { getUserByPhone, optionalAuth, requireFullAuth } from "./helpers";
 import { normalizeE164 } from "./lib/phone";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 import { deleteBlob } from "./lib/storage";
+import { deleteRecipientKeys } from "./lib/storage_usage";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const DELETION_GRACE_MS = 7 * DAY_MS;
@@ -18,6 +20,10 @@ export const SECURITY_LOG_RETENTION_MS = 30 * DAY_MS;
 /** Security-log action written when an account's erasure starts. */
 export const WIPE_ACTION = "account_wipe_executed";
 const BATCH = 200;
+// Each fresh schedule alerts the owner on every channel and cancel undoes it
+// at once: cap the schedules so a request/cancel loop can't burn the shared
+// email and WhatsApp quotas.
+const SCHEDULES_PER_DAY = 3;
 
 export const getStatus = query({
   args: {},
@@ -59,7 +65,7 @@ async function scheduleDeletion(
     ownerName: user.name,
     language: user.language,
     pushTokens: await activePushTokens(ctx, user._id),
-    date: new Date(scheduledAt).toISOString().slice(0, 10),
+    scheduledAt,
   });
   return { scheduledAt, alreadyScheduled: false };
 }
@@ -75,6 +81,15 @@ export const request = auditedMutation({
     const userId = await requireFullAuth(ctx);
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
+    if (!user.deletionScheduledAt) {
+      await enforceIpRateLimit(
+        ctx,
+        "deletion_request",
+        userId,
+        SCHEDULES_PER_DAY,
+        DAY_MS,
+      );
+    }
     const { scheduledAt } = await scheduleDeletion(ctx, user);
     return { scheduledAt };
   },
@@ -211,16 +226,16 @@ type Step = (
 
 async function dropContactLinks(
   ctx: MutationCtx,
-  contactId: Id<"trusted_contacts">,
+  contact: Doc<"trusted_contacts">,
 ): Promise<number> {
-  let deleted = 0;
-  for (const key of await ctx.db
+  const contactId = contact._id;
+  const keys = await ctx.db
     .query("vault_item_recipient_keys")
     .withIndex("by_contact", (q) => q.eq("contactId", contactId))
-    .collect()) {
-    await ctx.db.delete(key._id);
-    deleted += 1;
-  }
+    .collect();
+  // The keys are the owner's rows, counted in the owner's storage usage.
+  await deleteRecipientKeys(ctx, contact.userId, keys);
+  let deleted = keys.length;
   for (const share of await ctx.db
     .query("recovery_secret_shares")
     .withIndex("by_contact", (q) => q.eq("contactId", contactId))
@@ -256,7 +271,9 @@ const SIMPLE_TABLES = [
   "social_envelopes",
   "cloud_backup_envelopes",
   "devices",
+  "device_pins",
   "storage_blobs",
+  "storage_usage",
   "totp_secrets",
   "auth_session_totp",
   "login_otp_codes",
@@ -317,7 +334,7 @@ const STEPS: Step[] = [
       .take(limit);
     let deleted = 0;
     for (const contact of asContact) {
-      deleted += await dropContactLinks(ctx, contact._id);
+      deleted += await dropContactLinks(ctx, contact);
       await ctx.db.patch(contact._id, {
         invitationStatus: "revoked",
         contactUserId: undefined,
@@ -409,7 +426,7 @@ const STEPS: Step[] = [
       .take(limit);
     let deleted = 0;
     for (const contact of contacts) {
-      deleted += await dropContactLinks(ctx, contact._id);
+      deleted += await dropContactLinks(ctx, contact);
       await ctx.db.delete(contact._id);
       deleted += 1;
     }

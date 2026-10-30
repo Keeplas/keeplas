@@ -115,7 +115,7 @@ const CHECKS: { name: string; run: () => Promise<void> }[] = [
   {
     name: "Vault creation + 24-word reopen",
     run: async () => {
-      const material = await createVaultMaterial();
+      const material = await createVaultMaterial("self-test");
       const { masterKey } = await openKeyBundle(
         material.encryptedKeyBundle,
         material.phrase,

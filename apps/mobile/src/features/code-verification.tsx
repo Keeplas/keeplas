@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "expo-router";
+import { useConvex } from "convex/react";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -9,16 +10,22 @@ import { StateSheet, type StateMessageProps } from "@/components/state-message";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { classifyCodeError, type CodeFailure } from "@/lib/errors";
+import { failWhenOffline, OfflineError } from "@/lib/offline";
 import { useI18n } from "@/providers/i18n-provider";
 
 /** Server-side attempt budget per code (phone_auth / login_otp MAX_ATTEMPTS). */
 const MAX_ATTEMPTS = 5;
+/**
+ * Wait before asking for another code: WhatsApp can take a moment, each new
+ * code voids the previous one, and a number gets 3 codes an hour.
+ */
+const RESEND_COOLDOWN_S = 30;
 
 /**
  * M01-2 "Verify your number" layout, shared by phone sign-up / sign-in, the
  * email login-OTP step and the migration phone check. Failures open the
  * matching Sign-in error sheet (wrong code, expired, too many tries,
- * code not arriving).
+ * code not arriving, offline).
  */
 export function CodeVerification({
   title,
@@ -42,21 +49,36 @@ export function CodeVerification({
 }) {
   const router = useRouter();
   const { t } = useI18n();
+  const convex = useConvex();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [attempts, setAttempts] = useState(0);
-  const [sheet, setSheet] = useState<CodeFailure | "notArriving" | null>(null);
+  const [sheet, setSheet] = useState<
+    CodeFailure | "notArriving" | "offline" | null
+  >(null);
   const [resent, setResent] = useState(false);
+  // Every caller sends a code right before showing this screen.
+  const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_S);
+
+  useEffect(() => {
+    if (cooldown === 0) return;
+    const timer = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   async function submit(value = code) {
     if (value.length !== OTP_LENGTH || busy) return;
     setBusy(true);
     try {
-      await onSubmit(value);
+      await failWhenOffline(onSubmit(value), convex);
     } catch (error) {
-      setAttempts((n) => n + 1);
-      setSheet(classifyCodeError(error));
-      setCode("");
+      if (error instanceof OfflineError) {
+        setSheet("offline");
+      } else {
+        setAttempts((n) => n + 1);
+        setSheet(classifyCodeError(error));
+        setCode("");
+      }
     } finally {
       setBusy(false);
     }
@@ -66,12 +88,17 @@ export function CodeVerification({
     setSheet(null);
     setBusy(true);
     try {
-      await onResend();
+      await failWhenOffline(onResend(), convex);
       setAttempts(0);
       setResent(true);
+      setCooldown(RESEND_COOLDOWN_S);
     } catch (error) {
       setSheet(
-        classifyCodeError(error) === "tooMany" ? "tooMany" : "notArriving",
+        error instanceof OfflineError
+          ? "offline"
+          : classifyCodeError(error) === "tooMany"
+            ? "tooMany"
+            : "notArriving",
       );
     } finally {
       setBusy(false);
@@ -115,6 +142,13 @@ export function CodeVerification({
         onPress: () => router.back(),
       },
     },
+    offline: {
+      icon: "globe",
+      tone: "info",
+      title: t("offline.title"),
+      body: t("offline.submitBody"),
+      primary: { label: t("common.ok"), onPress: close },
+    },
   };
 
   return (
@@ -132,7 +166,7 @@ export function CodeVerification({
         value={code}
         onChange={setCode}
         onComplete={submit}
-        label={title}
+        label={t("verify.codeLabel")}
       />
       <Button
         label={confirmLabel}
@@ -145,7 +179,12 @@ export function CodeVerification({
       </Text>
       <Button
         variant="text"
-        label={t("verify.resend")}
+        label={
+          cooldown > 0
+            ? t("verify.resendIn", { seconds: cooldown })
+            : t("verify.resend")
+        }
+        disabled={cooldown > 0}
         onPress={() => setSheet("notArriving")}
       />
       {note ? <Callout icon="whatsapp" text={note} /> : null}

@@ -10,14 +10,22 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { auditedMutation } from "./audit";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
+import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 import { endSession, endSessions } from "./lib/sessions";
 import { cancelActiveRecovery } from "./recovery";
 
 const MAX_LABEL_LENGTH = 100;
+// Every device after the first alerts the owner (push, email, WhatsApp).
+// Each device registers once, so this only stops a registration loop.
+const REGISTRATIONS_PER_HOUR = 10;
 
 /**
  * Record the current device after sign-up or a QR link (workflow 8, step 16).
  * Every device but the first raises a new-device alert (M08-4) on the others.
+ * A phone signing in again passes the token it kept from `signOut`: it takes
+ * its row back, with no alert. Any other token registers a new device, so
+ * knowing a row id never silences the alert.
  */
 export const register = auditedMutation({
   action: "device.registered",
@@ -27,10 +35,39 @@ export const register = auditedMutation({
     label: v.string(),
     devicePublicKey: v.optional(v.string()),
     trusted: v.boolean(),
+    reattach: v.optional(
+      v.object({ deviceId: v.id("devices"), token: v.string() }),
+    ),
   },
   handler: async (ctx, args, audit) => {
     const userId = await requireAuth(ctx);
+    await enforceIpRateLimit(
+      ctx,
+      "device_register",
+      userId,
+      REGISTRATIONS_PER_HOUR,
+    );
     const now = Date.now();
+    if (args.reattach) {
+      const device = await ctx.db.get(args.reattach.deviceId);
+      if (
+        device &&
+        device.userId === userId &&
+        device.revokedAt === undefined &&
+        device.reattachTokenHash !== undefined &&
+        constantTimeStringEquals(
+          device.reattachTokenHash,
+          await sha256Hex(args.reattach.token),
+        )
+      ) {
+        await ctx.db.patch(device._id, {
+          sessionId: (await getAuthSessionId(ctx)) ?? undefined,
+          reattachTokenHash: undefined,
+          lastSeenAt: now,
+        });
+        return device._id;
+      }
+    }
     const isFirst =
       (await ctx.db
         .query("devices")
@@ -71,12 +108,52 @@ export const register = auditedMutation({
     return deviceId;
   },
   getResourceId: (_args, deviceId) => deviceId,
-  getMetadata: (args) => ({ kind: args.kind, trusted: args.trusted }),
+  getMetadata: (args, deviceId) => ({
+    kind: args.kind,
+    trusted: args.trusted,
+    reattached: deviceId === args.reattach?.deviceId,
+  }),
+});
+
+/**
+ * Phone sign-out, called before the session ends: the account's alerts stop
+ * reaching this phone, and the row stays for its next sign-in, which proves
+ * itself with `reattachToken` (only its SHA-256 is kept). Only the session
+ * on the row may do this, so no other device can mute this phone's alerts.
+ */
+export const signOut = auditedMutation({
+  action: "device.signed_out",
+  resourceType: "device",
+  args: { deviceId: v.id("devices"), reattachToken: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const device = await requireOwnDevice(ctx, userId, args.deviceId);
+    if (device.sessionId !== (await getAuthSessionId(ctx))) {
+      throw new ConvexError("Not this device");
+    }
+    await ctx.db.patch(device._id, {
+      reattachTokenHash: await sha256Hex(args.reattachToken),
+    });
+    const { pushToken } = device;
+    if (pushToken === undefined) return;
+    // Before phones kept one row, each sign-in left one with the same token.
+    const sameToken = await ctx.db
+      .query("devices")
+      .withIndex("by_push_token", (q) => q.eq("pushToken", pushToken))
+      .collect();
+    for (const row of sameToken) {
+      if (row.userId === userId) {
+        await ctx.db.patch(row._id, { pushToken: undefined });
+      }
+    }
+  },
+  getResourceId: (args) => args.deviceId,
 });
 
 /**
  * Expo push tokens of the user's active phones, except the one on
- * `exceptSessionId` (the device that caused the alert).
+ * `exceptSessionId` (the device that caused the alert). Once per token: rows
+ * older sign-ins left on the same phone share it.
  */
 export async function activePushTokens(
   ctx: QueryCtx,
@@ -87,7 +164,7 @@ export async function activePushTokens(
     .query("devices")
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .collect();
-  return devices
+  const tokens = devices
     .filter(
       (d) =>
         d.revokedAt === undefined &&
@@ -95,6 +172,7 @@ export async function activePushTokens(
         d.sessionId !== exceptSessionId,
     )
     .map((d) => d.pushToken!);
+  return [...new Set(tokens)];
 }
 
 /** Drop Expo push tokens the push service reports as unregistered. */

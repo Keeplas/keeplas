@@ -2,19 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView } from "expo-camera";
 import { useRouter } from "expo-router";
 
 import { Icon } from "@/components/icon";
+import { StateSheet } from "@/components/state-message";
 import { Text } from "@/components/text";
-import { PermissionSheet } from "@/features/capture/add-sheet";
 import { draftStore, useDraft } from "@/features/capture/draft-store";
-import {
-  chooseFiles,
-  chooseFromLibrary,
-  PermissionDenied,
-} from "@/features/capture/media";
+import { chooseFiles, chooseFromLibrary } from "@/features/capture/media";
 import { toast } from "@/lib/toast";
+import { useCameraAccess } from "@/lib/use-camera-access";
 import { useI18n } from "@/providers/i18n-provider";
 import { colors as palette, radius, type } from "@/theme";
 import { keepUnlockedWhile } from "@/lib/auto-lock";
@@ -24,7 +21,8 @@ import { draftHref, useDraftParam } from "@/features/capture/draft-route";
  * M07-2 Scan document. "Auto" opens the system document scanner (VisionKit /
  * ML Kit: edges, perspective, several pages); "Manual" is the dark camera
  * below, where each shot adds a page. Pages are bound into one PDF on save
- * (M07-8). The gallery button adds photos or files instead.
+ * (M07-8). The gallery button adds photos or files instead, also while
+ * the camera is off.
  */
 export default function ScanDocument() {
   useDraftParam();
@@ -32,17 +30,12 @@ export default function ScanDocument() {
   const { t } = useI18n();
   const draft = useDraft();
   const camera = useRef<CameraView>(null);
-  const [permission, requestPermission] = useCameraPermissions();
+  const access = useCameraAccess();
+  const [cameraOffDismissed, setCameraOffDismissed] = useState(false);
   const [torch, setTorch] = useState(false);
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useState<"auto" | "manual">("auto");
   const launched = useRef(false);
-
-  useEffect(() => {
-    if (permission && !permission.granted && permission.canAskAgain) {
-      void requestPermission();
-    }
-  }, [permission, requestPermission]);
 
   const review = () => router.replace(draftHref("/capture/compose"));
 
@@ -78,7 +71,7 @@ export default function ScanDocument() {
   }
 
   useEffect(() => {
-    if (!permission?.granted || launched.current) return;
+    if (!access.granted || launched.current) return;
     launched.current = true;
     void scanAuto();
   });
@@ -99,17 +92,8 @@ export default function ScanDocument() {
       {
         text: t("capture.chooseLibrary"),
         onPress: async () => {
-          try {
-            const files = await chooseFromLibrary();
-            if (files.length) draftStore.addPages(files.map((f) => f.uri));
-          } catch (error) {
-            if (!(error instanceof PermissionDenied)) throw error;
-            toast({
-              variant: "error",
-              title: t("permissions.photosTitle"),
-              description: t("permissions.photosBody"),
-            });
-          }
+          const files = await chooseFromLibrary();
+          if (files.length) draftStore.addPages(files.map((f) => f.uri));
         },
       },
       {
@@ -127,7 +111,6 @@ export default function ScanDocument() {
   }
 
   const pages = draft.pages.length;
-  const denied = permission && !permission.granted && !permission.canAskAgain;
 
   return (
     <SafeAreaView style={styles.root} edges={["top", "bottom"]}>
@@ -181,7 +164,7 @@ export default function ScanDocument() {
         ))}
       </View>
       <View style={styles.camera}>
-        {permission?.granted && mode === "manual" ? (
+        {access.granted && mode === "manual" ? (
           <CameraView
             ref={camera}
             style={StyleSheet.absoluteFill}
@@ -218,8 +201,11 @@ export default function ScanDocument() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("capture.shutter")}
-          onPress={shoot}
-          disabled={!permission?.granted || busy || mode !== "manual"}
+          // While the camera is off, the shutter says why and how to fix it.
+          onPress={access.denied ? () => setCameraOffDismissed(false) : shoot}
+          disabled={
+            !access.denied && (!access.granted || busy || mode !== "manual")
+          }
           style={styles.shutter}
         >
           <View style={styles.shutterDot} />
@@ -231,16 +217,23 @@ export default function ScanDocument() {
           style={[styles.done, { opacity: pages === 0 ? 0.4 : 1 }]}
         >
           <Text style={[type.caption, styles.navy]}>
-            {pages === 1
-              ? t("capture.onePage")
-              : t("capture.pages", { n: pages })}
+            {t("capture.pages", { count: pages })}
           </Text>
           <Icon name="arrow-right" size={16} tint={palette.navy["900"]} />
         </Pressable>
       </View>
-      <PermissionSheet
-        problem={denied ? "camera" : null}
-        onDismiss={router.back}
+      <StateSheet
+        visible={access.denied && !cameraOffDismissed}
+        onDismiss={() => setCameraOffDismissed(true)}
+        icon="camera"
+        tone="neutral"
+        title={t("permissions.cameraTitle")}
+        body={t("permissions.cameraBody")}
+        primary={access.allow}
+        secondary={{
+          label: t("common.notNow"),
+          onPress: () => setCameraOffDismissed(true),
+        }}
       />
     </SafeAreaView>
   );
@@ -274,7 +267,10 @@ const styles = StyleSheet.create({
   },
   modeActive: { backgroundColor: palette.white },
   camera: {
+    // Shrinks on short screens (iPhone SE: 667 pt) so the controls below
+    // keep their room.
     height: 520,
+    flexShrink: 1,
     marginTop: 8,
     backgroundColor: palette.navy["700"],
     justifyContent: "flex-end",
@@ -317,6 +313,7 @@ const styles = StyleSheet.create({
   bannerText: { flex: 1, gap: 2 },
   controls: {
     flex: 1,
+    minHeight: 104,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

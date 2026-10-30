@@ -1,6 +1,7 @@
 import type { VaultCategory } from "@/crypto/item-meta";
 import {
   bucketOf,
+  builtInCategory,
   shownFiling,
   contentKind,
   greetingKey,
@@ -22,13 +23,22 @@ import {
   keepUnlockedWhile,
   shouldLockOnResume,
 } from "../auto-lock";
-import { classifyCodeError, passkeyFailure } from "../errors";
+import { ConvexError } from "convex/values";
+
+import {
+  classifyCodeError,
+  isAttestationRejection,
+  isPasskeyUnavailable,
+  passkeyFailure,
+} from "../errors";
 import { formatBytes, relativeDay } from "../format";
 import {
   examplePlaceholder,
   flagEmoji,
   formatPhone,
   isTooLong,
+  listCountries,
+  searchCountries,
   toE164,
 } from "../phone";
 import { resolveStage, type StageInputs } from "../session-stage";
@@ -44,6 +54,7 @@ const base: StageInputs = {
   migrationDeferred: false,
   hasDeviceVault: true,
   unlocked: true,
+  signingOut: false,
 };
 
 describe("resolveStage", () => {
@@ -66,6 +77,15 @@ describe("resolveStage", () => {
     [{}, "ready"],
   ])("%j → %s", (overrides, stage) => {
     expect(resolveStage({ ...base, ...overrides })).toBe(stage);
+  });
+
+  it("leaves at once on sign-out, before the server confirms it", () => {
+    expect(resolveStage({ ...base, signingOut: true, unlocked: false })).toBe(
+      "signedOut",
+    );
+    expect(resolveStage({ ...base, signingOut: true, authLoading: true })).toBe(
+      "signedOut",
+    );
   });
 
   it("asks for the login OTP before anything that needs full auth", () => {
@@ -117,16 +137,33 @@ describe("resolveStage after a lost number", () => {
 });
 
 describe("auto-lock", () => {
+  // Both clocks advance together unless a test says otherwise.
+  const at = (ms: number) => ({ wall: ms, uptime: ms });
+
   it("locks only after the background grace period", () => {
-    expect(shouldLockOnResume(null, 10)).toBe(false);
-    expect(shouldLockOnResume(0, BACKGROUND_GRACE_MS)).toBe(false);
-    expect(shouldLockOnResume(0, BACKGROUND_GRACE_MS + 1)).toBe(true);
+    expect(shouldLockOnResume(null, at(10))).toBe(false);
+    expect(shouldLockOnResume(at(0), at(BACKGROUND_GRACE_MS))).toBe(false);
+    expect(shouldLockOnResume(at(0), at(BACKGROUND_GRACE_MS + 1))).toBe(true);
   });
 
   it("waits up to ten minutes while the app has a system screen open", () => {
-    expect(shouldLockOnResume(0, BACKGROUND_GRACE_MS + 1, true)).toBe(false);
-    expect(shouldLockOnResume(0, HELD_GRACE_MS, true)).toBe(false);
-    expect(shouldLockOnResume(0, HELD_GRACE_MS + 1, true)).toBe(true);
+    expect(shouldLockOnResume(at(0), at(BACKGROUND_GRACE_MS + 1), true)).toBe(
+      false,
+    );
+    expect(shouldLockOnResume(at(0), at(HELD_GRACE_MS), true)).toBe(false);
+    expect(shouldLockOnResume(at(0), at(HELD_GRACE_MS + 1), true)).toBe(true);
+  });
+
+  it("still locks when the phone's clock is turned back in the background", () => {
+    const away = { wall: 1_000_000, uptime: 0 };
+    const back = { wall: 0, uptime: BACKGROUND_GRACE_MS + 1 };
+    expect(shouldLockOnResume(away, back)).toBe(true);
+  });
+
+  it("counts the time the phone slept, which the uptime clock skips", () => {
+    const away = { wall: 0, uptime: 0 };
+    const woke = { wall: BACKGROUND_GRACE_MS + 1, uptime: 5 };
+    expect(shouldLockOnResume(away, woke)).toBe(true);
   });
 
   it("holds the lock only while a task runs", async () => {
@@ -191,6 +228,73 @@ describe("passkey errors", () => {
       passkeyFailure(new Error("Passkey registration failed verification")),
     ).toBe("Passkey registration failed verification");
   });
+
+  it("spots a phone with no passkey provider turned on", () => {
+    // Android: no Google account / Password Manager; either OS: unsupported.
+    expect(
+      isPasskeyUnavailable({ error: "NoCreateOption", message: "x" }),
+    ).toBe(true);
+    expect(isPasskeyUnavailable({ error: "NotSupported", message: "x" })).toBe(
+      true,
+    );
+    // iOS 26: iCloud Keychain off (ASAuthorizationError 1010), any language.
+    for (const message of [
+      "The operation couldn’t be completed. (com.apple.AuthenticationServices.AuthorizationError error 1010.)",
+      "L’opération n’a pas pu s’achever. (com.apple.AuthenticationServices.AuthorizationError erreur 1010.)",
+    ]) {
+      expect(isPasskeyUnavailable({ error: "Unknown error", message })).toBe(
+        true,
+      );
+    }
+    expect(
+      isPasskeyUnavailable({
+        error: "RequestFailed",
+        message: "not associated",
+      }),
+    ).toBe(false);
+    expect(isPasskeyUnavailable({ error: "UserCancelled", message: "" })).toBe(
+      false,
+    );
+    expect(isPasskeyUnavailable(new Error("NotSupported"))).toBe(false);
+  });
+});
+
+describe("attestation errors", () => {
+  it("treats the server verdict and a phone that can't attest as a rejection", () => {
+    expect(
+      isAttestationRejection(
+        new ConvexError("Attestation rejected: device integrity"),
+      ),
+    ).toBe(true);
+    const unsupported = Object.assign(new Error("Not supported"), {
+      code: "ERR_APP_INTEGRITY_FEATURE_UNSUPPORTED",
+    });
+    expect(isAttestationRejection(unsupported)).toBe(true);
+    const noPlayStore = Object.assign(new Error("No Play Store"), {
+      code: "ERR_APP_INTEGRITY_PLAY_STORE_NOT_FOUND",
+    });
+    expect(isAttestationRejection(noPlayStore)).toBe(true);
+  });
+
+  it("lets network and server hiccups be tried again", () => {
+    const offline = Object.assign(new Error("Network error"), {
+      code: "ERR_APP_INTEGRITY_NETWORK_ERROR",
+    });
+    expect(isAttestationRejection(offline)).toBe(false);
+    const appleBusy = Object.assign(new Error("Server unavailable"), {
+      code: "ERR_APP_INTEGRITY_SERVER_UNAVAILABLE",
+    });
+    expect(isAttestationRejection(appleBusy)).toBe(false);
+    // Redacted plain Error (e.g. "Google token exchange failed") on prod.
+    expect(
+      isAttestationRejection(
+        new Error("[CONVEX A(attestation_node:verify)] Server Error"),
+      ),
+    ).toBe(false);
+    expect(
+      isAttestationRejection(new ConvexError("Invalid or expired challenge")),
+    ).toBe(false);
+  });
 });
 
 describe("formatters", () => {
@@ -210,10 +314,25 @@ describe("formatters", () => {
     expect(toE164("CA", "416 555 0123")).toBe("+14165550123");
     expect(toE164("CA", "123")).toBeNull();
     // Ofcom drama range: never assigned, used for the UK review accounts.
-    expect(toE164("GB", "07700 900101")).toBe("+447700900101");
+    expect(toE164("GB", "07700 900842")).toBe("+447700900842");
     expect(toE164("GB", "7700 9001")).toBeNull();
     expect(formatPhone("+14165550123")).toBe("+1 416 555 0123");
     expect(flagEmoji("FR")).toBe("🇫🇷");
+  });
+
+  it("finds a country by name, dial code, ISO code or common alias", () => {
+    const countries = listCountries("en");
+    const search = (query: string) =>
+      searchCountries(countries, query).map((country) => country.code);
+    // "uk" also matches Ukraine by name: the United Kingdom comes first.
+    expect(search("uk")[0]).toBe("GB");
+    expect(search("UK ")).toContain("UA");
+    expect(search("gb")).toEqual(["GB"]);
+    expect(search("united king")).toEqual(["GB"]);
+    expect(search("+44")).toContain("GB");
+    expect(search("44")).toContain("GB");
+    expect(search("us")[0]).toBe("US");
+    expect(search("")).toHaveLength(countries.length);
   });
 
   it("drops the national trunk prefix from the placeholder", () => {
@@ -298,6 +417,17 @@ describe("home groups", () => {
     expect(
       listCounts([note, item("insurance_policy", "photos")]).documents,
     ).toBe(2);
+  });
+
+  it("names a web-only category after the built-in one of its group", () => {
+    expect(builtInCategory("legal_document")).toBe("personal_document");
+    expect(builtInCategory("insurance_policy")).toBe("personal_document");
+    expect(builtInCategory("subscription")).toBe("credential");
+    expect(builtInCategory("health_directive")).toBe("wishes");
+    expect(builtInCategory("contacts")).toBe("other");
+    expect(builtInCategory("mystery")).toBe("other");
+    expect(builtInCategory("inbox")).toBe("inbox");
+    expect(builtInCategory("credential")).toBe("credential");
   });
 
   it("maps a category to its tile", () => {

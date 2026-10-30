@@ -15,9 +15,13 @@
  *   (device-unlock/key-import.ts); a script running on this origin while unlocked could therefore
  *   read it. The trade-off is deliberate: the vault no longer re-locks on
  *   refresh. Cleared on sign-out via clearPersistedMasterKeys().
+ * - The copy carries the time of the last user activity: one left idle for
+ *   the auto-lock window is dropped on load, so closing the browser while
+ *   unlocked does not escape the inactivity lock.
  */
 
 import { purgeLegacyShards } from "./purge-legacy-shards";
+import { AUTO_LOCK_TIMEOUT_MS } from "./use-idle-timer";
 
 const DB_NAME = "keeplas-master-key";
 // v2: keyed by userId instead of email. The MasterKey is identifier-agnostic
@@ -31,6 +35,25 @@ interface StoredMasterKey {
   key: CryptoKey;
   /** Epoch ms after which the copy is dropped; unset keeps it until sign-out. */
   expiresAt?: number;
+  /** Last user activity (epoch ms). Unset on copies saved before tracking. */
+  lastActiveAt?: number;
+}
+
+/**
+ * Whether a persisted copy must be dropped: past its link's lifetime, or idle
+ * for the auto-lock window (the in-tab idle timer never fires once the
+ * browser is closed). A copy saved before activity tracking is kept; its
+ * first activity starts the clock.
+ */
+export function isPersistedKeyExpired(
+  record: Pick<StoredMasterKey, "expiresAt" | "lastActiveAt">,
+  now: number,
+): boolean {
+  if (record.expiresAt !== undefined && record.expiresAt <= now) return true;
+  return (
+    record.lastActiveAt !== undefined &&
+    now - record.lastActiveAt >= AUTO_LOCK_TIMEOUT_MS
+  );
 }
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -75,6 +98,7 @@ export async function persistMasterKey(
         userId,
         key,
         expiresAt,
+        lastActiveAt: Date.now(),
       } satisfies StoredMasterKey);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
@@ -97,7 +121,7 @@ export async function loadMasterKey(userId: string): Promise<CryptoKey | null> {
       const req = store.get(userId);
       req.onsuccess = () => {
         const record = req.result as StoredMasterKey | undefined;
-        if (record?.expiresAt !== undefined && record.expiresAt <= Date.now()) {
+        if (record && isPersistedKeyExpired(record, Date.now())) {
           store.delete(userId);
           resolve(null);
           return;
@@ -109,6 +133,29 @@ export async function loadMasterKey(userId: string): Promise<CryptoKey | null> {
   } catch (err) {
     console.error("Failed to load Master Key:", err);
     return null;
+  }
+}
+
+/**
+ * Record user activity on the persisted copy (best-effort, like persisting).
+ * The caller throttles: this writes IndexedDB.
+ */
+export async function touchMasterKey(userId: string): Promise<void> {
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, "readwrite");
+      const store = tx.objectStore(STORE);
+      const req = store.get(userId);
+      req.onsuccess = () => {
+        const record = req.result as StoredMasterKey | undefined;
+        if (record) store.put({ ...record, lastActiveAt: Date.now() });
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (err) {
+    console.error("Failed to record Master Key activity:", err);
   }
 }
 

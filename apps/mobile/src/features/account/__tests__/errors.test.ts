@@ -42,6 +42,10 @@ const CASES: [message: string, key: string][] = [
     "account.errors.tooYoung",
   ],
   ["Birthday is implausibly old", "account.errors.invalidBirthday"],
+  [
+    "Review accounts can't change their number or email.",
+    "account.errors.reviewAccount",
+  ],
 ];
 
 describe("accountErrorKey", () => {

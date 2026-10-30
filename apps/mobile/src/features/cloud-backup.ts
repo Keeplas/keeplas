@@ -20,6 +20,15 @@ export const providerName = (provider: CloudKey.CloudKeyProvider) =>
   provider === "icloud" ? "iCloud" : "Google";
 
 /**
+ * This phone's `{provider}` ("iCloud" / "Google") and `{account}` ("Apple" /
+ * "Google") copy placeholders, so each OS names only its own platform (2.3.10).
+ */
+export const cloudNames = {
+  provider: providerName(CloudKey.provider),
+  account: CloudKey.provider === "icloud" ? "Apple" : "Google",
+};
+
+/**
  * The backup this phone can restore ("iCloud" / "Google"), null when there
  * is none, undefined while loading. The CBK only syncs within its platform:
  * Block Store never reaches iCloud.

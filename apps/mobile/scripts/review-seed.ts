@@ -23,7 +23,9 @@ import type { FunctionArgs } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
-import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
+import { contactKeyMaterial, deriveContactTrust } from "@keeplas/crypto/sig";
+
+import { requireVerifiedKey } from "@/crypto/contact-keys";
 import {
   decryptFile,
   decryptText,
@@ -53,19 +55,20 @@ import {
 import { openSealedItem } from "@/features/vault/open-sealed-item";
 import { generatePhrase } from "@keeplas/crypto/recovery";
 
-const OWNER = { phone: "+447700900101", name: "Demo Owner" };
-const ALEX = { phone: "+447700900102", name: "Alex Demo" };
-const SAM = { phone: "+447700900103", name: "Sam Demo" };
-const KIT = "REVIEW_KIT";
-const ASSETS = resolve("apps/mobile/scripts/review-seed");
-const DAY_MS = 86_400_000;
+import { ALEX, KIT, KIT_PATH, OWNER, readKit, SAM } from "./review-demo";
 
-type Person = typeof OWNER;
+const ASSETS = resolve("apps/mobile/scripts/review-seed");
+
+interface Person {
+  phone: string;
+  name: string;
+}
 
 interface Account {
   person: Person;
   client: ConvexHttpClient;
   material: VaultMaterial;
+  userId: string;
 }
 
 function need(name: string): string {
@@ -99,12 +102,6 @@ function admin(fn: string, args: Record<string, unknown>): unknown {
   return out ? JSON.parse(out) : null;
 }
 
-const KIT_PATH = ["--env=prod", "--path=/keeplas_mobile", "--silent"];
-const readKit = () =>
-  run("infisical", ["secrets", "get", KIT, ...KIT_PATH, "--plain"])
-    .trim()
-    .split(/\s+/);
-
 /** REVIEW_KIT from the last run, or new words stored before any vault. */
 async function sharedKit(): Promise<string[]> {
   try {
@@ -129,6 +126,13 @@ if (!(process.env.CONVEX_DEPLOYMENT ?? "").startsWith("prod:")) {
 const CONVEX_URL = need("NEXT_PUBLIC_CONVEX_URL");
 const APP_URL = need("NEXT_PUBLIC_APP_URL");
 const REVIEW_CODE = need("REVIEW_CODE");
+// The demo accounts are the first three REVIEW_PHONES numbers (review-demo.ts).
+need("REVIEW_PHONES");
+if (!SAM.phone) {
+  throw new Error(
+    "REVIEW_PHONES must start with the owner, contact 1 and contact 2 numbers",
+  );
+}
 
 interface AuditContext {
   ip: string;
@@ -162,6 +166,7 @@ async function session(
     phoneNumber,
     intent: flow === "signUp" ? "signup" : "signin",
     language: "en-US",
+    _audit: await auditContext(),
   });
   const { tokens } = await anonymous.action(api.auth.signIn, {
     provider: "phone-otp",
@@ -186,7 +191,9 @@ async function createAccount(person: Person, kit: string[]): Promise<Account> {
     platform: "ios",
   });
   const client = await session(person.phone, "signUp", person.name);
-  const material = await createVaultMaterial(kit);
+  const viewer = await client.query(api.users.viewer, {});
+  if (!viewer) throw new Error(`${person.phone}: no account after sign-up`);
+  const material = await createVaultMaterial(viewer._id, kit);
   await client.mutation(api.onboarding.storeRecoveryPhraseHash, {
     recoveryPhraseHash: material.recoveryPhraseHash,
     phraseSalt: material.phraseSalt,
@@ -199,7 +206,7 @@ async function createAccount(person: Person, kit: string[]): Promise<Account> {
     ...material.publicKeys,
     _audit: await auditContext(),
   });
-  return { person, client, material };
+  return { person, client, material, userId: viewer._id };
 }
 
 /** Invite by phone only (no message reaches anyone), then accept. */
@@ -234,6 +241,10 @@ async function addContact(owner: Account, contact: Account): Promise<string> {
 /** Verify-before-wrap and the TOFU pin, as the phone does. */
 async function verifiedKeys(owner: Account): Promise<Map<string, string>> {
   const _audit = await auditContext();
+  const trust = await deriveContactTrust(
+    owner.userId,
+    await importMasterKey(owner.material.rawMasterKey),
+  );
   const keys = new Map<string, string>();
   for (const row of await owner.client.query(
     api.trusted_contacts.getContacts,
@@ -243,10 +254,11 @@ async function verifiedKeys(owner: Account): Promise<Map<string, string>> {
       row._id,
       await requireVerifiedKey(
         contactKeyMaterial(row),
-        (contactId, fingerprint) =>
+        trust,
+        (contactId, pin) =>
           owner.client.mutation(api.trusted_contacts.pinContactIdentity, {
             contactId: contactId as Id<"trusted_contacts">,
-            fingerprint,
+            ...pin,
             _audit,
           }),
       ),
@@ -471,7 +483,8 @@ async function seed() {
     },
   ]);
   // The contacts' own vaults: a reviewer signed in as one sees a few items
-  // too. They have no trusted contacts, so nothing is shared.
+  // too. They have no trusted contacts, so nothing is shared. Keep
+  // CONTACT_SEED (review-demo.ts) in step: `pnpm review:status` checks it.
   await fillVault(alex, [
     {
       title: "Holiday photo",
@@ -503,7 +516,7 @@ async function seed() {
     },
   ]);
 
-  console.log("Life check quarterly with travel mode, cloud backup off…");
+  console.log("Life check paused, cloud backup off…");
   const _audit = await auditContext();
   await owner.client.mutation(api.life_check.saveConfig, {
     frequency: "quarterly",
@@ -514,17 +527,16 @@ async function seed() {
     ],
     _audit,
   });
-  await owner.client.mutation(api.life_check.toggleTravelMode, {
-    enabled: true,
-    until: Date.now() + 30 * DAY_MS,
-    _audit,
-  });
-  // Off for good, so reviewers' phones never seal a backup the next
-  // reviewer can't open (lib/backup-policy.ts): each one gets the kit.
-  await owner.client.mutation(api.cloud_backup.disable, { _audit });
-
-  for (const account of [owner, alex, sam])
+  for (const account of [owner, alex, sam]) {
+    // Off for good, so reviewers' phones never seal a backup the next
+    // reviewer can't open (lib/backup-policy.ts): each one gets the kit.
+    await account.client.mutation(api.cloud_backup.disable, { _audit });
+    // Travel mode for the server maximum on every account, as
+    // `pnpm review:clear` re-arms it: no "Are you okay?" check-in during a
+    // review, on the owner or on a contact.
+    admin("store_review:clearDrift", { phoneNumber: account.person.phone });
     await account.client.action(api.auth.signOut, {});
+  }
 }
 
 const sha256 = (bytes: Uint8Array) =>

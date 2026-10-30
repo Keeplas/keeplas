@@ -1,32 +1,18 @@
 import { v, ConvexError } from "convex/values";
-import { query, type MutationCtx } from "./_generated/server";
+import { query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { createNotification, requireAuth, requireFullAuth } from "./helpers";
+import {
+  countQuorumVotes,
+  createNotification,
+  requireAuth,
+  requireFullAuth,
+} from "./helpers";
 import { auditedMutation } from "./audit";
 import { activePushTokens } from "./devices";
-import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
-
-/**
- * Count the number of DISTINCT humans behind a set of trusted-contact rows.
- * Quorum (and any participation count) must dedup by `contactUserId`, never by
- * row id (C1): the same person invited via two channels gets two rows but must
- * count as a single vote. A row with no `contactUserId` (not yet accepted)
- * cannot have voted, so it is ignored.
- */
-async function countDistinctContactPeople(
-  ctx: MutationCtx,
-  contactIds: Id<"trusted_contacts">[],
-): Promise<number> {
-  const people = new Set<string>();
-  for (const contactId of contactIds) {
-    const contact = await ctx.db.get(contactId);
-    if (contact?.contactUserId) {
-      people.add(contact.contactUserId);
-    }
-  }
-  return people.size;
-}
+import { DEFAULT_CONFIRMATION_THRESHOLD, clockResetFields } from "./life_check";
+import { verifiedChannels } from "./lib/identity";
+import { isEscalationPaused } from "./lib/pause";
 
 /**
  * Get pending access requests for the vault owner.
@@ -132,6 +118,13 @@ export const markUserUnreachable = auditedMutation({
         "This vault owner's Life Check has not requested contact confirmation.",
       );
     }
+    // While the timeline is frozen (operator kill switch) a vote would open a
+    // grace whose alert can't reach the owner. Votes resume with it.
+    if (isEscalationPaused()) {
+      throw new ConvexError(
+        "Life Check is paused for maintenance. Try again later.",
+      );
+    }
 
     const ownerConfig = await ctx.db
       .query("life_check_configs")
@@ -166,22 +159,20 @@ export const markUserUnreachable = auditedMutation({
       // so it must actually leave the building (createNotification is a no-op).
       const owner = await ctx.db.get(contact.userId);
       await ctx.scheduler.runAfter(0, internal.dispatch.notifyGraceCancel, {
-        email: owner?.email,
-        phoneNumber: owner?.phoneNumber,
+        ...verifiedChannels(owner),
         ownerName: owner?.name,
         language: owner?.language,
         pushTokens: await activePushTokens(ctx, contact.userId),
       });
     };
 
+    // Join this cycle's quorum request: the only pending one (every way out of
+    // Stage 2 denies, expires or approves it). An "approved" row is a past
+    // release; appending to it would never schedule a release again.
     const existing = await ctx.db
       .query("access_requests")
-      .withIndex("by_vault_user", (q) => q.eq("vaultUserId", contact.userId))
-      .filter((q) =>
-        q.or(
-          q.eq(q.field("status"), "pending"),
-          q.eq(q.field("status"), "approved"),
-        ),
+      .withIndex("by_status", (q) =>
+        q.eq("vaultUserId", contact.userId).eq("status", "pending"),
       )
       .first();
 
@@ -193,16 +184,10 @@ export const markUserUnreachable = auditedMutation({
       }
 
       const updatedContacts = [...contactsInitiated, args.contactId];
-      // C1: quorum is reached by DISTINCT HUMANS, not distinct rows. Two rows
-      // backed by the same `contactUserId` (same person invited via two
-      // channels) count as ONE vote — otherwise one person could reach the
-      // unreachability quorum alone. Resolve every initiating row to its
-      // person and count the unique set.
-      const distinctPeople = await countDistinctContactPeople(
-        ctx,
-        updatedContacts,
-      );
-      const quorumReached = distinctPeople >= threshold;
+      // Quorum counts distinct, still-accepted people (countQuorumVotes): one person
+      // holding two rows, or a voter revoked since, can't tip it.
+      const votes = await countQuorumVotes(ctx, updatedContacts);
+      const quorumReached = votes >= threshold;
       const newlyReached = quorumReached && !existing.quorumReached;
 
       await ctx.db.patch(existing._id, {
@@ -339,6 +324,22 @@ export const revokeReleasedAccess = auditedMutation({
       const contact = await ctx.db.get(req.requestedBy);
       if (contact?.contactUserId) {
         affectedContactUsers.add(contact.contactUserId);
+      }
+    }
+
+    // The owner is back: re-arm the Life check (it stays quiet while a release
+    // is in force) with a full fresh window, so the stale pre-release clock
+    // can't start a cycle on the next evaluator tick.
+    if (approved.length > 0) {
+      const config = await ctx.db
+        .query("life_check_configs")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .first();
+      if (config) {
+        await ctx.db.patch(config._id, {
+          updatedAt: now,
+          ...clockResetFields(config, now),
+        });
       }
     }
 

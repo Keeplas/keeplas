@@ -1,6 +1,11 @@
 import type { IconName } from "@/components/icon";
 import type { colors } from "@/theme";
-import { GROUP_CATEGORIES } from "@keeplas/backend/lib/vault_groups";
+import type { VaultCategory } from "@/crypto/item-meta";
+import {
+  GROUP_CATEGORIES,
+  GROUP_CATEGORY,
+  groupOf,
+} from "@keeplas/backend/lib/vault_groups";
 
 export {
   bucketOf,
@@ -53,6 +58,15 @@ export const VAULT_GROUPS = [
   color: keyof typeof colors.category;
   categories: readonly string[];
 }[];
+
+/**
+ * The built-in category the phone shows for a stored one: the phone offers
+ * one per group, so a web-only category (legal_document, subscription...)
+ * shows as its group's (Documents, Accounts...).
+ */
+export function builtInCategory(category: string): VaultCategory {
+  return GROUP_CATEGORY[groupOf(category) ?? "inbox"];
+}
 
 const RECENT_DAYS = 30;
 const RECENT_MAX = 3;

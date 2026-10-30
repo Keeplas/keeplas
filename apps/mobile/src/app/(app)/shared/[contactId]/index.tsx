@@ -120,13 +120,7 @@ export default function SharedVault() {
           onPress={intro.readable ? () => open(intro._id) : undefined}
         />
       ))}
-      <SectionHeader
-        title={
-          items.length === 1
-            ? t("shared.oneItem")
-            : t("shared.items", { n: items.length })
-        }
-      />
+      <SectionHeader title={t("shared.items", { count: items.length })} />
       {items.length === 0 ? (
         <Text color="text.muted">{t("shared.nothingLeft")}</Text>
       ) : null}

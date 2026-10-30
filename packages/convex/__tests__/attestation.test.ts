@@ -26,8 +26,9 @@ async function attestAsSimulator(t: TestConvex, phoneNumber = PHONE) {
   });
 }
 
-function requestSignupOtp(t: TestConvex, phoneNumber = PHONE) {
+async function requestSignupOtp(t: TestConvex, phoneNumber = PHONE) {
   return t.mutation(api.phone_auth.requestPhoneAuthOtp, {
+    _audit: await signedAudit(),
     phoneNumber,
     intent: "signup",
   });
@@ -127,6 +128,7 @@ describe("mobile-only sign-up", () => {
       t.mutation(api.email_auth.requestEmailAuthOtp, {
         email: "new@example.com",
         intent: "signup",
+        _audit: await signedAudit(),
       }),
     ).rejects.toThrow(MOBILE_ONLY_SIGNUP);
     expect(() => refuseNonMobileSignUp("signUp")).toThrow(MOBILE_ONLY_SIGNUP);

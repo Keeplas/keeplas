@@ -1,8 +1,13 @@
 name: CLA Assistant
 
-# Requires a repo secret `CLA_SIGNATURES_TOKEN`: a Personal Access Token with
-# `repo` scope, used to commit contributors' signatures to signatures/cla.json.
 # Contributors sign by commenting the sentence in `path-to-document` on their PR.
+# Signatures are committed to signatures/cla.json on the `cla-signatures`
+# branch with the workflow's GITHUB_TOKEN. No personal access token is needed:
+# the action only uses PERSONAL_ACCESS_TOKEN when signatures are stored in a
+# remote repository/organization, which is not the case here.
+#
+# Runs on pull_request_target (base-repo context, secrets available) — never
+# check out or execute PR code in this workflow.
 
 on:
   issue_comment:
@@ -10,22 +15,21 @@ on:
   pull_request_target:
     types: [opened, closed, synchronize]
 
-permissions:
-  actions: write
-  contents: write
-  pull-requests: write
-  statuses: write
+permissions: {}
 
 jobs:
   cla:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write # re-run the CLA check after a contributor signs
+      contents: write # commit signatures to the cla-signatures branch
+      pull-requests: write # comment on / lock the PR
     steps:
       - name: CLA Assistant
         if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
-        uses: contributor-assistant/github-action@v2.6.1
+        uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08 # v2.6.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.CLA_SIGNATURES_TOKEN }}
         with:
           path-to-signatures: signatures/cla.json
           path-to-document: https://github.com/Keeplas/keeplas/blob/main/CONTRIBUTOR_LICENSE_AGREEMENT.md

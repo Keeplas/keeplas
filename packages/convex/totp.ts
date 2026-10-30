@@ -4,8 +4,8 @@ import { mutation, query, type MutationCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { auditedMutation, createAuditLog } from "./audit";
-import { constantTimeStringEquals } from "./lib/crypto";
-import { requireSessionProof } from "./session_proofs";
+import { verifierDigest, verifierMatches } from "./lib/crypto";
+import { requireProvenFullAuth, requireSessionProof } from "./session_proofs";
 
 const ISSUER = "Keeplas";
 const STEP_SECONDS = 30;
@@ -84,13 +84,18 @@ async function hotp(secretBytes: Uint8Array, counter: number): Promise<string> {
   return (code % 10 ** DIGITS).toString().padStart(DIGITS, "0");
 }
 
-async function verifyTotp(
+/**
+ * The time step `code` matches within the drift window, or null. Steps at or
+ * before `lastUsedCounter` are skipped: an accepted code never works again.
+ */
+async function matchTotpStep(
   secretBase32: string,
   code: string,
   now: number,
-): Promise<boolean> {
+  lastUsedCounter: number | undefined,
+): Promise<number | null> {
   const cleaned = code.replace(/\s/g, "");
-  if (!/^\d{6}$/.test(cleaned)) return false;
+  if (!/^\d{6}$/.test(cleaned)) return null;
   const secret = base32ToBytes(secretBase32);
   const counter = Math.floor(now / 1000 / STEP_SECONDS);
   for (
@@ -98,10 +103,12 @@ async function verifyTotp(
     drift <= VERIFICATION_WINDOW;
     drift++
   ) {
-    const candidate = await hotp(secret, counter + drift);
-    if (timingSafeEquals(candidate, cleaned)) return true;
+    const step = counter + drift;
+    if (lastUsedCounter !== undefined && step <= lastUsedCounter) continue;
+    const candidate = await hotp(secret, step);
+    if (timingSafeEquals(candidate, cleaned)) return step;
   }
-  return false;
+  return null;
 }
 
 function timingSafeEquals(a: string, b: string): boolean {
@@ -143,10 +150,11 @@ const TOTP_LOCKOUT_MS = 15 * 60 * 1000;
 const INVALID_CODE = "Invalid or expired code. Try again.";
 
 /**
- * Check a code against an enrolled authenticator, with the shared lockout:
- * 10 wrong codes lock it for 15 minutes. A wrong code is counted and
- * reported as `false`, never thrown: Convex rolls back the writes of a
- * mutation that throws, and the failure must be counted (lib/otp.ts).
+ * Check a code against an authenticator (enrolled or pending), with the
+ * shared lockout: 10 wrong codes lock it for 15 minutes. A wrong or reused
+ * code is counted and reported as `false`, never thrown: Convex rolls back
+ * the writes of a mutation that throws, and the failure must be counted
+ * (lib/otp.ts). An accepted code's time step is recorded so it is single-use.
  */
 async function consumeTotpCode(
   ctx: MutationCtx,
@@ -161,7 +169,13 @@ async function consumeTotpCode(
   if (recentFailures >= TOTP_MAX_FAILURES) {
     throw new ConvexError("Too many attempts. Try again in 15 minutes.");
   }
-  if (!(await verifyTotp(totp.secret, code, now))) {
+  const step = await matchTotpStep(
+    totp.secret,
+    code,
+    now,
+    totp.lastUsedCounter,
+  );
+  if (step === null) {
     await ctx.db.patch(totp._id, {
       failedAttempts: recentFailures + 1,
       lastFailedAt: now,
@@ -170,6 +184,7 @@ async function consumeTotpCode(
   }
   await ctx.db.patch(totp._id, {
     lastUsedAt: now,
+    lastUsedCounter: step,
     failedAttempts: undefined,
     lastFailedAt: undefined,
   });
@@ -267,10 +282,15 @@ export const getMyTotpGate = query({
   },
 });
 
+/**
+ * Enrolling an authenticator (and its reset verifier) gates every later
+ * session, so it needs a fully stepped-up one: a password alone must not
+ * lock the owner behind an attacker's authenticator.
+ */
 export const startEnrollment = mutation({
   args: { label: v.optional(v.string()) },
   handler: async (ctx, { label }) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
 
@@ -313,7 +333,7 @@ export const verifyAndEnable = mutation({
     recoveryVerifierHash: v.optional(v.string()),
   },
   handler: async (ctx, { code, recoveryVerifierHash }) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const row = await ctx.db
       .query("totp_secrets")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -322,11 +342,11 @@ export const verifyAndEnable = mutation({
     if (row.verifiedAt) {
       throw new Error("Authenticator already verified");
     }
-    const ok = await verifyTotp(row.secret, code, Date.now());
-    if (!ok) throw new Error(INVALID_CODE);
-
     const now = Date.now();
-    await ctx.db.patch(row._id, { verifiedAt: now, lastUsedAt: now });
+    if (!(await consumeTotpCode(ctx, row, code, now))) {
+      return { success: false as const, error: INVALID_CODE };
+    }
+    await ctx.db.patch(row._id, { verifiedAt: now });
 
     const user = await ctx.db.get(userId);
     if (user) {
@@ -337,7 +357,8 @@ export const verifyAndEnable = mutation({
         updatedAt: now,
       };
       if (recoveryVerifierHash) {
-        patch.totpResetVerifierHash = recoveryVerifierHash;
+        patch.totpResetVerifierHash =
+          await verifierDigest(recoveryVerifierHash);
       }
       await ctx.db.patch(userId, patch);
     }
@@ -358,21 +379,22 @@ export const verifyAndEnable = mutation({
         });
       }
     }
-    return { success: true };
+    return { success: true as const };
   },
 });
 
 /**
  * Bind (or replace) the seed-derived recovery verifier on an already-enrolled
  * TOTP. Called from settings when the user wants to add the recovery path
- * after the fact, or rebind to a new recovery phrase.
+ * after the fact, or rebind to a new recovery phrase. The verifier resets
+ * TOTP (`submitTotpRecovery`), so binding one needs a proven session.
  */
 export const bindRecoveryReset = auditedMutation({
   action: "totp_recovery_bound",
   resourceType: "totp",
   args: { recoveryVerifierHash: v.string() },
   handler: async (ctx, { recoveryVerifierHash }) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireProvenFullAuth(ctx);
     const totp = await ctx.db
       .query("totp_secrets")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -381,7 +403,7 @@ export const bindRecoveryReset = auditedMutation({
       throw new Error("Enable TOTP before binding a recovery phrase.");
     }
     await ctx.db.patch(userId, {
-      totpResetVerifierHash: recoveryVerifierHash,
+      totpResetVerifierHash: await verifierDigest(recoveryVerifierHash),
       updatedAt: Date.now(),
     });
     return { success: true };
@@ -509,7 +531,7 @@ export const submitTotpRecovery = mutation({
     if (!user || !user.totpResetVerifierHash) {
       throw new Error("Recovery via seed is not configured for this account.");
     }
-    if (!constantTimeStringEquals(user.totpResetVerifierHash, verifierHash)) {
+    if (!(await verifierMatches(user.totpResetVerifierHash, verifierHash))) {
       throw new Error("Recovery phrase did not match. Try again.");
     }
 

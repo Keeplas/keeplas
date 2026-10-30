@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { OtpInput } from "@/components/otp-input";
 import { BulletCard } from "@/components/surfaces";
 import { Text } from "@/components/text";
@@ -41,6 +42,7 @@ export function ChoosePin({
   const [first, setFirst] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [mismatch, setMismatch] = useState(false);
+  const entry = useRef<View>(null);
 
   function restart() {
     setFirst(null);
@@ -68,7 +70,7 @@ export function ChoosePin({
       : t("pin.enterConfirm");
 
   return (
-    <View style={styles.entry}>
+    <View ref={entry} style={styles.entry}>
       <Text variant="label" align="center">
         {prompt}
       </Text>
@@ -81,12 +83,9 @@ export function ChoosePin({
         invalid={!!message}
         label={prompt}
         secure
+        keepVisible={entry}
       />
-      {message ? (
-        <Text variant="body-sm" color="status.revoked" align="center">
-          {message}
-        </Text>
-      ) : null}
+      <ErrorText align="center">{message}</ErrorText>
       {first === null ? (
         <Button
           variant="text"

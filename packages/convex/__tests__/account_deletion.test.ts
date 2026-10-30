@@ -185,6 +185,23 @@ describe("account deletion", () => {
     ).toBeNull();
   });
 
+  // Each fresh schedule emails and WhatsApps the owner, and cancel undoes it
+  // at once: a request → cancel loop must not burn the shared send quotas.
+  it("caps fresh deletion schedules at 3 per day", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    for (let i = 0; i < 3; i++) {
+      await requestDeletion(t, userId);
+      await asUser(t, userId).mutation(api.account_deletion.cancel, {
+        _audit: await signedAudit(),
+      });
+    }
+
+    await expect(requestDeletion(t, userId)).rejects.toThrow(
+      "Too many requests",
+    );
+  });
+
   it("erases everything after the grace period and keeps legal records", async () => {
     const t = makeT();
     const owner = await seedVaultOwner(t);
@@ -212,6 +229,14 @@ describe("account deletion", () => {
         codeHash: "hash",
         expiresAt: 0,
         attempts: 0,
+      });
+      await ctx.db.insert("device_pins", {
+        userId: owner.userId,
+        sessionId,
+        proofHash: "hash",
+        secret: "secret",
+        failCount: 0,
+        createdAt: 0,
       });
       await ctx.db.insert("capture_handoffs", {
         userId: owner.userId,
@@ -321,6 +346,10 @@ describe("account deletion", () => {
         .query("capture_handoffs")
         .withIndex("by_user", (q) => q.eq("userId", owner.userId))
         .collect(),
+      devicePins: await ctx.db
+        .query("device_pins")
+        .withIndex("by_user", (q) => q.eq("userId", owner.userId))
+        .collect(),
     }));
 
     expect(left.user).toBeNull();
@@ -348,6 +377,7 @@ describe("account deletion", () => {
     expect(left.numberChanges).toEqual([]);
     expect(left.sessionPhoneCodes).toEqual([]);
     expect(left.captureHandoffs).toEqual([]);
+    expect(left.devicePins).toEqual([]);
   });
 
   it("deletes the security log 30 days after the erasure, and only the erased account's", async () => {

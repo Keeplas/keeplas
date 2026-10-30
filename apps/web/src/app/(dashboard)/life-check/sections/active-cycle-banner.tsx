@@ -9,13 +9,17 @@ interface ActiveCycleBannerProps {
   onPostpone: (duration: "48h" | "7d") => void;
 }
 
-/** A check-in is waiting for an answer: confirm now or postpone. */
+/**
+ * A check-in is waiting for an answer: confirm now or postpone. Once contacts
+ * are being asked (Stage 2) only confirming stops it, so postpone is hidden.
+ */
 export function ActiveCycleBanner({
   status,
   onValidate,
   onPostpone,
 }: ActiveCycleBannerProps) {
   const t = useTranslations("lifeCheck.activeCycle");
+  const running = status === "running";
   return (
     <section className="flex flex-wrap items-center gap-[14px] rounded-[16px] bg-bg-pending p-[20px]">
       <IconTile
@@ -26,19 +30,19 @@ export function ActiveCycleBanner({
         className="min-w-[240px]"
         title={t("title")}
         description={
-          status === "running"
-            ? t("runningDescription")
-            : t("escalatingDescription")
+          running ? t("runningDescription") : t("escalatingDescription")
         }
       />
       <div className="flex gap-[12px]">
-        <Button
-          variant="bordered"
-          size="regular"
-          onClick={() => onPostpone("48h")}
-        >
-          {t("postpone48h")}
-        </Button>
+        {running ? (
+          <Button
+            variant="bordered"
+            size="regular"
+            onClick={() => onPostpone("48h")}
+          >
+            {t("postpone48h")}
+          </Button>
+        ) : null}
         <Button variant="primary" size="regular" onClick={onValidate}>
           {t("imWell")}
         </Button>

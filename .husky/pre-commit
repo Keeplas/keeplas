@@ -1,14 +1,18 @@
-# Vercel attributes deploys to the commit author; a non-team author email
-# gets the deployment blocked. Fail fast before any other work.
-email="$(git config user.email)"
-case "$email" in
-  princenocode@gmail.com | mitahighislain@gmail.com) ;;
-  *)
-    echo "✖ Commit author email '$email' is not a Vercel team address."
-    echo "  Use princenocode@gmail.com or mitahighislain@gmail.com in git config user.email."
-    exit 1
-    ;;
-esac
+# Team-only (opt-in): Vercel attributes deploys to the commit author and
+# blocks deployments from a non-team author email. Founders who deploy via
+# Vercel can set KEEPLAS_TEAM=1 to catch a misconfigured user.email early.
+# Contributors don't need this — commit with your own email.
+if [ "$KEEPLAS_TEAM" = "1" ]; then
+  email="$(git config user.email)"
+  case "$email" in
+    princenocode@gmail.com | mitahighislain@gmail.com) ;;
+    *)
+      echo "✖ KEEPLAS_TEAM=1 but commit author email '$email' is not a Vercel team address."
+      echo "  Set your own team email in git config user.email, or unset KEEPLAS_TEAM."
+      exit 1
+      ;;
+  esac
+fi
 
 pnpm exec lint-staged
 pnpm check:zk

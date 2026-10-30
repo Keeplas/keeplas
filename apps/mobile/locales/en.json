@@ -1,0 +1,10 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Keeplas uses the camera to scan documents, take photos and videos for your vault, take your profile photo, and scan QR codes from your recovery kit or from Keeplas on another device.",
+    "NSMicrophoneUsageDescription": "Keeplas uses the microphone to record voice notes and the sound of videos you add to your vault. They are encrypted on this phone first.",
+    "NSPhotoLibraryUsageDescription": "Keeplas lets you choose photos and videos from your library to add to your vault, set your profile photo, or read your recovery kit’s QR code from a picture.",
+    "NSPhotoLibraryAddUsageDescription": "Keeplas saves a photo or video from your vault to your library when you choose to save it.",
+    "NSFaceIDUsageDescription": "Keeplas uses Face ID to unlock your vault on this device.",
+    "NSContactsUsageDescription": "Keeplas reads only the contact you pick, to fill in the name, email and phone number of someone you add. Your address book is not sent anywhere."
+  }
+}

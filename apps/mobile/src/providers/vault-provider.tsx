@@ -8,13 +8,25 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { AppState, View } from "react-native";
+import { AppState, Platform, View } from "react-native";
+import * as ScreenCapture from "expo-screen-capture";
 
 import { importMasterKey } from "@/crypto/vault-keys";
-import { openDeviceVault, unlockDeviceVault } from "@/crypto/device-vault";
+import {
+  openCurrentDeviceVault,
+  unlockDeviceVault,
+} from "@/crypto/device-vault";
 import { forgetOwnerKeys } from "@/crypto/owner-keys";
-import { IDLE_LOCK_MS, isLockHeld, shouldLockOnResume } from "@/lib/auto-lock";
+import {
+  IDLE_LOCK_MS,
+  instantNow,
+  isLockHeld,
+  shouldLockOnResume,
+  type Instant,
+} from "@/lib/auto-lock";
 import { clearDecryptedCache } from "@/lib/files";
+
+type DeviceVaultUser = Parameters<typeof openCurrentDeviceVault>[0];
 
 interface VaultValue {
   /** Live MasterKey while unlocked; null when locked. */
@@ -22,9 +34,10 @@ interface VaultValue {
   /**
    * Biometric unlock (M08-6). Resolves to the RootKey when this phone knows
    * it (the caller wipes it), so the cloud backup needs no second prompt.
+   * Throws `StaleDeviceVault` when the phone's keys predate a rotation.
    */
   unlock: (
-    userId: string,
+    user: DeviceVaultUser,
     prompt: string,
     pin?: string,
   ) => Promise<Uint8Array | null>;
@@ -53,7 +66,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [masterKey, setMasterKey] = useState<CryptoKey | null>(null);
   const [finishingSetup, setFinishingSetup] = useState(false);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const backgroundedAt = useRef<number | null>(null);
+  const backgroundedAt = useRef<Instant | null>(null);
   const backgroundHeld = useRef(false);
 
   const lock = useCallback(() => {
@@ -70,8 +83,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const unlock = useCallback(
-    async (userId: string, prompt: string, pin?: string) => {
-      const { masterKey, rootKey } = await openDeviceVault(userId, prompt, pin);
+    async (user: DeviceVaultUser, prompt: string, pin?: string) => {
+      const { masterKey, rootKey } = await openCurrentDeviceVault(
+        user,
+        prompt,
+        pin,
+      );
       await adopt(masterKey);
       return rootKey;
     },
@@ -105,13 +122,13 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") {
         const held = backgroundHeld.current || isLockHeld();
-        if (shouldLockOnResume(backgroundedAt.current, Date.now(), held)) {
+        if (shouldLockOnResume(backgroundedAt.current, instantNow(), held)) {
           lock();
         }
         backgroundedAt.current = null;
         backgroundHeld.current = false;
       } else {
-        backgroundedAt.current ??= Date.now();
+        backgroundedAt.current ??= instantNow();
         backgroundHeld.current ||= isLockHeld();
       }
     });
@@ -120,6 +137,18 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       if (idleTimer.current) clearTimeout(idleTimer.current);
     };
   }, [masterKey, armIdleTimer, lock]);
+
+  // iOS blurs the app whenever it leaves the foreground while the vault is
+  // open, so the app switcher snapshot shows nothing of it (also once the
+  // vault has locked). Android blanks Recents on the screens that block
+  // screen capture (FLAG_SECURE, useNoScreenCapture).
+  useEffect(() => {
+    if (!masterKey || Platform.OS !== "ios") return;
+    ScreenCapture.enableAppSwitcherProtectionAsync(1).catch(() => undefined);
+    return () => {
+      ScreenCapture.disableAppSwitcherProtectionAsync().catch(() => undefined);
+    };
+  }, [masterKey]);
 
   const value = useMemo<VaultValue>(
     () => ({

@@ -16,6 +16,10 @@
     "language": "Language",
     "genericError": "Something went wrong. Try again."
   },
+  "crash": {
+    "title": "Something went wrong",
+    "body": "Keeplas stopped unexpectedly. Your vault and your data are safe. Try again."
+  },
   "languageNames": {
     "en": "English",
     "fr": "Français"
@@ -64,11 +68,16 @@
     "confirm": "Confirm number",
     "noCode": "Didn't get the code?",
     "resend": "Resend code",
+    "resendIn": "Resend code in {seconds} s",
     "resent": "We sent you a new code.",
-    "note": "WhatsApp only carries your codes and alerts. Nothing from your vault is sent there."
+    "note": "WhatsApp only carries your codes and alerts. Nothing from your vault is sent there.",
+    "codeLabel": "Verification code",
+    "field_one": "{label}, {count} digit",
+    "field": "{label}, {count} digits"
   },
   "codeErrors": {
     "wrongTitle": "That code isn't right",
+    "wrongBody_one": "Check the 6 digits and try again. {count} try left.",
     "wrongBody": "Check the 6 digits and try again. {count} tries left.",
     "expiredTitle": "This code has expired",
     "expiredBody": "Codes work for 10 minutes. We can send you a new one.",
@@ -79,6 +88,11 @@
     "notArrivingBody": "Codes can take a minute to arrive. Check that {phone} is right, then ask for a new code.",
     "changeNumber": "Change number"
   },
+  "offline": {
+    "title": "You're offline",
+    "body": "Keeplas needs a connection to open your account. Connect to Wi-Fi or mobile data: Keeplas reconnects on its own.",
+    "submitBody": "No connection. Connect to Wi-Fi or mobile data, then try again."
+  },
   "passkey": {
     "title": "Create your passkey",
     "body": "Use your face, fingerprint or phone passcode to get into your account securely. Your passkey syncs with your {provider} keychain, so it comes back on a new phone.",
@@ -86,6 +100,8 @@
     "failedTitle": "Passkey not created",
     "failedBody": "The prompt closed before you finished. You need a passkey to keep your vault on this phone.",
     "errorBody": "Your phone couldn't create the passkey. Try again, or tap Get help to send us the details.",
+    "keychainOff": "Keeplas saves your passkey in iCloud Keychain. Turn it on in Settings › your name › iCloud › Passwords, then try again.",
+    "passwordManagerOff": "Keeplas saves your passkey in Google Password Manager. Add a Google account in your phone's Settings and check that Google Password Manager is on, then try again.",
     "screenLockTitle": "Set up a screen lock",
     "screenLockBody": "Keeplas uses your phone's screen lock (PIN, face or fingerprint) to protect your vault. Set one up in Settings, then come back.",
     "devSkip": "Skip (development build)"
@@ -100,7 +116,7 @@
   },
   "contacts": {
     "title": "Add trusted contacts",
-    "body": "Invite people you trust. Any 2 of them can help you recover your account and confirm a death. They only see what you share with them.",
+    "body": "Invite people you trust. Any 2 of them can help you recover your account or confirm you can't be reached. They only see what you share with them.",
     "invite": "Invite contacts",
     "skip": "Skip for now",
     "warning": "Without contacts or a cloud backup, losing every device and passkey may lock you out."
@@ -110,7 +126,7 @@
     "body": "Your account is ready. Your information is safe and ready for tomorrow.",
     "optional": "Optional protection",
     "contactsTitle": "Add trusted contacts",
-    "contactsBody": "Invite people you trust. Any 2 of them can help you recover your account and confirm a death.",
+    "contactsBody": "Invite people you trust. Any 2 of them can help you recover your account or confirm you can't be reached.",
     "open": "Open my vault",
     "backupBody": "Your vault comes back on a new phone with your {account} account."
   },
@@ -119,7 +135,7 @@
     "body": "Write these 24 words down, in order, or save them as a file. With them you can open your vault if you lose this phone.",
     "warning": "Anyone with these words can open your vault. Keep them offline and never share them, not even with Keeplas.",
     "saved": "I've saved my kit",
-    "intro": "24 words that open your vault if you can't restore it from your Apple or Google account or with your contacts. You don't need them to sign in.",
+    "intro": "24 words that open your vault if you can't restore it from your {account} account or with your contacts. You don't need them to sign in.",
     "replaces": "Creating a kit replaces any previous one: older words stop working.",
     "create": "Create my kit",
     "auth": "Create a recovery kit",
@@ -128,9 +144,13 @@
     "rule3": "Keeplas will never ask for them. A new kit replaces this one.",
     "pdf": "Download PDF",
     "image": "Save image",
-    "pdfSaved": "PDF saved",
-    "imageSaved": "Image saved",
+    "pdfShared": "PDF created. Check that you saved it.",
+    "imageShared": "Image created. Check that you saved it.",
     "exportFailed": "Keeplas could not create the file. Try again.",
+    "leaveTitle": "Leave without saving these words?",
+    "leaveBody": "Your previous kit no longer works, and these words can't be shown again. If you leave, you'll need to create a new kit.",
+    "stay": "Stay",
+    "leave": "Leave",
     "fileWarning": "Anyone with these words can open your vault. Best: print the PDF, then delete the file. A copy in your photos or cloud drive can be read by anyone who gets into that account.",
     "qr": "Scan this code with the Keeplas app to open your vault without typing the words. Keep it as private as the words."
   },
@@ -153,6 +173,7 @@
   },
   "attestation": {
     "checking": "Checking this device…",
+    "unavailable": "We couldn't check this phone right now. Check your connection, then try again.",
     "title": "Keeplas can't run on this device",
     "body": "To protect what you store, Keeplas only works on devices that pass a standard security check. This one didn't, so we can't create your account here.",
     "hint": "This often happens on devices that are modified (rooted or jailbroken), running a test build, or emulated. Try again on another phone.",
@@ -167,18 +188,27 @@
     "cta": "Continue with passkey",
     "lost": "Lost access?",
     "lostBody": "Your backup, your 24 words or your trusted contacts",
-    "failed": "We couldn't unlock your vault. Try again."
+    "failed": "We couldn't unlock your vault. Try again.",
+    "staleTitle": "Your keys were changed",
+    "staleBody": "Your vault's keys were rotated on another device, so this phone's keys no longer work. Open your vault again with your cloud backup, your 24 words or a QR code from your other device."
   },
   "otherOptions": {
     "title": "Other options",
-    "signOutBody": "Forgets this phone. You'll sign in again with your number."
+    "signOutBody": "You'll sign in again with your number, then open your vault with your cloud backup, your 24 words or your trusted contacts."
+  },
+  "signOut": {
+    "confirmTitle": "Sign out on this phone?",
+    "confirmBody": "Drafts on this phone will be deleted, and this phone will forget your vault key. To open your vault next time, you'll need your cloud backup, your 24 words or your trusted contacts.",
+    "confirmBodyNoBackup": "Drafts on this phone will be deleted, and this phone will forget your vault key. Your cloud backup is off, so next time only your 24 words or your trusted contacts can open your vault. Without them, it can't be opened again."
   },
   "recoveryKit": {
     "title": "Open your vault with your kit",
     "body": "This phone doesn't hold your vault key yet. Type the 24 words of your recovery kit, separated by spaces.",
     "placeholder": "word1 word2 word3 …",
+    "count": "{n}/24 words",
     "cta": "Open my vault",
     "invalid": "These words don't open your vault. Check each word and their order.",
+    "notKept": "Your vault key couldn't be saved behind this phone's screen lock. Try again, and confirm with your face, fingerprint or PIN if asked.",
     "contactsCta": "Ask my trusted contacts",
     "lastTimeIcloud": "You need your words only this once. When your vault opens, Keeplas keeps its key in your iCloud Keychain, so your next iPhone opens it without them.",
     "lastTimeGoogle": "You need your words only this once. When your vault opens, Keeplas keeps its key in your Google backup. Set up your next Android phone from that backup, and it opens your vault without them."
@@ -231,11 +261,14 @@
     "stepReview": "Our team checks your details",
     "stepReviewBody": "We compare what you told us with your account.",
     "stepWait": "72-hour safety wait",
-    "stepWaitBody": "About {n} h left, until {date}.",
+    "stepWaitBody": "About {count} h left, until {date}.",
     "stepWaitDone": "The wait is over.",
     "sendCode": "Send the code to {phone}",
     "statusNote": "Come back here anytime: this phone keeps track of your request.",
     "withdraw": "Withdraw my request",
+    "withdrawTitle": "Withdraw your request?",
+    "withdrawBody": "Your account stays on your old number. To move it, you'll make a new request and wait 72 hours again.",
+    "keep": "Keep my request",
     "startOver": "Make a new request",
     "notFound": "We can't find your request anymore.",
     "lapsed": "Your request has lapsed. Requests last 7 days.",
@@ -274,6 +307,8 @@
     "sentBody": "We'll reply to {contact}.",
     "invalidContact": "Enter a valid email or WhatsApp number, with its country code (e.g. +33).",
     "tooShort": "Your message must be at least 10 characters.",
+    "tooLong": "Your message is too long: keep it under 5,000 characters, and your name under 100.",
+    "tooMany": "You've sent several messages in a short time. Try again in an hour.",
     "missing": "Fill in every field."
   },
   "help": {
@@ -291,7 +326,7 @@
     "q": {
       "newPhone": {
         "question": "I'm switching to a new phone",
-        "answer": "Install Keeplas on the new phone and sign in with your number and the WhatsApp code. Tap \"Restore from iCloud\" (or Google): a WhatsApp code confirms it's you and your vault opens. Keep the old phone until then, then remove it in Settings › Devices."
+        "answer": "Install Keeplas on the new phone and sign in with your number and the WhatsApp code. Tap \"Restore from {provider}\": a WhatsApp code confirms it's you and your vault opens. Keep the old phone until then, then remove it in Settings › Devices."
       },
       "platform": {
         "question": "My new phone is another brand",
@@ -299,7 +334,7 @@
       },
       "lostPhone": {
         "question": "I lost my phone",
-        "answer": "Nobody can open your vault on it: it's locked by Face ID, fingerprint or the phone passcode. On a new phone, sign in and restore from iCloud or Google. Then remove the lost phone in Settings › Devices so its session ends."
+        "answer": "Nobody can open your vault on it: it's locked by your face, fingerprint or phone passcode. On a new phone, sign in and restore from {provider}. Then remove the lost phone in Settings › Devices so its session ends."
       },
       "lostNumber": {
         "question": "I lost my phone number",
@@ -315,7 +350,7 @@
       },
       "backup": {
         "question": "What does the cloud backup do?",
-        "answer": "Keeplas keeps an encrypted copy of your vault key, and what opens it stays in your iCloud or Google keychain. Neither Keeplas nor Apple or Google can open it alone. Restoring it also asks for a WhatsApp code."
+        "answer": "Keeplas keeps an encrypted copy of your vault key, and what opens it stays in your {provider} keychain. Neither Keeplas nor {account} can open it alone. Restoring it also asks for a WhatsApp code."
       },
       "kit": {
         "question": "Do I need the 24 words?",
@@ -357,26 +392,34 @@
     "title": "Recover with contacts",
     "body": "Two trusted contacts must approve. Keeplas then waits 72 hours before releasing the protected key.",
     "start": "Start recovery",
-    "codeBody": "Compare this code with your contacts by phone or video call. Never send it by message.",
+    "codeBody": "Each contact gets their own code. Read it to them on a phone or video call. Never send it by message.",
     "waiting": "Waiting",
     "restore": "Restore my vault",
     "cancel": "Cancel request",
+    "cancelTitle": "Cancel this recovery?",
+    "cancelBody": "Your contacts' approvals will be lost. To try again, you'll start a new request and wait 72 hours again.",
+    "keep": "Keep the request",
     "requestTitle": "Recovery request",
     "requestBody": "Your trusted contacts are reviewing your request. You'll be notified when the approvals are received and the protection window ends.",
-    "approvals": "{n} of 2 approvals received",
-    "approvalsLeft": "{n} more approval needed to restore your vault.",
+    "approvals": "{count} of 2 approvals received",
+    "approvalsLeft_one": "{count} more approval needed to restore your vault.",
+    "approvalsLeft": "{count} more approvals needed to restore your vault.",
     "approvalsDone": "Both approvals are in.",
     "approved": "Approved",
     "declined": "Declined",
     "windowTitle": "72-hour protection window",
     "windowStarted": "Started when you requested recovery.",
-    "hoursLeft": "{n}h left",
+    "hoursLeft": "{count}h left",
     "windowOver": "Window complete",
     "windowBody": "Your vault will be restored after 2 approvals and the end of the 72-hour window.",
     "expired": "Your last request expired before it was approved. You can start a new one.",
     "rejected": "{name} declined your request, so this recovery stopped. Call them to check it was really you, then start a new request.",
     "notReady": "You don’t have 2 trusted contacts ready yet, so they can’t open your vault. Use your recovery kit instead.",
-    "useKit": "Use my recovery kit"
+    "useKit": "Use my recovery kit",
+    "codeWaiting": "Your code for {name} shows up when they open the request.",
+    "otherPhone": "This request was started on another phone. The codes are shown there.",
+    "keyMismatch": "This request no longer matches the key this phone made, so no codes are shown. If you didn't start it on another phone, cancel it now.",
+    "codeTampered": "A code on this request wasn't made by this phone. Don't let anyone approve it: cancel the request and start a new one."
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -391,7 +434,7 @@
     "instructions": "Instructions",
     "other": "Other",
     "items": "{count} items",
-    "item": "1 item",
+    "items_one": "{count} item",
     "inbox": "To sort",
     "recent": "Recent items",
     "outbox": {
@@ -403,7 +446,7 @@
       "server": "Upload refused. Tap to see why"
     },
     "updated": "Updated {when}",
-    "itemWord": "item",
+    "itemsWord_one": "item",
     "itemsWord": "items",
     "addName": "What should we call you?",
     "addNameTitle": "Your first name",
@@ -420,10 +463,15 @@
     "agreeAfter": "."
   },
   "push": {
-    "title": "Turn on security alerts?",
-    "body": "Keeplas tells you when a new device signs in, when someone asks to recover your account, and when a Life check needs your answer.",
-    "allow": "Turn on",
-    "notNow": "Not now"
+    "title": "Security alerts",
+    "on": "On for new sign-ins, recovery requests and Life checks",
+    "off": "Off. Tap to get alerts about new sign-ins, recovery requests and Life checks.",
+    "blocked": "Off. Allow notifications for Keeplas in your phone's settings."
+  },
+  "storageFull": {
+    "title": "Storage full",
+    "body": "This change does not fit in your 100 MB. Nothing was lost. Upgrade to Lifetime for 10 GB.",
+    "bodyLifetime": "This change does not fit in your 10 GB. Nothing was lost."
   },
   "upgrade": {
     "title": "Upgrade to Lifetime",
@@ -447,7 +495,7 @@
     "errors": {
       "unavailable": "Lifetime can't be bought from {store} right now. Nothing was charged. Try again later.",
       "network": "Can't reach {store}. Nothing was charged. Check your connection and try again.",
-      "notAllowed": "Purchases are turned off on this phone (Screen Time or parental controls). Nothing was charged.",
+      "notAllowed": "Purchases are turned off on this phone, for example by parental controls. Nothing was charged.",
       "pending": "Your payment is waiting for approval. Lifetime turns on as soon as {store} confirms it.",
       "failed": "The payment couldn't be completed by {store}. Nothing was charged. Try again."
     },
@@ -506,10 +554,8 @@
     "activityBody": "Review sign-ins and recent activity.",
     "rotation": "Rotate encryption keys",
     "rotationBody": "New keys after a lost or untrusted device.",
-    "pinSheetTitle": "Your phone already guards Keeplas",
-    "pinSheetBody": "On this phone, Keeplas opens with your screen lock: Face ID, fingerprint or your phone's passcode. A separate Keeplas PIN is available on the web app, for computers.",
     "backup": "Cloud backup",
-    "backupBody": "Your vault comes back with your Apple or Google account."
+    "backupBody": "Your vault comes back with your {account} account."
   },
   "rotation": {
     "title": "Rotate encryption keys",
@@ -519,15 +565,17 @@
     "noRoot": "This phone does not hold the Root Key. Create a new recovery kit first.",
     "legacy": "Some legacy files still use the old Master Key directly. Open them once to migrate before rotating.",
     "failed": "Key rotation could not finish",
-    "note": "Keep Keeplas open and connected until every item reaches 100%.",
+    "contactKey": "Keeplas couldn't verify {name}'s security code, so nothing was changed. Check it in People, then try again.",
+    "note": "Keep Keeplas open and connected until every item reaches 100%. If it stops, start it again: it picks up where it left off.",
     "whenTitle": "When to do it",
     "when1": "A phone or computer that had your vault open was lost or stolen.",
     "when2": "You removed a device you don't trust.",
     "when3": "Keeplas support asked you to.",
     "whatTitle": "What happens",
-    "what1": "This phone creates new keys and re-locks every item and every share.",
-    "what2": "The old keys can no longer open your vault.",
-    "what3": "Nothing else changes: your items, contacts, passkey, 24 words and cloud backup stay the same.",
+    "what1": "This phone creates new keys and re-locks every item and every share with them.",
+    "what2": "The old keys and your old 24 words stop working. Your other phones and browsers are signed out until you open the vault on them again.",
+    "what3": "Your items and contacts stay the same, and your cloud backup is renewed. If you keep a paper recovery kit, make a new one in Settings.",
+    "what4": "What's inside each item is not re-encrypted: someone who already opened an item with the old keys could still read it if they got a copy. New items are safe.",
     "confirmTitle": "Rotate your keys now?",
     "confirmBody": "Keeplas will re-lock every item in your vault ({items} in total). It usually takes about a minute.",
     "confirmBodyShared": "Keeplas will re-lock every item in your vault ({items} in total) and what you share with your contacts ({contacts}). It usually takes about a minute.",
@@ -541,7 +589,8 @@
     "notReady": "Contact recovery not ready",
     "configure": "Set up contact recovery",
     "renew": "Renew recovery setup",
-    "needTwo": "You have {n} trusted contact with a Keeplas account. With fewer than 2, they can't help you get back in, so contact recovery is off for now.",
+    "needTwo_one": "You have {count} trusted contact with a Keeplas account. With fewer than 2, they can't help you get back in, so contact recovery is off for now.",
+    "needTwo": "You have {count} trusted contacts with a Keeplas account. With fewer than 2, they can't help you get back in, so contact recovery is off for now.",
     "requests": "Requests for me",
     "owner": "Vault owner",
     "review": "Review recovery request",
@@ -549,7 +598,16 @@
     "ofTwo": "{n} of 2",
     "active": "Active",
     "addContact": "Add a trusted contact",
-    "contactsBody": "Two trusted contacts can help you get back in if every other way is gone."
+    "contactsBody": "Two trusted contacts can help you get back in if every other way is gone.",
+    "request": {
+      "title": "Someone asked to recover your account",
+      "waiting": "Asked on {asked} from a new phone. Nothing is released before {deadline}, and only if 2 of your trusted contacts approve.",
+      "released": "Asked on {asked} from a new phone. Two trusted contacts approved and the 72 hours are over: that phone can now open your vault.",
+      "notMe": "It wasn't me, cancel it",
+      "cancelTitle": "Cancel this recovery?",
+      "cancelBody": "The request stops now and the new phone gets nothing more. If it was you, you can start a new one from that phone.",
+      "cancelled": "Recovery request cancelled"
+    }
   },
   "vaultRestored": {
     "title": "Vault restored",
@@ -586,7 +644,12 @@
     "stillDifferent": "Still different? Decline",
     "stillDifferentBody": "{name} gets a security alert and the request stops.",
     "decline": "Decline request",
-    "compareAgain": "Compare again"
+    "compareAgain": "Compare again",
+    "waitingForPhone": "Waiting for {name}'s new phone. Ask {name} to open Keeplas on it: your code appears here a moment later.",
+    "openedElsewhere": "You opened this request on another phone, so the code is shown there. If it wasn't you, decline the request.",
+    "unverified": "Keeplas couldn't check the code of this request. Don't approve it: decline, then call {name} on a number you already had.",
+    "goneTitle": "This request is no longer open",
+    "goneBody": "It was already answered, cancelled or has expired. There's nothing for you to do."
   },
   "devices": {
     "title": "Devices",
@@ -595,7 +658,7 @@
     "addedOn": "Added {date}",
     "remove": "Remove",
     "removeTitle": "Remove {label}?",
-    "removeBody": "It is signed out and can only sign in again after a new pairing from this phone. The passkey created on this device is deleted too: if it is synced (iCloud, Google), it will stop working on your other devices, which will need a new one.",
+    "removeBody": "It is signed out and can only sign in again after a new pairing from this phone. The passkey created on this device is deleted too: if it is synced, it will stop working on your other devices, which will need a new one.",
     "linkComputer": "Link a browser or phone"
   },
   "scan": {
@@ -618,7 +681,15 @@
     "deviceOn": "{browser} on {os}",
     "unknownLocation": "Unknown location",
     "today": "Today at {time}",
-    "confirmTitle": "Confirm it's you to log this browser in"
+    "confirmTitle": "Confirm it's you to log this browser in",
+    "title": "Log this browser in?",
+    "body": "A browser is asking to open your Keeplas vault. Approving gives it full access.",
+    "codeLabel": "Code",
+    "codeOnComputer": "Code on your computer",
+    "codeBody": "Your computer shows a code next to the QR code. It must be the same.",
+    "warning": "Approve only if you are logging in on this computer right now and it shows this code. Never approve a code or link someone sent you.",
+    "approve": "Approve",
+    "decline": "Decline"
   },
   "connected": {
     "title": "You're logged in",
@@ -665,7 +736,7 @@
     "body": "The unknown device has no access anymore. Here's what we did:",
     "deviceRemoved": "Device removed",
     "sessionsEnded": "{count} sessions ended",
-    "sessionEnded": "1 session ended",
+    "sessionsEnded_one": "{count} session ended",
     "keysRotated": "Keys rotated",
     "keysRotatedBody": "Vault re-encrypted on this phone",
     "keysPending": "Key rotation pending",
@@ -743,9 +814,9 @@
     "shutter": "Take picture",
     "encryptedTitle": "Encrypted on this phone",
     "scanEncryptedBody": "Nothing is uploaded before encryption.",
-    "onePage": "1 page",
-    "pages": "{n} pages",
-    "page": "Page {n}",
+    "pages_one": "{count} page",
+    "pages": "{count} pages",
+    "removePage": "Remove page {n}",
     "voiceTitle": "Voice note",
     "recording": "Recording…",
     "paused": "Paused",
@@ -780,11 +851,10 @@
       "offlineBody": "You're offline. The encrypted copy is safe on this phone and uploads as soon as you're back online.",
       "failedBody": "The upload stopped for an unexpected reason. Your encrypted copy is still safe on this phone. Try again.",
       "quotaBody": "Your storage is full: this item ({size}) does not fit in your space. Nothing was lost. Upgrade to Lifetime and the upload resumes on its own.",
-      "quotaBodyLifetime": "Your storage is full: this item ({size}) does not fit in your space. Nothing was lost. Free up space in Settings to make room.",
+      "quotaBodyLifetime": "Your storage is full: this item ({size}) does not fit in your space. Nothing was lost. Contact support and we'll help you make room.",
       "protected": "Protected",
       "protectedWaiting": "Waiting for verification…",
       "protectedBody": "Your item is encrypted and safely stored.",
-      "manageStorage": "Manage storage",
       "background": "Continue in background",
       "offlineFailedBody": "The connection was lost. Your encrypted copy is safe on this phone and will upload on its own as soon as you are back online.",
       "serverBody": "The server refused the upload. Your encrypted copy is safe on this phone. Try again in a moment; if it happens again, contact support.",
@@ -807,12 +877,15 @@
     "resetBody": "Your {time} recording will be deleted from this phone and you can record again. This cannot be undone.",
     "resetConfirm": "Delete and record again",
     "resetKeep": "Keep this recording",
+    "discardRecordingTitle": "Discard this recording?",
+    "discardRecordingBody": "Your {time} recording isn't saved yet. If you leave, it will be deleted from this phone.",
+    "discardRecording": "Discard",
     "newNoteTitle": "New note",
     "reviewScanTitle": "Review scan",
     "noteTitlePlaceholder": "Give your note a title",
     "noteBodyPlaceholder": "Write something…",
-    "pagesMeta": "{n} pages · PDF",
-    "onePageMeta": "1 page · PDF",
+    "pagesMeta": "{count} pages · PDF",
+    "pagesMeta_one": "{count} page · PDF",
     "suggestedTitle": "Suggested title",
     "addNote": "Add a note",
     "addNoteHint": "Your trusted people will see this note with the document.",
@@ -841,23 +914,21 @@
     "addDocumentTitle": "Add a document",
     "fromFiles": "From Files · {type}",
     "chooseAnother": "Choose another file",
-    "whoCanSee": "Who can see it",
     "neverSees": "Encrypted on your phone before it is uploaded. Keeplas never sees the file.",
     "modeAuto": "Auto",
     "modeManual": "Manual",
     "autoUnavailableTitle": "Automatic scan unavailable",
     "autoUnavailableBody": "This phone cannot open the automatic document scanner. Take each page with the camera instead.",
     "allContacts": "All trusted contacts",
-    "contactKeyTitle": "Couldn't share with {name}",
-    "contactKeyBody": "Keeplas couldn't verify {name}'s security code, so the item wasn't saved. Check it in People, then try again.",
+    "contactKeyTitle": "Couldn't add {name} as a recipient",
+    "contactKeyBody": "Keeplas couldn't verify {name}'s encryption key, so nothing was saved. Choose other recipients, or ask {name} to open Keeplas, then try again. If it keeps happening, contact support.",
     "preparingVideo": "Preparing the video",
     "preparingVideoPct": "Making it lighter to load fast, with no visible loss · {pct}%"
   },
   "permissions": {
     "cameraTitle": "Camera access is off",
     "cameraBody": "Allow camera access to scan documents and QR codes.",
-    "photosTitle": "Photo access is off",
-    "photosBody": "Allow photo access to add images to your vault.",
+    "allowCamera": "Allow camera",
     "microphoneTitle": "Microphone access is off",
     "microphoneBody": "Allow microphone access to record voice notes."
   },
@@ -865,7 +936,7 @@
     "title": "Item details",
     "decrypting": "Opening item…",
     "category": "Category",
-    "share": "Share",
+    "share": "Recipients",
     "opening": "Decrypting on this phone…",
     "play": "Play",
     "pause": "Pause",
@@ -875,7 +946,7 @@
     "missingTitle": "This item isn't available",
     "missingBody": "It may have been deleted on another device, or it belongs to another account. Go back to your vault to see what's there now.",
     "lockedTitle": "This item can't be unlocked on this phone",
-    "lockedBody": "Its key doesn't match the vault key on this phone, so Keeplas can't decrypt it here. Tap Lock vault, unlock with Face ID or your fingerprint, then open this item again. If it still fails, contact support with the reference below.",
+    "lockedBody": "Its key doesn't match the vault key on this phone, so Keeplas can't decrypt it here. Tap Lock vault, unlock with your face or fingerprint, then open this item again. If it still fails, contact support with the reference below.",
     "fileErrors": {
       "offline": {
         "title": "You're offline",
@@ -914,14 +985,14 @@
     "fileSize": "Size",
     "added": "Added",
     "updated": "Updated",
-    "onePage": "1 page",
-    "pages": "{n} pages",
+    "pages_one": "{count} page",
+    "pages": "{count} pages",
     "rotate": "Rotate",
     "renameTitle": "Rename",
     "titleRow": "Title",
     "addedOn": "Added {date}",
     "addPeople": "Add people",
-    "addPeopleBody": "Share with trusted people",
+    "addPeopleBody": "Choose who receives it after you're gone",
     "activity": "Activity",
     "activityAdded": "Added to Keeplas",
     "activityEncrypted": "Encrypted on device",
@@ -929,23 +1000,24 @@
     "activityProtected": "Protected and ready",
     "byYou": "You",
     "byKeeplas": "Keeplas",
-    "shareTitle": "Who can see it",
-    "shareBody": "Choose the trusted contacts who can open this item, or none to keep it for all of them. Keeplas encrypts it for each of them on this phone.",
+    "shareTitle": "Who receives it",
+    "shareBody": "Choose the trusted contacts who receive this item if your vault is released after your contacts confirm they can't reach you, or none for all of them. Keeplas encrypts it for each of them on this phone.",
     "shareNobody": "No trusted contact has joined Keeplas yet. Invite someone first.",
     "addTrustedPerson": "Add a trusted person",
-    "shareFailedTitle": "Sharing not saved",
-    "shareFailedBody": "Keeplas could not encrypt this item for everyone you chose. Check your connection, or check that each contact's security code is verified, then try again.",
+    "shareFailedTitle": "Recipients not saved",
+    "shareFailedBody": "Keeplas could not encrypt this item for everyone you chose. Check your connection, then try again.",
     "downloading": "Downloading… {pct}%",
     "edit": "Edit",
     "history": "History",
-    "historyCount": "{n} earlier versions",
+    "historyCount_one": "{count} earlier version",
+    "historyCount": "{count} earlier versions",
     "historyEmpty": "No changes yet",
     "archivedOn": "Archived on {date}. It is no longer in your vault or passed on to anyone.",
     "uploadingFiles": "Uploading"
   },
   "people": {
     "title": "Trusted people",
-    "body": "They help you recover access, confirm a death if needed, and receive the items you share with them.",
+    "body": "They help you recover access, confirm you can't be reached if needed, and receive the items you share with them.",
     "add": "Add",
     "trusted": "Trust contacts",
     "empty": "No trusted contacts yet.",
@@ -959,31 +1031,37 @@
     "orManual": "or enter manually",
     "whichNumber": "Which number?",
     "sendInvite": "Send invitation",
+    "invitePreview": "Keeplas will send {name} a WhatsApp message saying \"{inviter} invited you as a trusted contact on Keeplas\", with a link to the invitation.",
+    "invitePreviewEmail": "Keeplas will send {name} a WhatsApp message and an email saying \"{inviter} invited you as a trusted contact on Keeplas\", with a link to the invitation.",
     "status": {
       "pending": "Invited",
       "accepted": "Active",
       "declined": "Declined",
       "revoked": "Removed"
     },
-    "ready": "{n} ready",
+    "ready": "{count} ready",
     "readyBody": "Any 2 of your contacts can help you recover your account.",
-    "quorumWarning": "Nothing can be passed on yet: {required} trusted people must confirm, and {available} accepted so far. Add someone you trust.",
+    "quorumWarning_one": "Nothing can be passed on yet: {count} trusted person must confirm, and {available} accepted so far. Add someone you trust.",
+    "quorumWarning": "Nothing can be passed on yet: {count} trusted people must confirm, and {available} accepted so far. Add someone you trust.",
     "replace": "Replace",
     "replaceTitle": "Replace {name}?",
-    "replaceBody": "{name} will no longer be able to help you recover your account. You can then invite someone new.",
+    "replaceBody": "{name} will no longer be able to help you recover your account or receive the items you share with them. You can then invite someone new.",
+    "moreFor": "More options for {name}",
     "resend": "Resend invitation",
     "resent": "Invitation sent again.",
     "remove": "Remove",
     "removeTitle": "Remove {name}?",
-    "removeBody": "{name} will no longer be able to help you recover your account.",
+    "removeBody": "{name} will no longer be able to help you recover your account or receive the items you share with them.",
     "addTrust": "Add a trusted contact",
     "emailInvalid": "Enter a valid email address, like name@example.com.",
     "alreadyInvited": "This person is already one of your contacts.",
+    "selfInvite": "You can't add yourself. Invite someone you trust.",
+    "tooManyInvites": "You've sent this person enough invitations for today. Try again tomorrow.",
     "inviteFailed": "The invitation couldn't be sent. Check your connection and try again.",
     "continue": "Continue",
     "edit": "Edit details",
     "permissions": "Permissions summary",
-    "permRecovery": "Can help you recover access and confirm a death.",
+    "permRecovery": "Can help you recover access and confirm you can't be reached.",
     "permReceive": "Receives only the items you share with them, after you're gone.",
     "permNoFiles": "Cannot read anything you don't share with them.",
     "editTitle": "Edit contact",
@@ -994,6 +1072,7 @@
     "notFound": "This contact no longer exists."
   },
   "categories": {
+    "unnamed": "Unnamed category",
     "new": "New category",
     "newBody": "Category names are encrypted like the items inside them.",
     "name": "Category name",
@@ -1003,14 +1082,15 @@
     "body": "Sort your vault your way. Deleting a category deletes its items too: you can restore them from Archives.",
     "inboxBody": "Where new items land. It can't be deleted.",
     "rename": "Rename category",
-    "items": "{n} items",
+    "items_one": "{count} item",
+    "items": "{count} items",
     "move": "Change category",
     "delete": "Delete",
     "deleteCategory": "Delete category",
     "deleteTitle": "Delete {name}?",
     "deleteEmptyBody": "This category is empty.",
-    "deleteItemsOne": "Its item will be deleted too. You can still restore it from Settings → Archives.",
-    "deleteItems": "Its {n} items will be deleted too. You can still restore them from Settings → Archives.",
+    "deleteItems_one": "Its item will be deleted too. You can still restore it from Settings → Archives.",
+    "deleteItems": "Its {count} items will be deleted too. You can still restore them from Settings → Archives.",
     "removed": "Deleted categories",
     "restore": "Tap to restore",
     "search": "Search in {name}"
@@ -1038,6 +1118,13 @@
     "confirmedBody": "Your countdown starts over. Next Life check on {date}.",
     "confirmedBodyNoDate": "Your countdown starts over.",
     "lastConfirmed": "Last confirmed on {date}",
+    "grace": {
+      "title": "Emergency access in progress",
+      "body": "Your trusted contacts said they can't reach you. Unless you cancel, they get the items you assigned them on {date}.",
+      "endsIn": "Time left to cancel",
+      "cancel": "I'm okay, cancel emergency access",
+      "cancelled": "Emergency access cancelled"
+    },
     "travel": "Travel mode",
     "travelOn": "Paused for your trip",
     "travelOff": "Pause checks for 30 days",
@@ -1109,8 +1196,10 @@
     "photo": "Photo",
     "video": "Video",
     "voiceNote": "Voice note",
-    "attachment": "1 attachment",
-    "attachments": "{n} attachments",
+    "attachments_one": "{count} attachment",
+    "attachments": "{count} attachments",
+    "sharedWith_one": "Shared with {count} person",
+    "sharedWith": "Shared with {count} people",
     "noResults": "No items match your search.",
     "time": {
       "today": "Today",
@@ -1131,10 +1220,10 @@
     "emptyTitle": "Nothing shared with you yet",
     "emptyBody": "When someone makes you a trusted contact, their shared items appear here.",
     "trusted": "You are a trusted contact",
-    "laterOne": "Locked. It opens only if {name} stops answering their Life check, 1 trusted contact confirms it, and 72 hours pass with no cancellation.",
-    "later": "Locked. It opens only if {name} stops answering their Life check, {n} trusted contacts confirm it, and 72 hours pass with no cancellation.",
-    "oneItem": "1 item left for you",
-    "items": "{n} items left for you",
+    "later_one": "Locked. It opens only if {name} stops answering their Life check, {count} trusted contact confirms it, and 72 hours pass with no cancellation.",
+    "later": "Locked. It opens only if {name} stops answering their Life check, {count} trusted contacts confirm it, and 72 hours pass with no cancellation.",
+    "items_one": "{count} item left for you",
+    "items": "{count} items left for you",
     "accessNow": "Access now",
     "readOnly": "Read-only: only what {name} left for you, decrypted on this phone.",
     "messageFrom": "A message from {name}",
@@ -1181,7 +1270,7 @@
     "why1": "It's how you sign in to Keeplas. Your account always needs one.",
     "why2": "It syncs with your {account} account, so on a new phone you sign in and your vault comes back with your cloud backup.",
     "why3": "Without it, a code sent to your WhatsApp would be enough to sign in.",
-    "stop": "To stop using Keeplas, delete your account in Settings › Account."
+    "stop": "To stop using Keeplas, go to Settings › Delete my account."
   },
   "activity": {
     "subtitle": "Sign-ins, devices and changes to your vault, newest first.",
@@ -1228,8 +1317,8 @@
     "cta": "Set up succession plan",
     "reminders": "Owner reminders",
     "remindersBody": "We'll remind you periodically to keep your information up to date.",
-    "contacts": "2 trusted contacts confirm death",
-    "contactsBody": "Both contacts must confirm before any access is granted.",
+    "contacts": "2 trusted contacts confirm they can't reach you",
+    "contactsBody": "At least 2 of your trusted contacts must confirm before any access is granted.",
     "grace": "72-hour grace period",
     "graceBody": "A waiting period gives you time to respond if needed.",
     "assigned": "Only assigned content released",
@@ -1266,6 +1355,7 @@
     "progress": "Preparing files: {done} of {total}",
     "keepOpen": "Keep Keeplas open until it finishes.",
     "background": "You can leave this screen or Keeplas: you’ll get a notification when the archive is ready.",
+    "backgroundComeBack": "You can leave this screen or Keeplas: come back to Keeplas to get your archive.",
     "notifyRunning": "Decrypting your vault on this phone",
     "notifyReady": "Your archive is ready. Open Keeplas to save or share it.",
     "notifyFailed": "The export stopped before the end. Open Keeplas to try again.",
@@ -1283,7 +1373,8 @@
       "contacts": "Trusted contacts",
       "contactsBody": "Names and contact details only"
     },
-    "skipped": "{n} item(s) could not be opened on this phone and are not in the archive. Try exporting from the web app to include them."
+    "skipped_one": "{count} item could not be opened on this phone and is not in the archive. Try exporting from the web app to include it.",
+    "skipped": "{count} items could not be opened on this phone and are not in the archive. Try exporting from the web app to include them."
   },
   "deleteAccount": {
     "title": "Delete my account",
@@ -1308,6 +1399,8 @@
     "scheduledTitle": "Your account will be deleted",
     "scheduledBody": "Everything will be erased for good on {date}. Until then you can still use Keeplas and cancel the deletion.",
     "cancel": "Cancel the deletion",
+    "cancelled": "Deletion cancelled. Your account stays.",
+    "verifyFailed": "Keeplas couldn't confirm it's you, so nothing was deleted. Try again.",
     "failed": "Keeplas could not save your request. Check your connection and try again."
   },
   "pin": {
@@ -1317,7 +1410,8 @@
     "unlockTitle": "Keeplas code",
     "unlockBody": "Enter your {n}-digit code, then confirm with your face or fingerprint.",
     "required": "Enter your Keeplas code.",
-    "wrong": "Wrong code. {n} more tries before a 1-minute pause.",
+    "wrong_one": "Wrong code. {count} more try before a 1-minute pause.",
+    "wrong": "Wrong code. {count} more tries before a 1-minute pause.",
     "locked": "Too many wrong codes. Try again in {seconds} s.",
     "wipedTitle": "Your vault key was removed from this phone",
     "wipedBody": "After 10 wrong codes Keeplas removes the key from this phone to protect it. Your vault is safe: open it again from your cloud backup or with your 24 words.",
@@ -1353,8 +1447,10 @@
     "choose": "Choose an archive",
     "reading": "Reading the archive…",
     "progress": "Adding items: {done} of {total}",
-    "done": "{n} item(s) added. Their files upload in the background; you can follow them on Home.",
-    "skippedFiles": "{n} file(s) could not be read from the archive and were left out.",
+    "done_one": "{count} item added. Its files upload in the background; you can follow them on Home.",
+    "done": "{count} items added. Their files upload in the background; you can follow them on Home.",
+    "skippedFiles_one": "{count} file could not be read from the archive and was left out.",
+    "skippedFiles": "{count} files could not be read from the archive and were left out.",
     "notKeeplas": "This file is not a Keeplas export. Choose the ZIP made with \"Export my data\", without unzipping and zipping it again.",
     "failed": "The import stopped before the end. Items already added stay in your vault. Check your storage and try again.",
     "openVault": "Open my vault",
@@ -1365,7 +1461,7 @@
     "body": "Your other phone sends your vault key to this one, encrypted end to end. Keeplas never sees it.",
     "step1": "Open Keeplas on the phone where you’re signed in.",
     "step2": "Go to Settings → Devices → {menu}.",
-    "step3": "Scan this code, then approve.",
+    "step3": "Scan this code, check it shows the code below, then approve.",
     "expires": "This code works for 2 minutes.",
     "preparing": "Preparing a secure code…",
     "opening": "Opening your vault on this phone…",
@@ -1373,7 +1469,8 @@
     "rejected": "The other phone declined. If it wasn’t you, secure your account from that phone.",
     "failed": "This phone couldn’t be linked. Check your connection, then generate a new code.",
     "retry": "Generate a new code",
-    "note": "Only a phone already signed in to your account can approve this code."
+    "note": "Only a phone already signed in to your account can approve this code.",
+    "codeDetail": "Approve on the other phone only if it shows this same code."
   },
   "itemEdit": {
     "title": "Edit",
@@ -1497,7 +1594,8 @@
       "uploadFailed": "The photo couldn't be uploaded. Try again.",
       "imageTooLarge": "This image is too large. Choose one under 5 MB.",
       "tooYoung": "You must be at least 18 to use Keeplas.",
-      "invalidBirthday": "This date of birth isn't valid."
+      "invalidBirthday": "This date of birth isn't valid.",
+      "reviewAccount": "This account is for app review: its number and email can't be changed."
     }
   },
   "setupPin": {

@@ -69,17 +69,19 @@
       "step1Detail": "sur votre téléphone",
       "step2": "Scannez le QR code",
       "step2Detail": "avec l'application",
-      "step3": "C'est fait",
-      "step3Detail": "ce navigateur ouvre votre coffre",
+      "step3": "Vérifiez le code",
+      "step3Detail": "puis approuvez sur votre téléphone",
       "expiresIn": "Expire dans",
       "trust": "Rester connecté",
       "trustDetail": "Sur un ordinateur partagé, laissez décoché.",
       "expired": "Ce code a expiré.",
       "newCode": "Générer un nouveau code",
-      "rejected": "Votre téléphone a bloqué cette connexion car le code ne correspondait pas à ce navigateur. Actualisez la page pour obtenir un nouveau code.",
+      "rejected": "Cette connexion a été refusée sur votre téléphone, ou le code ne correspondait pas à ce navigateur. Actualisez la page pour obtenir un nouveau code.",
       "error": "Un problème est survenu pendant l'association de ce navigateur.",
       "retry": "Réessayer",
-      "linking": "Association de ce navigateur…"
+      "linking": "Association de ce navigateur…",
+      "codeLabel": "Code",
+      "codeDetail": "N'approuvez que si votre téléphone affiche le même code."
     }
   },
   "chrome": {
@@ -843,7 +845,7 @@
       "savePin": "Enregistrer mon code",
       "whyTitle": "Pourquoi c'est important",
       "why1": "Sans code, vous associez à nouveau ce navigateur depuis votre téléphone à chaque verrouillage de Keeplas.",
-      "why2": "La clé de votre coffre reste chiffrée dans ce navigateur : seuls ces {n} chiffres l'ouvrent.",
+      "why2": "La clé de votre coffre reste chiffrée dans ce navigateur. Elle ne s'ouvre qu'avec ces {n} chiffres, vérifiés par Keeplas : une copie du navigateur seule ne suffit pas.",
       "why3": "Après 10 essais incorrects, Keeplas retire la clé de ce navigateur. Votre coffre reste protégé."
     },
     "deviceUnlock": {
@@ -996,8 +998,7 @@
       "encrypted": "Chiffré",
       "download": "Télécharger",
       "decrypting": "Déchiffrement…",
-      "documentReady": "Document prêt. Ouvrez-le ou téléchargez-le pour le consulter.",
-      "open": "Ouvrir",
+      "documentReady": "Document prêt. Téléchargez-le pour le consulter.",
       "enlarge": "Agrandir",
       "close": "Fermer"
     }
@@ -1871,6 +1872,9 @@
   },
   "lifeCheckConfirm": {
     "badge": "Life Check",
+    "promptTitle": "Confirmez que vous allez bien",
+    "promptBody": "Appuyez sur le bouton ci-dessous pour répondre à votre Life Check et réinitialiser votre compte à rebours.",
+    "confirm": "Je vais bien",
     "okTitle": "Merci, vous êtes confirmé",
     "okBody": "Nous avons enregistré que vous allez bien et réinitialisé votre compte à rebours. Vous pouvez fermer cet onglet en toute sécurité.",
     "invalidTitle": "Ce lien est invalide ou expiré",
@@ -2130,11 +2134,12 @@
     "request": {
       "title": "Demande de récupération en cours",
       "approved": "{count} sur 2 validations",
-      "code": "Code de récupération",
+      "code": "Codes de récupération",
       "hoursLeft": "{hours} heures restantes",
       "hourLeft": "1 heure restante",
       "windowEnded": "Fenêtre de protection terminée",
-      "cancel": "Annuler la demande"
+      "cancel": "Annuler la demande",
+      "codeOnPhone": "Affichés sur le téléphone qui a lancé la récupération, un par contact."
     },
     "cancelDialog": {
       "title": "Annuler cette demande de récupération ?",
@@ -2204,6 +2209,9 @@
         "device_revoked": "Appareil révoqué",
         "device_not_me": "Appareil inconnu bloqué",
         "pairing_session_approved": "Navigateur associé",
+        "device_pin_enrolled": "Code PIN configuré sur un navigateur",
+        "device_pin_unlocked": "Déverrouillé avec un code PIN",
+        "device_pin_removed": "Code PIN retiré d'un navigateur",
         "passkey_registered": "Clé d'accès ajoutée",
         "passkey_removed": "Clé d'accès supprimée",
         "vault_item_created": "Élément ajouté",

@@ -2,6 +2,10 @@
 // Keychain (end-to-end encrypted) restores it on a new iPhone signed in to the
 // same Apple account. expo-secure-store only writes device-bound items.
 // Deleting the item is half of turning cloud backup off.
+//
+// Synchronizable items cannot be *ThisDeviceOnly; WhenUnlocked is the
+// strictest class that still syncs. The CBK is only used in the foreground
+// (turning the backup on, restoring), so a locked phone never needs it.
 import ExpoModulesCore
 import Foundation
 import Security
@@ -11,6 +15,20 @@ private let service = "com.keeplas.cloud-backup"
 public class KeeplasCloudKeyModule: Module {
   public func definition() -> ModuleDefinition {
     Name("KeeplasCloudKey")
+
+    // CBKs written before were AfterFirstUnlock (readable on a locked phone
+    // once unlocked after boot). Best effort: a phone that is locked right
+    // now upgrades at a later launch.
+    OnCreate {
+      let query: [CFString: Any] = [
+        kSecClass: kSecClassGenericPassword,
+        kSecAttrService: service,
+        kSecAttrSynchronizable: kSecAttrSynchronizableAny,
+        kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlock,
+      ]
+      let update: [CFString: Any] = [kSecAttrAccessible: kSecAttrAccessibleWhenUnlocked]
+      SecItemUpdate(query as CFDictionary, update as CFDictionary)
+    }
 
     // iCloud Keychain sync is always end-to-end encrypted.
     AsyncFunction("isEndToEndEncrypted") { () -> Bool in
@@ -24,8 +42,7 @@ public class KeeplasCloudKeyModule: Module {
         kSecAttrService: service,
         kSecAttrAccount: key,
         kSecAttrSynchronizable: kCFBooleanTrue as Any,
-        // Synchronizable items cannot use a *ThisDeviceOnly accessibility.
-        kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlock,
+        kSecAttrAccessible: kSecAttrAccessibleWhenUnlocked,
         kSecValueData: Data(value.utf8),
       ]
       let status = SecItemAdd(query as CFDictionary, nil)

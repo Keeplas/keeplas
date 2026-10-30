@@ -8,12 +8,13 @@ import { useChangeLanguage } from "@/lib/use-change-language";
 import { radius, welcomeSky } from "@/theme";
 import { Radio } from "./controls";
 import { Icon } from "./icon";
+import { Backdrop } from "./sheet";
 import { Text } from "./text";
 
 /** Figma `Language Segment`: EN | FR pill (M01-1). */
 export function LanguageSegment() {
   const { colors } = useTheme();
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const changeLanguage = useChangeLanguage();
   return (
     <View
@@ -26,6 +27,7 @@ export function LanguageSegment() {
           <Pressable
             key={code}
             accessibilityRole="radio"
+            accessibilityLabel={t(`languageNames.${code}`)}
             accessibilityState={{ selected: active }}
             onPress={() => changeLanguage(code)}
             hitSlop={{ top: 6, bottom: 6 }}
@@ -65,6 +67,7 @@ export function LanguageDropdown({ inverse = false }: { inverse?: boolean }) {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("common.language")}
+        accessibilityValue={{ text: t(`languageNames.${language}`) }}
         onPress={() => setOpen(true)}
         hitSlop={8}
         style={[
@@ -88,7 +91,7 @@ export function LanguageDropdown({ inverse = false }: { inverse?: boolean }) {
         animationType="fade"
         onRequestClose={() => setOpen(false)}
       >
-        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
+        <Backdrop style={styles.backdrop} onDismiss={() => setOpen(false)}>
           <View
             style={[
               styles.menu,
@@ -108,7 +111,7 @@ export function LanguageDropdown({ inverse = false }: { inverse?: boolean }) {
               />
             ))}
           </View>
-        </Pressable>
+        </Backdrop>
       </Modal>
     </>
   );

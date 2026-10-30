@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { approveRecovery, recoveryCode } from "@keeplas/crypto/social";
+import { approveRecovery } from "@keeplas/crypto/social";
 
 import VerificationCall from "../../../../assets/illustrations/verification-call.svg";
 import { AppHeader } from "@/components/app-header";
@@ -12,17 +12,24 @@ import { Button } from "@/components/button";
 import { Checkbox } from "@/components/controls";
 import { Icon, type IconName } from "@/components/icon";
 import { Screen } from "@/components/screen";
+import { StateMessage } from "@/components/state-message";
 import { Callout, Card, IconTile } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { withOwnerSecret } from "@/crypto/owner-keys";
+import {
+  forgetContactCode,
+  secureCodeStore,
+  serialQueue,
+  syncContactCode,
+  type ContactCodeState,
+} from "@/features/recovery-codes";
 import { useVaultData } from "@/features/vault/vault-data";
+import { spacedCode } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius } from "@/theme";
-
-const spaced = (code: string) =>
-  code.length === 6 ? `${code.slice(0, 3)} ${code.slice(3)}` : code;
 
 /** M02-3 Contact recovery approval, with the M09-5 "codes don't match" step. */
 export default function RecoveryApproval() {
@@ -35,36 +42,57 @@ export default function RecoveryApproval() {
   const { ownerKeys } = useVaultData();
   const approve = useAuditedMutation(api.recovery.approve);
   const reject = useAuditedMutation(api.recovery.reject);
-  const [code, setCode] = useState("");
+  const sendCodeNonce = useAuditedMutation(api.recovery.sendCodeNonce);
+  const [exchange, setExchange] = useState<ContactCodeState>({
+    kind: "waiting",
+  });
+  const [queue] = useState(serialQueue);
   const [verified, setVerified] = useState(false);
   const [mismatch, setMismatch] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Answered: the request leaves getRequestsForMe while the screen closes.
+  const [answered, setAnswered] = useState(false);
   const name = request?.ownerName || t("recoveryCenter.owner");
+  const code = exchange.kind === "ready" ? exchange.code : "";
 
   useEffect(() => {
-    if (request)
-      void recoveryCode(request.requestId, request.newDevicePublicKey).then(
-        setCode,
-      );
-  }, [request]);
+    if (!request) return;
+    void queue(() =>
+      syncContactCode({
+        store: secureCodeStore,
+        request,
+        answer: (contactNonce) =>
+          sendCodeNonce({ requestId: request.requestId, contactNonce }),
+      }),
+    )
+      .then(setExchange)
+      .catch(() => undefined); // Retried on the next update of the request.
+  }, [request, queue, sendCodeNonce]);
 
   async function accept() {
-    if (!request) return;
+    if (!request || exchange.kind !== "ready") return;
     setBusy(true);
     try {
       const keys = await ownerKeys();
-      if (!keys.identitySecretKey) throw new Error("Identity key unavailable");
-      const sealed = await approveRecovery({
-        wrappedShare: request.wrappedShare,
-        ownerUserId: request.ownerUserId,
-        contactId: request.contactId,
-        generation: request.generation,
-        requestId: request.requestId,
-        devicePublicKey: request.newDevicePublicKey,
-        contactSecretKey: keys.secretKey,
-        contactIdentitySecretKey: keys.identitySecretKey,
-      });
+      const identitySecretKey = keys.identitySecretKey;
+      if (!identitySecretKey) throw new Error("Identity key unavailable");
+      // The share may be sealed to a key I retired by rotating since.
+      const sealed = await withOwnerSecret(keys, (contactSecretKey) =>
+        approveRecovery({
+          wrappedShare: request.wrappedShare,
+          ownerUserId: request.ownerUserId,
+          contactId: request.contactId,
+          generation: request.generation,
+          requestId: request.requestId,
+          // The key the code was checked against, not a later copy.
+          devicePublicKey: exchange.devicePublicKey,
+          contactSecretKey,
+          contactIdentitySecretKey: identitySecretKey,
+        }),
+      );
       await approve({ requestId: request.requestId, ...sealed });
+      await forgetContactCode(secureCodeStore, request.requestId);
+      setAnswered(true);
       router.back();
     } catch {
       toast({
@@ -85,6 +113,8 @@ export default function RecoveryApproval() {
         requestId: request.requestId as Id<"recovery_requests">,
         reason: "code_mismatch",
       });
+      await forgetContactCode(secureCodeStore, request.requestId);
+      setAnswered(true);
       router.back();
     } catch {
       toast({ variant: "error", title: t("common.genericError") });
@@ -96,6 +126,27 @@ export default function RecoveryApproval() {
   const header = (
     <AppHeader onBack={mismatch ? () => setMismatch(false) : router.back} />
   );
+
+  if (requests === undefined || answered) {
+    return (
+      <Screen header={header} center>
+        <ActivityIndicator color={colors["text.muted"]} />
+      </Screen>
+    );
+  }
+  if (!request) {
+    return (
+      <Screen header={header} center>
+        <StateMessage
+          icon="info"
+          tone="info"
+          title={t("approval.goneTitle")}
+          body={t("approval.goneBody")}
+          primary={{ label: t("common.back"), onPress: router.back }}
+        />
+      </Screen>
+    );
+  }
 
   if (mismatch) {
     const steps: { icon: IconName; title: string; body: string }[] = [
@@ -145,20 +196,22 @@ export default function RecoveryApproval() {
         <Text variant="body" color="text.muted">
           {t("approval.mismatchBody", { name })}
         </Text>
-        <View
-          style={[
-            styles.codeCard,
-            {
-              backgroundColor: colors["bg.surface"],
-              borderColor: colors["border.strong"],
-            },
-          ]}
-        >
-          <Text variant="caption" color="text.muted">
-            {t("approval.codeOnScreen")}
-          </Text>
-          <Text variant="code">{spaced(code)}</Text>
-        </View>
+        {code ? (
+          <View
+            style={[
+              styles.codeCard,
+              {
+                backgroundColor: colors["bg.surface"],
+                borderColor: colors["border.strong"],
+              },
+            ]}
+          >
+            <Text variant="caption" color="text.muted">
+              {t("approval.codeOnScreen")}
+            </Text>
+            <Text variant="code">{spacedCode(code)}</Text>
+          </View>
+        ) : null}
         <Card gap={14}>
           <Text variant="caption" color="text.muted">
             {t("approval.doThis")}
@@ -191,15 +244,17 @@ export default function RecoveryApproval() {
       gap={14}
       footer={
         <View style={styles.footer}>
-          <Checkbox
-            checked={verified}
-            onChange={setVerified}
-            label={t("approval.verified", { name, code: spaced(code) })}
-          />
+          {code ? (
+            <Checkbox
+              checked={verified}
+              onChange={setVerified}
+              label={t("approval.verified", { name, code: spacedCode(code) })}
+            />
+          ) : null}
           <Button
             label={t("approval.approve")}
             loading={busy}
-            disabled={!request || !verified}
+            disabled={!request || !code || !verified}
             onPress={() => void accept()}
           />
           <Button
@@ -218,21 +273,36 @@ export default function RecoveryApproval() {
       <Text variant="body-lg" color="text.muted" align="center">
         {t("approval.body", { name })}
       </Text>
-      <View
-        style={[
-          styles.codeCard,
-          styles.center,
-          {
-            backgroundColor: colors["bg.info"],
-            borderColor: colors["bg.info"],
-          },
-        ]}
-      >
-        <Text variant="body-sm" color="text.muted">
-          {t("approval.code")}
-        </Text>
-        <Text variant="code">{spaced(code)}</Text>
-      </View>
+      {code ? (
+        <View
+          style={[
+            styles.codeCard,
+            styles.center,
+            {
+              backgroundColor: colors["bg.info"],
+              borderColor: colors["bg.info"],
+            },
+          ]}
+        >
+          <Text variant="body-sm" color="text.muted">
+            {t("approval.code")}
+          </Text>
+          <Text variant="code">{spacedCode(code)}</Text>
+        </View>
+      ) : exchange.kind === "waiting" ? (
+        <Callout icon="phone" text={t("approval.waitingForPhone", { name })} />
+      ) : (
+        <Callout
+          tone={exchange.kind === "elsewhere" ? "warning" : "danger"}
+          icon="alert-triangle"
+          text={t(
+            exchange.kind === "elsewhere"
+              ? "approval.openedElsewhere"
+              : "approval.unverified",
+            { name },
+          )}
+        />
+      )}
       <View style={styles.center}>
         <VerificationCall width={320} height={220} />
       </View>

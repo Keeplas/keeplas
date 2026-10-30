@@ -5,18 +5,23 @@ import { api } from "@keeplas/backend/_generated/api";
 import { isValidEmail, normalizeEmail } from "@keeplas/backend/lib/email";
 
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { accountErrorKey } from "@/features/account/errors";
+import { useEnsureSessionProof } from "@/features/vault-proof";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
+import { useVault } from "@/providers/vault-provider";
 
 export default function AccountEmail() {
   const router = useRouter();
   const { t } = useI18n();
   const viewer = useViewer();
+  const { masterKey } = useVault();
+  const ensureSessionProof = useEnsureSessionProof();
   const requestVerification = useMutation(
     api.email_verification.requestVerification,
   );
@@ -31,6 +36,8 @@ export default function AccountEmail() {
     setBusy(true);
     setError(null);
     try {
+      // Replacing a verified email needs a proven session.
+      if (changing && masterKey) await ensureSessionProof(masterKey);
       await requestVerification({ email: next });
       router.push({
         pathname: "/account-email-verify",
@@ -73,11 +80,7 @@ export default function AccountEmail() {
         onSubmitEditing={submit}
         autoFocus
       />
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
+      <ErrorText>{error}</ErrorText>
       <Button
         label={t("account.emailStep.cta")}
         chevron

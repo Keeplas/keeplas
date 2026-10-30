@@ -1,6 +1,10 @@
 import { query } from "../_generated/server";
 import { requireAdmin } from "../helpers";
 import { countBy } from "./lib";
+import { batchPage } from "../lib/batch";
+
+/** Most audit entries the per-action breakdown counts. */
+const AUDIT_BREAKDOWN_ENTRIES = 5000;
 
 /** The 50 most recent audit-log entries (newest first). Metadata/hashes are
  * intentionally omitted — the console only surfaces action + actor + geo. */
@@ -20,13 +24,20 @@ export const recentAuditLogs = query({
   },
 });
 
-/** Audit-event counts grouped by action name. */
+/**
+ * Audit-event counts grouped by action name, over the most recent entries:
+ * every audited call by any user adds one, so the whole table outgrows what
+ * a query may read. One page, capped in rows and bytes (lib/batch.ts).
+ */
 export const auditByAction = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
-    const logs = await ctx.db.query("audit_logs").collect();
-    return countBy(logs, (l) => l.action);
+    const { page } = await ctx.db
+      .query("audit_logs")
+      .order("desc")
+      .paginate(batchPage(AUDIT_BREAKDOWN_ENTRIES, undefined));
+    return countBy(page, (l) => l.action);
   },
 });
 

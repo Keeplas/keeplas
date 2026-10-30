@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Button, Icon, InfoCallout, Progress } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
+import { useUploadQueue } from "@/lib/upload-queue";
 import {
   NotKeeplasArchive,
   useImportArchive,
@@ -18,6 +19,7 @@ type Phase =
 export default function ImportPage() {
   const t = useTranslations("settings.importArchive");
   const importArchive = useImportArchive();
+  const { showIfStorageFull } = useUploadQueue();
   const input = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
 
@@ -33,6 +35,8 @@ export default function ImportPage() {
       );
       setPhase({ kind: "done", result });
     } catch (error) {
+      // Storage full: the items imported so far stay, the dialog explains.
+      void showIfStorageFull(error);
       setPhase({
         kind: "failed",
         message:

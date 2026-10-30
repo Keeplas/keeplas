@@ -26,9 +26,11 @@ vi.mock("@keeplas/crypto/pairing", () => ({
     secretKey: new Uint8Array(32),
     loginSecret: "secret",
     loginSecretHash: "hash",
+    qrSecret: "qr-secret",
   }),
   pairingKeyHash: async () => "keyhash",
   buildPairingQr: () => "https://example.test/link",
+  pairingCode: async () => "482913",
   openPairingEnvelope: vi.fn(),
 }));
 vi.mock("@/lib/device-unlock/key-import", () => ({ importMasterKey: vi.fn() }));

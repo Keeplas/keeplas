@@ -1,9 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, beforeEach, describe, it, expect } from "vitest";
 import {
   generateRegistrationOptions,
   generateAuthenticationOptions,
 } from "@simplewebauthn/server";
+import { api, internal } from "../_generated/api";
 import { REQUIRED_USER_VERIFICATION } from "../webauthn";
+import { makeT, signedAudit, type TestConvex } from "./test.helpers";
 
 /**
  * Security regression guard (finding #6): the server passkey flow must demand
@@ -39,5 +41,62 @@ describe("webauthn user verification hardening", () => {
     });
 
     expect(options.userVerification).toBe("required");
+  });
+});
+
+// startAuthentication is public and signed out, and writes a challenge row
+// on every call: it needs the sealed audit envelope, is throttled per IP,
+// and abandoned challenges are swept once expired.
+describe("passkey sign-in challenges", () => {
+  beforeEach(() => {
+    process.env.WEBAUTHN_RP_ID = "localhost";
+  });
+  afterEach(() => {
+    delete process.env.WEBAUTHN_RP_ID;
+  });
+
+  const challenges = (t: TestConvex) =>
+    t.run((ctx) => ctx.db.query("webauthn_challenges").collect());
+
+  it("throttles challenge requests per IP", async () => {
+    const t = makeT();
+    const _audit = await signedAudit();
+    for (let i = 0; i < 30; i++) {
+      await t.mutation(api.webauthn.startAuthentication, { _audit });
+    }
+
+    await expect(
+      t.mutation(api.webauthn.startAuthentication, { _audit }),
+    ).rejects.toThrow("Too many requests");
+    expect(await challenges(t)).toHaveLength(30);
+  });
+
+  it("stores no caller-supplied email", async () => {
+    const t = makeT();
+    await t.mutation(api.webauthn.startAuthentication, {
+      _audit: await signedAudit(),
+    });
+    const [row] = await challenges(t);
+    expect(row?.email).toBeUndefined();
+  });
+
+  it("sweeps expired challenges and keeps live ones", async () => {
+    const t = makeT();
+    const now = Date.now();
+    await t.run(async (ctx) => {
+      for (const expiresAt of [now - 1, now - 60_000, now + 60_000]) {
+        await ctx.db.insert("webauthn_challenges", {
+          challenge: `c${expiresAt}`,
+          kind: "authentication",
+          expiresAt,
+        });
+      }
+    });
+
+    await t.mutation(internal.webauthn.sweepExpiredChallenges, {});
+
+    expect((await challenges(t)).map((c) => c.expiresAt)).toEqual([
+      now + 60_000,
+    ]);
   });
 });

@@ -23,6 +23,8 @@ export type PairingState =
       sessionId: PairingSessionId;
       expiresAt: number;
       qrUrl: string;
+      /** Shown next to the QR; the phone shows it too before approving. */
+      code: string;
     }
   | { phase: "signingIn"; sessionId: PairingSessionId }
   | { phase: "unlocking"; sessionId: PairingSessionId }
@@ -37,6 +39,7 @@ export type PairingEvent =
       sessionId: PairingSessionId;
       expiresAt: number;
       qrUrl: string;
+      code: string;
     }
   | { type: "status"; status: PairingStatus }
   | { type: "signedIn" }
@@ -58,6 +61,7 @@ export function pairingReducer(
             sessionId: event.sessionId,
             expiresAt: event.expiresAt,
             qrUrl: event.qrUrl,
+            code: event.code,
           }
         : state;
     case "status":

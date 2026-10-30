@@ -1,7 +1,6 @@
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
-import { storedFileBytes } from "./lib/storage";
 
 export const TOTP_REQUIRED_ERROR = "TOTP_REQUIRED";
 export const LOGIN_OTP_REQUIRED_ERROR = "LOGIN_OTP_REQUIRED";
@@ -130,13 +129,15 @@ export async function requireFullAuth(ctx: QueryCtx) {
 }
 
 /**
- * Back-office guard for the keeplas-admin analytics console. Requires an
- * authenticated user whose `role` is "admin". Throws "FORBIDDEN" otherwise so
- * the admin client can distinguish a denied (non-admin) session from an
- * unauthenticated one. Every `admin/*` query starts with this.
+ * Back-office guard for the keeplas-admin analytics console. Requires a fully
+ * stepped-up session (`requireFullAuth`: an admin's password alone must not
+ * approve a lost-number request) whose user `role` is "admin". Throws
+ * "FORBIDDEN" otherwise so the admin client can distinguish a denied
+ * (non-admin) session from an unauthenticated one. Every `admin/*` function
+ * starts with this.
  */
 export async function requireAdmin(ctx: QueryCtx) {
-  const userId = await requireAuth(ctx);
+  const userId = await requireFullAuth(ctx);
   const user = await ctx.db.get(userId);
   if (user?.role !== "admin") throw new Error("FORBIDDEN");
   return userId;
@@ -161,6 +162,28 @@ export async function approvedReleaseRequest(
       r.sectionsRequested.some((s) => s.startsWith("item:")),
     ) ?? null
   );
+}
+
+/**
+ * Count the unreachability votes behind a set of trusted-contact rows: the
+ * DISTINCT humans, never the rows (C1). The same person invited via two
+ * channels gets two rows but counts as a single vote. Only rows still
+ * `accepted` count: a contact the owner revoked after voting no longer
+ * speaks for them. Shared by the vote (access_requests.markUserUnreachable)
+ * and the release re-check (life_check.releaseAfterConfirmation).
+ */
+export async function countQuorumVotes(
+  ctx: QueryCtx,
+  contactIds: Id<"trusted_contacts">[],
+): Promise<number> {
+  const people = new Set<string>();
+  for (const contactId of contactIds) {
+    const contact = await ctx.db.get(contactId);
+    if (contact?.contactUserId && contact.invitationStatus === "accepted") {
+      people.add(contact.contactUserId);
+    }
+  }
+  return people.size;
 }
 
 /**
@@ -201,7 +224,7 @@ export async function getActiveItems(ctx: QueryCtx, userId: Id<"users">) {
 
 /**
  * Attachments on the user's active (non-archived) items, for the per-kind
- * breakdown in `getUsageStats`. Quota and totals use `getStorageUsage`.
+ * breakdown in `getUsageStats`. Quota and totals use `readStorageUsage`.
  */
 export async function getActiveVaultFiles(ctx: QueryCtx, userId: Id<"users">) {
   const items = await getActiveItems(ctx, userId);
@@ -211,43 +234,6 @@ export async function getActiveVaultFiles(ctx: QueryCtx, userId: Id<"users">) {
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .collect();
   return allFiles.filter((f) => activeItemIds.has(f.itemId));
-}
-
-export async function getStorageUsage(
-  ctx: QueryCtx,
-  userId: Id<"users">,
-): Promise<{ activeBytes: number; archiveBytes: number }> {
-  const items = await ctx.db
-    .query("vault_items")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
-    .collect();
-  const itemById = new Map(items.map((item) => [item._id, item]));
-  const files = await ctx.db
-    .query("vault_item_files")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
-    .collect();
-  const counted = new Set<string>();
-  let activeBytes = 0;
-  let archiveBytes = 0;
-  for (const file of files) {
-    const item = itemById.get(file.itemId);
-    if (!item) continue;
-    counted.add(file.storageId);
-    if (item.status === "archived") archiveBytes += storedFileBytes(file);
-    else if (!item.isReleaseIntroduction) activeBytes += storedFileBytes(file);
-  }
-  const versions = await ctx.db
-    .query("vault_item_versions")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
-    .collect();
-  for (const version of versions) {
-    for (const file of version.files) {
-      if (counted.has(file.storageId)) continue;
-      counted.add(file.storageId);
-      archiveBytes += storedFileBytes(file);
-    }
-  }
-  return { activeBytes, archiveBytes };
 }
 
 /**

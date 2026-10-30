@@ -8,16 +8,27 @@ import VerifyScreen from "@/app/(auth)/verify";
 const rtl = jest.requireActual<typeof Rtl>("@testing-library/react-native");
 
 const mockPush = jest.fn();
+const mockDismissTo = jest.fn();
 let mockParams: Record<string, string> = {};
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: mockPush, canGoBack: () => false }),
+  useRouter: () => ({
+    push: mockPush,
+    dismissTo: mockDismissTo,
+    canGoBack: () => false,
+  }),
   useLocalSearchParams: () => mockParams,
+}));
+jest.mock("convex/react", () => ({
+  useConvex: () => ({
+    connectionState: () => ({ isWebSocketConnected: true }),
+    subscribeToConnectionState: () => () => undefined,
+  }),
 }));
 const mockSignIn = jest.fn();
 jest.mock("@convex-dev/auth/react", () => ({
   useAuthActions: () => ({ signIn: mockSignIn }),
 }));
-const mockRequestCode = jest.fn();
+const mockRequestCode = jest.fn(async () => undefined);
 jest.mock("@/lib/use-request-phone-code", () => ({
   AttestationFailed: class extends Error {},
   useRequestPhoneCode: () => mockRequestCode,
@@ -32,7 +43,18 @@ jest.mock("@/providers/theme-provider", () => ({
   useTheme: () => ({ colors: {} }),
 }));
 jest.mock("@/components/screen", () => ({
-  Screen: ({ children }: { children: React.ReactNode }) => children,
+  Screen: ({
+    children,
+    footer,
+  }: {
+    children: React.ReactNode;
+    footer?: React.ReactNode;
+  }) => (
+    <>
+      {children}
+      {footer}
+    </>
+  ),
 }));
 jest.mock("@/components/text", () => ({
   Text: jest.requireActual("react-native").Text,
@@ -49,7 +71,16 @@ jest.mock("@/components/button", () => {
 });
 jest.mock("@/components/app-header", () => ({ AppHeader: () => null }));
 jest.mock("@/components/language", () => ({ LanguageSegment: () => null }));
-jest.mock("@/components/phone-input", () => ({ PhoneInput: () => null }));
+const mockFocusPhone = jest.fn();
+jest.mock("@/components/phone-input", () => {
+  const { useImperativeHandle } = jest.requireActual("react");
+  return {
+    PhoneInput: ({ ref }: { ref?: React.Ref<{ focus: () => void }> }) => {
+      useImperativeHandle(ref, () => ({ focus: mockFocusPhone }));
+      return null;
+    },
+  };
+});
 jest.mock("@/components/stepper", () => ({ RequiredSteps: () => null }));
 jest.mock("@/components/surfaces", () => ({ Callout: () => null }));
 jest.mock("@/features/code-verification", () => {
@@ -57,12 +88,17 @@ jest.mock("@/features/code-verification", () => {
   return {
     CodeVerification: ({
       onSubmit,
+      footer,
     }: {
       onSubmit: (code: string) => Promise<void>;
+      footer?: React.ReactNode;
     }) => (
-      <Pressable onPress={() => onSubmit("123456")}>
-        <Text>submit-code</Text>
-      </Pressable>
+      <>
+        <Pressable onPress={() => onSubmit("123456")}>
+          <Text>submit-code</Text>
+        </Pressable>
+        {footer}
+      </>
     ),
   };
 });
@@ -93,6 +129,12 @@ describe("sign-up asks for the first name", () => {
     });
   });
 
+  it("moves on to the phone number from the first name's next key", () => {
+    rtl.render(<PhoneScreen />);
+    rtl.fireEvent(rtl.screen.getByLabelText("home.firstName"), "submitEditing");
+    expect(mockFocusPhone).toHaveBeenCalled();
+  });
+
   it("does not ask for it on sign-in", async () => {
     mockParams = { intent: "signin" };
     rtl.render(<PhoneScreen />);
@@ -114,5 +156,20 @@ describe("sign-up asks for the first name", () => {
       "phone-otp",
       expect.objectContaining({ flow: "signUp", name: "Marie" }),
     );
+    expect(rtl.screen.queryByText("phone.createAccount")).toBeNull();
+  });
+
+  // A sign-in for a number with no account gets no code and no error (the
+  // server does not tell who has an account): the code screen offers sign-up.
+  it("offers to create an account from the sign-in code screen", async () => {
+    mockParams = { phone: "+14165550123", intent: "signin" };
+    rtl.render(<VerifyScreen />);
+    await rtl.act(() =>
+      rtl.fireEvent.press(rtl.screen.getByText("phone.createAccount")),
+    );
+    expect(mockDismissTo).toHaveBeenCalledWith({
+      pathname: "/phone",
+      params: { intent: "signup" },
+    });
   });
 });

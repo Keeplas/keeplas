@@ -9,6 +9,7 @@ import {
   buildPairingQr,
   generateBrowserPairingKeys,
   openPairingEnvelope,
+  pairingCode,
   pairingKeyHash,
 } from "@keeplas/crypto/pairing";
 
@@ -20,6 +21,7 @@ import { Text } from "@/components/text";
 import { saveDeviceVault } from "@/crypto/device-vault";
 import { deviceLabel } from "@/lib/attestation";
 import { env } from "@/lib/env";
+import { spacedCode } from "@/lib/format";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
@@ -29,7 +31,12 @@ import { radius } from "@/theme";
 
 type Phase =
   | { kind: "creating" }
-  | { kind: "waiting"; sessionId: Id<"pairing_sessions">; qr: string }
+  | {
+      kind: "waiting";
+      sessionId: Id<"pairing_sessions">;
+      qr: string;
+      code: string;
+    }
   | { kind: "opening" }
   | { kind: "failed"; message: string };
 
@@ -44,9 +51,11 @@ export default function LinkFromDevice() {
   const claimEnvelope = useAuditedMutation(api.pairing.claimEnvelope);
   const [phase, setPhase] = useState<Phase>({ kind: "creating" });
   const [attempt, setAttempt] = useState(0);
-  const secrets = useRef<{ secretKey: Uint8Array; loginSecret: string } | null>(
-    null,
-  );
+  const secrets = useRef<{
+    secretKey: Uint8Array;
+    loginSecret: string;
+    qrSecret: string;
+  } | null>(null);
   const sessionId = phase.kind === "waiting" ? phase.sessionId : null;
   const status = useQuery(
     api.pairing.status,
@@ -62,19 +71,27 @@ export default function LinkFromDevice() {
         secrets.current = {
           secretKey: keys.secretKey,
           loginSecret: keys.loginSecret,
+          qrSecret: keys.qrSecret,
         };
         const created = await createSession({
           browserPublicKey: keys.publicKey,
           secretHash: keys.loginSecretHash,
           userAgent: deviceLabel(),
         });
-        const qr = buildPairingQr({
+        const qr = {
           sessionId: created.sessionId,
           keyHash: await pairingKeyHash(keys.publicKey),
           origin: env.appUrl,
-        });
+          qrSecret: keys.qrSecret,
+        };
+        const code = await pairingCode(qr);
         if (alive) {
-          setPhase({ kind: "waiting", sessionId: created.sessionId, qr });
+          setPhase({
+            kind: "waiting",
+            sessionId: created.sessionId,
+            qr: buildPairingQr(qr),
+            code,
+          });
         }
       } catch {
         if (alive)
@@ -110,6 +127,7 @@ export default function LinkFromDevice() {
           secretKey: current.secretKey,
           sessionId,
           origin: env.appUrl,
+          qrSecret: current.qrSecret,
           identityPublicKey: viewer.identityPublicKey,
           userId: viewer._id,
         });
@@ -186,6 +204,13 @@ export default function LinkFromDevice() {
           ]}
         >
           <QRCode value={shown.qr} size={220} />
+          <Text variant="caption" color="text.muted">
+            {t("linkBrowser.codeLabel")}
+          </Text>
+          <Text variant="digit">{spacedCode(shown.code)}</Text>
+          <Text variant="body-sm" color="text.muted" align="center">
+            {t("linkDevice.codeDetail")}
+          </Text>
           <Text variant="body-sm" color="text.muted" align="center">
             {t("linkDevice.expires")}
           </Text>

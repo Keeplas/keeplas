@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
+import { safeLinkHref } from "@/lib/link-payload";
 
 interface VaultLinkListProps {
   urls: string[];
@@ -25,9 +26,9 @@ export function VaultLinkList({ urls }: VaultLinkListProps) {
   }
 
   function openAt(index: number) {
-    const url = urls[index];
-    if (!url) return;
-    window.open(url, "_blank", "noopener,noreferrer");
+    const href = safeLinkHref(urls[index] ?? "");
+    if (!href) return;
+    window.open(href, "_blank", "noopener,noreferrer");
   }
 
   if (urls.length === 0) {
@@ -76,6 +77,7 @@ export function VaultLinkList({ urls }: VaultLinkListProps) {
               variant="ghost"
               size="sm"
               onClick={() => openAt(index)}
+              disabled={safeLinkHref(url) === null}
               aria-label={t("links.openNewTab")}
               className="shrink-0 cursor-pointer text-on-surface-variant hover:text-primary"
             >

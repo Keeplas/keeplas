@@ -12,6 +12,7 @@ import {
 } from "@keeplas/ui";
 import { useLocale, useTranslations } from "@/lib/i18n";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useUploadQueue } from "@/lib/upload-queue";
 
 /**
  * Edit history of an item ("See all" under Activity): every earlier
@@ -41,6 +42,7 @@ export function HistorySheet({
     open ? { itemId } : "skip",
   );
   const restore = useAuditedMutation(api.vault_items.restoreItemVersion);
+  const { showIfStorageFull } = useUploadQueue();
   const [titles, setTitles] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -73,7 +75,12 @@ export function HistorySheet({
       cancelLabel: t("cancel"),
     });
     if (!ok) return;
-    await restore({ itemId, versionId });
+    try {
+      await restore({ itemId, versionId });
+    } catch (error) {
+      if (!(await showIfStorageFull(error))) throw error;
+      return;
+    }
     onOpenChange(false);
   }
 

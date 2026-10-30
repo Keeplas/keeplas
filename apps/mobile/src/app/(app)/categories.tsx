@@ -88,7 +88,7 @@ export default function Categories() {
             key={group.key}
             icon={group.icon}
             title={builtInLabel(group.key)}
-            trailing={trash({
+            action={trash({
               name: builtInLabel(group.key),
               itemIds: itemIdsOf(group.key),
               remove: () => setHidden({ groups: [...hidden, group.key] }),
@@ -97,15 +97,15 @@ export default function Categories() {
         ),
       )}
       {(categories ?? []).map((category) => {
-        const name = category.name ?? t("item.decrypting");
+        const name = category.name ?? t("categories.unnamed");
         const itemIds = itemIdsOf(category.id);
         return (
           <ListRow
             key={category.id}
             icon="document"
             title={name}
-            description={t("categories.items", { n: itemIds.length })}
-            trailing={trash({
+            description={t("categories.items", { count: itemIds.length })}
+            action={trash({
               name,
               itemIds,
               remove: () => removeCategory({ categoryId: category.id }),

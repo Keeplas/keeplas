@@ -1,76 +1,24 @@
 /**
- * Verify-before-wrap (TOFU), same rules as apps/web/src/lib/verify-contact-key.ts.
- * Before sealing anything to a contact (item DEK, folder name, recovery
- * share) the app checks that:
- *
- *  1. the contact's ML-DSA identity key signed exactly this ML-KEM key, so a
- *     server-substituted encryption key is refused;
- *  2. the identity key matches the fingerprint the owner pinned on first use,
- *     so a substituted identity key is refused too.
+ * Verify-before-wrap (TOFU) on the phone. The checks themselves live in
+ * @keeplas/crypto/sig (contact-trust.ts), shared with the web: the contact's
+ * identity key must have signed its ML-KEM key, and its fingerprint must match
+ * the pin the owner MACed on first use. This module turns a refusal into an
+ * error the screens show, and persists the pins the verifier hands back.
  *
  * Any failure is blocking: callers never silently skip a contact.
  */
-import { parsePublicKey } from "@keeplas/crypto/kem";
-import { identityKeyFingerprint, verifyBytes } from "@keeplas/crypto/sig";
+import {
+  carryOverPin,
+  verifyContactKey,
+  type BlockReason,
+  type ContactKeyMaterial,
+  type ContactTrust,
+  type PinWrite,
+  type VerifyOutcome,
+} from "@keeplas/crypto/sig";
 
-export interface ContactKeyMaterial {
-  contactId: string;
-  name?: string;
-  contactPublicKey?: string;
-  contactIdentityPublicKey?: string;
-  contactPublicKeySignature?: string;
-  /** Owner's pin; undefined on first use. */
-  pinnedIdentityFingerprint?: string;
-}
-
-export type VerifyOutcome =
-  | { status: "ok"; contactPublicKey: string; pinFingerprint?: string }
-  | { status: "unverifiable" }
-  | { status: "signature_invalid" }
-  | { status: "fingerprint_changed"; newFingerprint: string };
-
-export type BlockReason = Exclude<VerifyOutcome["status"], "ok">;
-
-export async function verifyContactKey(
-  contact: ContactKeyMaterial,
-): Promise<VerifyOutcome> {
-  if (
-    !contact.contactPublicKey ||
-    !contact.contactIdentityPublicKey ||
-    !contact.contactPublicKeySignature
-  ) {
-    return { status: "unverifiable" };
-  }
-  let keyBytes: Uint8Array;
-  try {
-    keyBytes = parsePublicKey(contact.contactPublicKey);
-  } catch {
-    return { status: "signature_invalid" };
-  }
-  if (
-    !verifyBytes(
-      contact.contactIdentityPublicKey,
-      keyBytes,
-      contact.contactPublicKeySignature,
-    )
-  ) {
-    return { status: "signature_invalid" };
-  }
-  const fingerprint = await identityKeyFingerprint(
-    contact.contactIdentityPublicKey,
-  );
-  if (!contact.pinnedIdentityFingerprint) {
-    return {
-      status: "ok",
-      contactPublicKey: contact.contactPublicKey,
-      pinFingerprint: fingerprint,
-    };
-  }
-  if (contact.pinnedIdentityFingerprint !== fingerprint) {
-    return { status: "fingerprint_changed", newFingerprint: fingerprint };
-  }
-  return { status: "ok", contactPublicKey: contact.contactPublicKey };
-}
+/** Persist a pin (`trusted_contacts.pinContactIdentity`). */
+export type PersistPin = (contactId: string, pin: PinWrite) => Promise<unknown>;
 
 /** A contact the app refused to seal to, for the blocking alert. */
 export class ContactKeyBlocked extends Error {
@@ -83,15 +31,12 @@ export class ContactKeyBlocked extends Error {
   }
 }
 
-/**
- * Verify one contact and persist the TOFU pin on first use. Returns the
- * authenticated ML-KEM key or throws {@link ContactKeyBlocked}.
- */
-export async function requireVerifiedKey(
+/** The authenticated key of `outcome`, its pin persisted, or a throw. */
+async function requireKey(
   contact: ContactKeyMaterial,
-  pin: (contactId: string, fingerprint: string) => Promise<unknown>,
+  outcome: VerifyOutcome,
+  pin: PersistPin,
 ): Promise<string> {
-  const outcome = await verifyContactKey(contact);
   if (outcome.status !== "ok") {
     throw new ContactKeyBlocked(
       contact.contactId,
@@ -99,27 +44,33 @@ export async function requireVerifiedKey(
       contact.name,
     );
   }
-  if (outcome.pinFingerprint) {
-    await pin(contact.contactId, outcome.pinFingerprint);
-  }
+  if (outcome.pin) await pin(contact.contactId, outcome.pin);
   return outcome.contactPublicKey;
 }
 
-/** Key material of a `trusted_contacts` row. */
-export function contactKeyMaterial(c: {
-  _id: string;
-  name?: string;
-  contactPublicKey?: string;
-  contactIdentityPublicKey?: string;
-  contactPublicKeySignature?: string;
-  pinnedIdentityFingerprint?: string;
-}): ContactKeyMaterial {
-  return {
-    contactId: c._id,
-    name: c.name,
-    contactPublicKey: c.contactPublicKey,
-    contactIdentityPublicKey: c.contactIdentityPublicKey,
-    contactPublicKeySignature: c.contactPublicKeySignature,
-    pinnedIdentityFingerprint: c.pinnedIdentityFingerprint,
-  };
+/**
+ * Verify one contact and persist the pin on first use (or a legacy pin
+ * upgrade). Returns the authenticated ML-KEM key or throws
+ * {@link ContactKeyBlocked}.
+ */
+export async function requireVerifiedKey(
+  contact: ContactKeyMaterial,
+  trust: ContactTrust,
+  pin: PersistPin,
+): Promise<string> {
+  return requireKey(contact, await verifyContactKey(contact, trust), pin);
+}
+
+/**
+ * MasterKey rotation: as {@link requireVerifiedKey} under the current key
+ * (`from`), persisting the pin MACed under the next one (`to`) so trust
+ * survives the rotation.
+ */
+export async function requireCarriedOverKey(
+  contact: ContactKeyMaterial,
+  from: ContactTrust,
+  to: ContactTrust,
+  pin: PersistPin,
+): Promise<string> {
+  return requireKey(contact, await carryOverPin(contact, from, to), pin);
 }

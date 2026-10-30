@@ -6,8 +6,8 @@ import DateTimePicker, {
 import { api } from "@keeplas/backend/_generated/api";
 
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { BottomSheet } from "@/components/sheet";
-import { Text } from "@/components/text";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -82,11 +82,7 @@ export function useBirthdayEditor(birthday: number | undefined) {
           onValueChange={(_, date) => setDraft(date)}
         />
       ) : null}
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
+      <ErrorText>{error}</ErrorText>
       <Button
         label={t("account.save")}
         loading={saving}

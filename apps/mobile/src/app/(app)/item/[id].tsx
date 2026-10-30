@@ -29,6 +29,7 @@ import {
   type FileUrl,
 } from "@/features/vault/use-decrypted-attachment";
 import {
+  contactKeyBlockedToast,
   useEveryoneRecipients,
   useWrapForContacts,
 } from "@/features/vault/use-recipients";
@@ -46,6 +47,8 @@ import { contactSupport } from "@/lib/support";
 import { NoteView } from "@/features/notes/note-view";
 import { isEmptyNote } from "@keeplas/export/rich-text";
 import { toast } from "@/lib/toast";
+import { useStorageFullPrompt } from "@/features/billing/storage-full";
+import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -65,6 +68,7 @@ import { outboxLabel } from "@/features/outbox/outbox";
 import { usePendingAttachments } from "@/features/vault/use-pending-attachments";
 
 export default function ItemDetails() {
+  useNoScreenCapture();
   const { id } = useLocalSearchParams<{ id: string }>();
   const itemId = id as Id<"vault_items">;
   const router = useRouter();
@@ -79,6 +83,7 @@ export default function ItemDetails() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const { items } = useVaultData();
   const recategorizeItem = useRecategorize();
+  const storageFull = useStorageFullPrompt();
   const { colors } = useTheme();
   const [selected, setSelected] = useState(0);
   const [pages, setPages] = useState(0);
@@ -209,11 +214,13 @@ export default function ItemDetails() {
         });
       }
       setSheet(null);
-    } catch {
+    } catch (error) {
       toast({
         variant: "error",
-        title: t("item.shareFailedTitle"),
-        description: t("item.shareFailedBody"),
+        ...(contactKeyBlockedToast(error, t) ?? {
+          title: t("item.shareFailedTitle"),
+          description: t("item.shareFailedBody"),
+        }),
       });
     } finally {
       setSharing(false);
@@ -290,9 +297,11 @@ export default function ItemDetails() {
   });
   async function recategorize(choice: CategoryChoice) {
     if (!raw || !opened) return;
-    await recategorizeItem(raw, opened, choice).catch(() =>
-      toast({ variant: "error", title: t("common.genericError") }),
-    );
+    await recategorizeItem(raw, opened, choice).catch((error: unknown) => {
+      if (!storageFull.handle(error)) {
+        toast({ variant: "error", title: t("common.genericError") });
+      }
+    });
   }
 
   const archived = raw?.status === "archived";
@@ -383,7 +392,7 @@ export default function ItemDetails() {
       title={t("item.history")}
       description={
         versions?.length
-          ? t("item.historyCount", { n: versions.length })
+          ? t("item.historyCount", { count: versions.length })
           : t("item.historyEmpty")
       }
       onPress={() =>
@@ -558,7 +567,6 @@ export default function ItemDetails() {
           onPress={share}
         />
         {pendingBlock}
-        {pendingBlock}
         {historyRow}
         {categorySheet}
         {sheets}
@@ -629,16 +637,13 @@ export default function ItemDetails() {
               icon={FILE_ICON[attachment.kind]}
               title={attachment.name}
               description={formatBytes(attachment.size, language)}
-              trailing={
-                index === current ? (
-                  <Icon name="check" size={18} color="status.active" />
-                ) : undefined
-              }
+              selected={index === current}
               onPress={() => setSelected(index)}
             />
           ))}
         </>
       ) : null}
+      {pendingBlock}
 
       <DetailRows
         rows={[
@@ -660,6 +665,7 @@ export default function ItemDetails() {
 
       {categorySheet}
       {sheets}
+      {storageFull.sheet}
     </Screen>
   );
 }
@@ -690,7 +696,7 @@ function summaryOf(
         .join(" · ");
     default:
       return pages > 0
-        ? `${extension} · ${pages === 1 ? t("item.onePage") : t("item.pages", { n: pages })}`
+        ? `${extension} · ${t("item.pages", { count: pages })}`
         : extension;
   }
 }

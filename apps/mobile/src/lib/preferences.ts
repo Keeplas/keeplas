@@ -8,7 +8,6 @@ const KEYS = {
   language: "keeplas.pref.language",
   appearance: "keeplas.pref.appearance",
   kitExported: "keeplas.pref.kitExported",
-  pushPrompted: "keeplas.pref.pushPrompted",
 } as const;
 
 export type PreferenceKey = keyof typeof KEYS;

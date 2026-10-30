@@ -1,6 +1,15 @@
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+  type AlertButton,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
@@ -9,9 +18,11 @@ import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
-import { IconTile, StatusChip } from "@/components/surfaces";
+import { IconTile, StatusChip, type Tone } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { inviteErrorKey } from "@/features/people/invite-error";
 import { ReleaseQuorumWarning } from "@/features/people/release-quorum-warning";
+import { formatPhone } from "@/lib/phone";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -19,6 +30,17 @@ import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius } from "@/theme";
 
 const AVATAR_COLORS = Object.values(palette.category);
+
+type Status = FunctionReturnType<
+  typeof api.trusted_contacts.getContactSummaries
+>[number]["invitationStatus"];
+
+const STATUS_TONE: Record<Status, Tone> = {
+  pending: "warning",
+  accepted: "success",
+  declined: "danger",
+  revoked: "neutral",
+};
 
 /**
  * M06-1 Trusted people: every contact is a trust contact. They help recover
@@ -71,7 +93,7 @@ export default function People() {
     name: string,
     invited: boolean,
   ) {
-    Alert.alert(name, undefined, [
+    const actions: AlertButton[] = [
       {
         text: t("people.editTitle"),
         onPress: () =>
@@ -86,10 +108,10 @@ export default function People() {
                   .then(() =>
                     toast({ variant: "success", title: t("people.resent") }),
                   )
-                  .catch(() =>
+                  .catch((error: unknown) =>
                     toast({
                       variant: "error",
-                      title: t("common.genericError"),
+                      title: t(inviteErrorKey(error, "common.genericError")),
                     }),
                   ),
             },
@@ -97,7 +119,7 @@ export default function People() {
         : []),
       {
         text: t("people.remove"),
-        style: "destructive" as const,
+        style: "destructive",
         onPress: () =>
           confirm(
             t("people.removeTitle", { name }),
@@ -106,8 +128,13 @@ export default function People() {
             () => revoke({ contactId }),
           ),
       },
-      { text: t("common.cancel"), style: "cancel" as const },
-    ]);
+    ];
+    // Android drops any button past the third: there, a full menu is closed
+    // with back or a tap outside instead of Cancel.
+    if (Platform.OS === "ios" || actions.length < 3) {
+      actions.push({ text: t("common.cancel"), style: "cancel" });
+    }
+    Alert.alert(name, undefined, actions, { cancelable: true });
   }
 
   return (
@@ -116,16 +143,25 @@ export default function People() {
       <Text variant="body-lg" color="text.muted">
         {t("people.body")}
       </Text>
-      <View style={styles.ready}>
-        <IconTile icon="people" size={48} />
-        <View style={styles.flex}>
-          <Text variant="h3">{t("people.ready", { n: ready })}</Text>
-          <Text variant="body-sm" color="text.muted">
-            {t("people.readyBody")}
-          </Text>
+      {contacts === undefined ? (
+        <ActivityIndicator color={colors["text.muted"]} />
+      ) : (
+        <View style={styles.ready}>
+          <IconTile icon="people" size={48} />
+          <View style={styles.flex}>
+            <Text variant="h3">{t("people.ready", { count: ready })}</Text>
+            <Text variant="body-sm" color="text.muted">
+              {t("people.readyBody")}
+            </Text>
+          </View>
         </View>
-      </View>
+      )}
       <ReleaseQuorumWarning />
+      {contacts?.length === 0 ? (
+        <Text variant="body" color="text.muted">
+          {t("people.empty")}
+        </Text>
+      ) : null}
       {(contacts ?? []).map((contact, index) => {
         const invited = contact.invitationStatus === "pending";
         return (
@@ -156,12 +192,15 @@ export default function People() {
               <View style={styles.flex}>
                 <Text variant="label">{contact.name}</Text>
                 <Text variant="body-sm" color="text.muted">
-                  {contact.email ?? contact.phoneNumber ?? ""}
+                  {contact.email ??
+                    (contact.phoneNumber
+                      ? formatPhone(contact.phoneNumber)
+                      : "")}
                 </Text>
               </View>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={contact.name}
+                accessibilityLabel={t("people.moreFor", { name: contact.name })}
                 hitSlop={10}
                 onPress={() => more(contact._id, contact.name, invited)}
               >
@@ -171,7 +210,7 @@ export default function People() {
             <View style={styles.footer}>
               <StatusChip
                 label={t(`people.status.${contact.invitationStatus}`)}
-                tone={invited ? "warning" : "success"}
+                tone={STATUS_TONE[contact.invitationStatus]}
               />
               <Pressable
                 accessibilityRole="button"

@@ -122,6 +122,50 @@ describe("deferred shares re-wrap", () => {
     expect(rows[0].readyContacts[0]._id).toBe(contactId);
   });
 
+  it("getItemsNeedingRewrap carries what verify-before-wrap needs", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const contactUser = await seedUser(t);
+    const vaultId = await seedVault(t, userId);
+    const contactId = await seedContact(t, userId, true);
+    await t.run((ctx) =>
+      ctx.db.patch(contactId, {
+        contactUserId: contactUser,
+        pinnedIdentityFingerprint: "fp",
+        pinnedIdentityMac: "mac",
+      }),
+    );
+    await seedPendingItem(t, userId, vaultId, [contactId]);
+
+    const [fresh] = await asUser(t, userId).query(
+      api.vault_items.getItemsNeedingRewrap,
+      {},
+    );
+    expect(fresh.readyContacts[0]).toMatchObject({
+      contactUserId: contactUser,
+      pinnedIdentityFingerprint: "fp",
+      pinnedIdentityMac: "mac",
+      hasWraps: false,
+    });
+
+    // Once the contact holds a wrap on any item, a missing pin can no longer
+    // pass for a first use.
+    const shared = await seedPendingItem(t, userId, vaultId, []);
+    await t.run((ctx) =>
+      ctx.db.insert("vault_item_recipient_keys", {
+        itemId: shared,
+        contactId,
+        wrappedDek: WRAPPED_DEK,
+        createdAt: Date.now(),
+      }),
+    );
+    const [owed] = await asUser(t, userId).query(
+      api.vault_items.getItemsNeedingRewrap,
+      {},
+    );
+    expect(owed.readyContacts[0].hasWraps).toBe(true);
+  });
+
   it("getItemsNeedingRewrap skips pending contacts that haven't published", async () => {
     const t = makeT();
     const userId = await seedUser(t);

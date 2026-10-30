@@ -3,6 +3,7 @@ import { Pressable } from "react-native";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { BottomSheet } from "@/components/sheet";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
@@ -57,11 +58,7 @@ export function NamePrompt() {
           returnKeyType="done"
           onSubmitEditing={() => name.trim() && void save()}
         />
-        {failed ? (
-          <Text variant="body-sm" color="status.revoked">
-            {t("home.addNameFailed")}
-          </Text>
-        ) : null}
+        <ErrorText>{failed ? t("home.addNameFailed") : null}</ErrorText>
         <Button
           label={t("capture.save")}
           loading={busy}

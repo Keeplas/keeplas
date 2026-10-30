@@ -142,7 +142,7 @@ export default function Home() {
             key={category.id}
             icon="document"
             tint={palette.category.other}
-            label={category.name ?? t("item.decrypting")}
+            label={category.name ?? t("categories.unnamed")}
             count={byCategory.get(category.id) ?? 0}
             onPress={() => openCategory(category.id)}
           />
@@ -242,9 +242,7 @@ function VaultTile({
         <View
           style={styles.count}
           accessible
-          accessibilityLabel={
-            count === 1 ? t("home.item") : t("home.items", { count })
-          }
+          accessibilityLabel={t("home.items", { count })}
         >
           <View style={[styles.badge, { backgroundColor: tone }]}>
             <Text variant="caption" style={{ color: tint }}>
@@ -252,7 +250,7 @@ function VaultTile({
             </Text>
           </View>
           <Text variant="body-sm" color="text.muted">
-            {count === 1 ? t("home.itemWord") : t("home.itemsWord")}
+            {t("home.itemsWord", { count })}
           </Text>
         </View>
       </View>

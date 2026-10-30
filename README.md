@@ -210,10 +210,10 @@ Full Docker workflow (provisioning Convex inside the container, running ad-hoc c
 
 All required variables are documented in [`.env.example`](./.env.example). High-level groups:
 
-- **Application** — `NEXT_PUBLIC_APP_URL`, `APP_URL`, `NODE_ENV`
+- **Application** — `NEXT_PUBLIC_APP_URL`, `APP_URL`
 - **Convex** — `CONVEX_MODE` (`cloud` | `selfhosted`), `CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`, `SITE_URL`
 - **WebAuthn** — `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_NAME`, `WEBAUTHN_ORIGIN`
-- **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; the **same value** must exist in `.env.local` AND on the Convex deployment — `pnpm check:convex` enforces this)
+- **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; the **same value** must exist in `.env.local` AND on the Convex deployment — `pnpm check:convex` enforces this); optional `KEEPLAS_TRUSTED_PROXY` (`vercel` | `cloudflare`) names the proxy whose client-IP headers are trusted
 - **Email — Resend (required for email auth)** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`; optional `SUPPORT_INBOX_EMAIL` for the contact form
 - **Native push — Expo (optional)** — `EXPO_ACCESS_TOKEN` — authenticates phone push (security alerts, Life Check) once Enhanced Push Security is on
 - **WhatsApp — Infobip (optional)** — `INFOBIP_*`, `WHATSAPP_*_TEMPLATE_NAME` — Life Check WhatsApp channel and WhatsApp OTP verification
@@ -265,7 +265,7 @@ Both tiers run the same zero-knowledge encryption — only the surface area chan
 - **Master Key** and **Recovery Phrase (24 words)** never leave the client unencrypted. The master key is never split — trusted contacts hold no part of it.
 - The **24-word phrase** is the root crypto secret (Argon2id-derived). The **password is pure auth** and is resettable via the 24 words.
 - **No OAuth.** Trusted contacts confirm when the owner is unreachable (2 confirmations + a 72h owner-cancellable grace window); each recipient then receives only the items assigned to them. A missed Life Check alone never releases anything.
-- **Authenticated key distribution (TOFU).** Each user holds an **ML-DSA-65 (FIPS 204)** identity key; their ML-KEM public key is signed with it. Clients verify the signature and pinned fingerprint before wrapping a DEK to a contact — never trusting a server-provided pubkey unverified. The identity secret key is wrapped under the master key and never sent in clear.
+- **Authenticated key distribution (TOFU).** Each user holds an **ML-DSA-65 (FIPS 204)** identity key; their ML-KEM public key is signed with it. Clients verify the signature and pinned fingerprint before wrapping a DEK to a contact — never trusting a server-provided pubkey unverified. The pin is authenticated with an HMAC under a key derived from the owner's master key, so the server cannot forge or swap it. The identity secret key is wrapped under the master key and never sent in clear.
 - Sensitive auth flows enforce a **step-up gate** (login-OTP + TOTP) on top of the password; auth/onboarding/public flows are intentionally exempt.
 - Per-device unlock combines **PIN**, **biometric (PRF)**, and **hardware key (PRF)** — RootKey wraps live in IndexedDB; the 24-word phrase is requested on first login per device.
 - All sensitive cryptography is implemented in [`packages/crypto/`](./packages/crypto), gated by CODEOWNERS and unit-tested.
@@ -305,7 +305,7 @@ We welcome contributions! Please read:
 - [CONTRIBUTOR_LICENSE_AGREEMENT.md](./CONTRIBUTOR_LICENSE_AGREEMENT.md)
 - [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
 
-Restricted areas (founder approval required): `packages/crypto/`, `security/`.
+Restricted areas (founder approval required): `packages/crypto/`, `security/`, `.github/`, `scripts/`, and the Convex auth, guard, audit and schema files — see [CODEOWNERS](./.github/CODEOWNERS).
 
 ## License
 

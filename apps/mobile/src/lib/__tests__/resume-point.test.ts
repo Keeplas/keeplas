@@ -56,4 +56,11 @@ describe("resume after unlock", () => {
     expect(isResumable("/contacts")).toBe(true);
     expect(isResumable("/item/abc")).toBe(true);
   });
+
+  it("does not reopen a recorder or a scanner, nor a recovery approval", () => {
+    expect(isResumable("/capture/voice")).toBe(false);
+    expect(isResumable("/capture/scan")).toBe(false);
+    expect(isResumable("/recovery-approval/abc")).toBe(false);
+    expect(isResumable("/capture/compose")).toBe(true);
+  });
 });

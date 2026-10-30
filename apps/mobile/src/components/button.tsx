@@ -82,6 +82,8 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
+      // Kept while the label gives way to the spinner.
+      accessibilityLabel={label}
       accessibilityState={{ disabled: inactive, busy: loading }}
       onPress={onPress}
       disabled={inactive}

@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 /**
  * Zero-knowledge invariant checks. Runs as a pre-commit hook against the
- * staged files and as a manual `pnpm check:zk` over the whole repo.
+ * staged files, and over every tracked file with `pnpm check:zk --all`
+ * (CI). See RULES for the invariants, e.g.:
+ *  - Vault items must never be created or updated with `accessLevel: "public"`.
+ *    Public access would imply unencrypted data on Emergency Card QRs.
+ *  - Convex `ctx.storage.*` calls and any mention of the `_storage` table
+ *    (`Id<"_storage">`, `v.id("_storage")`, system-table reads) must only
+ *    appear inside `packages/convex/lib/storage.ts`. The wrapper exists so we
+ *    can swap S3 / GCS / R2 without rewriting every domain file
+ *    (docs/STORAGE_MIGRATION.md).
+ *  - The MasterKey is never split: only the social-recovery module may reach
+ *    the Shamir code, by any import form, and the crypto package must not
+ *    export it.
  *
- * Two invariants:
- *  1. Vault items must never be created or updated with `accessLevel: "public"`.
- *     Public access would imply unencrypted data on Emergency Card QRs.
- *  2. Convex `ctx.storage.*` calls and any mention of the `_storage` table
- *     (`Id<"_storage">`, `v.id("_storage")`, system-table reads) must only
- *     appear inside `packages/convex/lib/storage.ts`. The wrapper exists so we
- *     can swap S3 / GCS / R2 without rewriting every domain file
- *     (docs/STORAGE_MIGRATION.md).
- *
- * Exits with code 1 on the first violation, printing path + line number.
+ * Patterns are matched against the whole file, so a match may span lines.
+ * Exits with code 1 if anything matched, printing path + line number.
  */
 import { execSync } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
@@ -21,15 +24,25 @@ import { readdirSync } from "node:fs";
 
 const REPO_ROOT = process.cwd();
 const STORAGE_WRAPPER_REL = join("packages", "convex", "lib", "storage.ts");
+const CRYPTO_PACKAGE_JSON = join("packages", "crypto", "package.json");
 
 // Only source paths we control. Skipping scripts/, docs/, and node_modules
 // keeps documentation comments and tooling out of the regex window.
 const SCANNED_PREFIXES = [
 	join("apps", "web", "src"),
 	join("apps", "mobile", "src"),
+	join("apps", "mobile", "modules"),
 	join("packages", "convex"),
 	join("packages", "crypto"),
 	join("packages", "ui"),
+];
+
+// The only code that may import the Shamir split (it splits the recovery
+// secret RS, never the MasterKey), plus the split's own code and tests.
+const SHAMIR_ALLOWED = [
+	join("packages", "crypto", "src", "shamir") + sep,
+	join("packages", "crypto", "src", "social") + sep,
+	join("packages", "crypto", "__tests__", "shamir.test.ts"),
 ];
 
 function isClientPath(relPath) {
@@ -97,13 +110,18 @@ const RULES = [
 			'fallbackBehavior must default to "abort", never "release_anyway" (finding H1).',
 	},
 	{
-		// v2 F1/F2: the MasterKey is never Shamir-split — no client may split it
+		// v2 F1/F2: the MasterKey is never Shamir-split — no code may split it
 		// or rebuild it from contact shards. Owner recovery (phase 5) splits a
-		// separate recovery secret and must not reopen this path.
-		pattern: /from\s+["']@keeplas\/crypto\/shamir["']/,
+		// separate recovery secret and must not reopen this path. Any module
+		// specifier naming shamir counts: import / export … from, side-effect
+		// import, dynamic import(), require(), package or relative path.
+		pattern: /\b(?:from|import|require)\s*\(?\s*["'`][^"'`\n]*shamir/i,
 		message:
-			"Clients must not import @keeplas/crypto/shamir — the MasterKey is never split (v2 F1/F2).",
-		allow: (relPath) => !isClientPath(relPath),
+			"Only packages/crypto/src/social may import the Shamir split — the MasterKey is never split (v2 F1/F2).",
+		allow: (relPath) =>
+			SHAMIR_ALLOWED.some((allowed) =>
+				allowed.endsWith(sep) ? relPath.startsWith(allowed) : relPath === allowed,
+			),
 	},
 	{
 		// v2 F5: a missed Life Check never releases — the client must not offer it.
@@ -114,7 +132,10 @@ const RULES = [
 	},
 	{
 		// The recovery-phrase verifier must be compared in constant time (M1).
-		pattern: /recoveryPhraseHash\s*[!=]==|[!=]==\s*args\.phraseHash/,
+		// Either side of == / === / != / !==; a check against undefined or
+		// null is not a comparison of the verifier.
+		pattern:
+			/\b(?:recoveryP|p)hraseHash\b\s*[!=]==?(?!=)(?!\s*(?:undefined|null)\b)|[!=]==?\s*[\w.?!]*\b(?:recoveryP|p)hraseHash\b/,
 		message:
 			"Compare the recovery-phrase verifier with constantTimeStringEquals, not == / !== (finding M1).",
 	},
@@ -132,9 +153,12 @@ const IGNORED_DIRS = new Set([
 	"build",
 ]);
 
+const FULL_SCAN = process.argv.includes("--all");
+
 function getFilesFromArgs() {
-	const fromCli = process.argv.slice(2).filter(Boolean);
+	const fromCli = process.argv.slice(2).filter((a) => a && a !== "--all");
 	if (fromCli.length > 0) return fromCli;
+	if (FULL_SCAN) return null;
 
 	// When invoked with no args, infer staged files (pre-commit hook path).
 	try {
@@ -150,6 +174,17 @@ function getFilesFromArgs() {
 		// Not in a git context — fall through to whole-repo scan.
 	}
 	return null;
+}
+
+/** Whole repo: the tracked files, or a walk outside a git checkout. */
+function allFiles() {
+	try {
+		return execSync("git ls-files", { encoding: "utf8", stdio: "pipe" })
+			.split("\n")
+			.filter(Boolean);
+	} catch {
+		return walk(REPO_ROOT, []);
+	}
 }
 
 function walk(dir, acc) {
@@ -181,8 +216,23 @@ function fileExists(path) {
 	}
 }
 
+/** The crypto package must not export the Shamir split (v2 F1/F2). */
+function checkCryptoExports() {
+	const abs = join(REPO_ROOT, CRYPTO_PACKAGE_JSON);
+	if (!fileExists(abs)) return 0;
+	const exported = Object.keys(
+		JSON.parse(readFileSync(abs, "utf8")).exports ?? {},
+	).filter((path) => /shamir/i.test(path));
+	for (const path of exported) {
+		console.error(
+			`${CRYPTO_PACKAGE_JSON.split(sep).join("/")}  "${path}" exports the Shamir split — keep it internal to the social module (v2 F1/F2).`,
+		);
+	}
+	return exported.length;
+}
+
 function check(files) {
-	let violations = 0;
+	let violations = checkCryptoExports();
 	for (const file of files) {
 		if (!SCANNED_EXTENSIONS.has(extname(file))) continue;
 		const abs = file.startsWith(sep) ? file : join(REPO_ROOT, file);
@@ -193,21 +243,21 @@ function check(files) {
 		const content = readFileSync(abs, "utf8");
 		const lines = content.split("\n");
 		for (const rule of RULES) {
-			if (rule.allow && rule.allow(relPath.replaceAll("/", sep))) continue;
-			lines.forEach((line, i) => {
-				if (rule.pattern.test(line)) {
-					console.error(`${relPath}:${i + 1}  ${rule.message}`);
-					console.error(`  > ${line.trim()}`);
-					violations++;
-				}
-			});
+			if (rule.allow && rule.allow(relPathOs)) continue;
+			const global = new RegExp(rule.pattern.source, `${rule.pattern.flags}g`);
+			for (const match of content.matchAll(global)) {
+				const line = content.slice(0, match.index).split("\n").length;
+				console.error(`${relPath}:${line}  ${rule.message}`);
+				console.error(`  > ${lines[line - 1].trim()}`);
+				violations++;
+			}
 		}
 	}
 	return violations;
 }
 
 const argFiles = getFilesFromArgs();
-const filesToCheck = argFiles ?? walk(REPO_ROOT, []);
+const filesToCheck = argFiles ?? allFiles();
 const total = check(filesToCheck);
 
 if (total > 0) {

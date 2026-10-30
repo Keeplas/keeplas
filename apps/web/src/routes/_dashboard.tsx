@@ -15,6 +15,7 @@ import { useTranslations } from "@/lib/i18n";
 import { useBackfillItemMeta } from "@/lib/use-backfill-item-meta";
 import { useBackfillItemTitles } from "@/lib/use-backfill-item-titles";
 import { useBackfillPendingShares } from "@/lib/use-backfill-pending-shares";
+import { useUpgradeLegacyPins } from "@/lib/use-upgrade-legacy-pins";
 import { purgeLegacyShards } from "@/lib/purge-legacy-shards";
 import { api } from "@keeplas/backend/_generated/api";
 import { getInitials } from "@/lib/user";
@@ -25,11 +26,13 @@ export const Route = createFileRoute("/_dashboard")({
 
 /**
  * Mounts the owner-side vault migrations once the vault is unlocked: re-wrap
- * of deferred shares, legacy plaintext titles and metadata. Renders nothing —
- * lives inside UnlockGate so it only runs with the master key available.
+ * of deferred shares, legacy contact pins, plaintext titles and metadata.
+ * Renders nothing — lives inside UnlockGate so it only runs with the master
+ * key available.
  */
 function VaultBackfills() {
   useBackfillPendingShares();
+  useUpgradeLegacyPins();
   useBackfillItemTitles(useQuery(api.vault_items.getItemSummaries));
   useBackfillItemMeta();
   return null;

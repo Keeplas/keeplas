@@ -10,7 +10,8 @@
  *   RootKey     Argon2id(phrase, salt)
  *   bundle      {version 2, phraseSalt, iv, encryptedMasterKey} = AES-GCM(RootKey, MasterKey)
  *   ML-KEM-768 + ML-DSA-65 secret keys wrapped under the MasterKey as
- *   {ciphertext, iv}; the ML-KEM public key signed with the identity key.
+ *   {ciphertext, iv}; the ML-KEM public key bound to the account by the
+ *   identity key (v1 key binding, @keeplas/crypto/sig key-binding.ts).
  *
  * Platform independent: only WebCrypto + @keeplas/crypto.
  */
@@ -19,7 +20,6 @@ import { base64ToUint8, uint8ToBase64 } from "@keeplas/crypto/encoding";
 import { deriveRootKey } from "@keeplas/crypto/kdf";
 import {
   generateRecipientKeyPair,
-  parsePublicKey,
   serializePublicKey,
   serializeSecretKey,
 } from "@keeplas/crypto/kem";
@@ -28,7 +28,7 @@ import {
   generatePhrase,
   generatePhraseVerifierSalt,
 } from "@keeplas/crypto/recovery";
-import { generateIdentityKeyPair, signBytes } from "@keeplas/crypto/sig";
+import { generateIdentityKeyPair, signKemBinding } from "@keeplas/crypto/sig";
 
 import {
   decryptText,
@@ -201,9 +201,13 @@ export async function createKitMaterial(
   };
 }
 
-/** ML-KEM encryption keypair + ML-DSA identity, secrets wrapped under the MasterKey. */
+/**
+ * ML-KEM encryption keypair + ML-DSA identity for `userId`, secrets wrapped
+ * under the MasterKey.
+ */
 export async function createPublicKeyMaterial(
   masterKey: CryptoKey,
+  userId: string,
 ): Promise<{ publicKeys: PublicKeyMaterial; identitySecretKey: string }> {
   const { publicKey, secretKey } = generateRecipientKeyPair();
   const publicKeyB64 = serializePublicKey(publicKey);
@@ -218,10 +222,11 @@ export async function createPublicKeyMaterial(
     identity.secretKey,
     masterKey,
   );
-  // Bind the ML-KEM key to the identity (TOFU): contacts verify this.
-  const publicKeySignature = signBytes(
+  // Bind the ML-KEM key to this account (v1 key binding): contacts verify it.
+  const publicKeySignature = await signKemBinding(
     identity.secretKey,
-    parsePublicKey(publicKeyB64),
+    userId,
+    publicKeyB64,
   );
 
   return {
@@ -236,14 +241,17 @@ export async function createPublicKeyMaterial(
   };
 }
 
-/** Everything M01-4 "Create my vault" needs, generated on the device. */
+/** Everything M01-4 "Create my vault" needs for `userId`, generated on the device. */
 export async function createVaultMaterial(
+  userId: string,
   words?: string[],
 ): Promise<VaultMaterial> {
   const masterKey = await generateMasterKey();
   const rawMasterKey = await exportRawKey(masterKey);
   const kit = await createKitMaterial(rawMasterKey, words);
-  const { publicKeys, identitySecretKey } =
-    await createPublicKeyMaterial(masterKey);
+  const { publicKeys, identitySecretKey } = await createPublicKeyMaterial(
+    masterKey,
+    userId,
+  );
   return { ...kit, publicKeys, rawMasterKey, identitySecretKey };
 }

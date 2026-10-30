@@ -1,16 +1,27 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { api } from "@keeplas/backend/_generated/api";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import {
   DeviceUnlockEntry,
   DeviceUnlockError,
   EnrollOptions,
+  PinServer,
   enrollMethod as enrollMethodImpl,
   deleteMethod as deleteMethodImpl,
   listMethods,
   unlockWith,
 } from "./device-unlock";
+import { useAuditedMutation } from "./use-audited-mutation";
 
 type DeviceUnlockUser = Pick<Doc<"users">, "_id" | "email">;
+
+/** The failed unlock deleted its entry (too many wrong PINs, or forgotten). */
+export function isRemovedEntry(err: unknown): boolean {
+  return (
+    err instanceof DeviceUnlockError &&
+    (err.code === "wiped" || err.code === "not-found")
+  );
+}
 
 /** Device-unlock entries of the signed-in user (`users.viewer`). */
 export function useDeviceUnlock(user: DeviceUnlockUser | null | undefined) {
@@ -19,6 +30,13 @@ export function useDeviceUnlock(user: DeviceUnlockUser | null | undefined) {
   const [entries, setEntries] = useState<DeviceUnlockEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<DeviceUnlockError | null>(null);
+  const enrollPin = useAuditedMutation(api.device_pins.enroll);
+  const releasePin = useAuditedMutation(api.device_pins.release);
+  const removePin = useAuditedMutation(api.device_pins.remove);
+  const server = useMemo<PinServer>(
+    () => ({ enroll: enrollPin, release: releasePin, remove: removePin }),
+    [enrollPin, releasePin, removePin],
+  );
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -55,28 +73,34 @@ export function useDeviceUnlock(user: DeviceUnlockUser | null | undefined) {
       if (!userId) {
         throw new DeviceUnlockError("No signed-in user", "io");
       }
-      const entry = await enrollMethodImpl(userId, masterKey, options);
+      const entry = await enrollMethodImpl(userId, masterKey, options, server);
       await refresh();
       return entry;
     },
-    [userId, refresh],
+    [userId, refresh, server],
   );
 
   const unlock = useCallback(
     async (entryId: string, secret?: string) => {
-      const key = await unlockWith(entryId, secret);
-      await refresh();
-      return key;
+      try {
+        const result = await unlockWith(entryId, secret, server);
+        await refresh();
+        return result;
+      } catch (err) {
+        // A wiped or forgotten PIN is gone from this browser: show it.
+        if (isRemovedEntry(err)) await refresh();
+        throw err;
+      }
     },
-    [refresh],
+    [refresh, server],
   );
 
   const remove = useCallback(
     async (entryId: string) => {
-      await deleteMethodImpl(entryId);
+      await deleteMethodImpl(entryId, server);
       await refresh();
     },
-    [refresh],
+    [refresh, server],
   );
 
   return {

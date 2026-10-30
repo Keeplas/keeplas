@@ -8,7 +8,6 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { isEmptyNote } from "@keeplas/export/rich-text";
 
 import { Button } from "@/components/button";
-import { Icon } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
@@ -32,6 +31,7 @@ import { keepUnlockedWhile } from "@/lib/auto-lock";
 import { formatBytes } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 import { toast } from "@/lib/toast";
+import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { useVault } from "@/providers/vault-provider";
@@ -39,6 +39,7 @@ import { radius } from "@/theme";
 
 /** An item a trusted person left me: read-only, opened on this phone. */
 export default function SharedItem() {
+  useNoScreenCapture();
   const params = useLocalSearchParams<{ contactId: string; itemId: string }>();
   const contactId = params.contactId as Id<"trusted_contacts">;
   const itemId = params.itemId as Id<"vault_items">;
@@ -201,11 +202,7 @@ export default function SharedItem() {
               icon={FILE_ICON[attachment.kind]}
               title={attachment.name}
               description={formatBytes(attachment.size, language)}
-              trailing={
-                index === current ? (
-                  <Icon name="check" size={18} color="status.active" />
-                ) : undefined
-              }
+              selected={index === current}
               onPress={() => setSelected(index)}
             />
           ))}

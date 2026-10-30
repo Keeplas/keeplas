@@ -21,7 +21,10 @@ export async function attestDevice(challenge: string): Promise<Attestation> {
   if (!Device.isDevice) return { platform: "simulator", token: "simulator" };
   if (Platform.OS === "ios") {
     if (!AppIntegrity.isSupported)
-      throw new Error("App Attest is not supported");
+      // The native module's code for it, so callers read it as a rejection.
+      throw Object.assign(new Error("App Attest is not supported"), {
+        code: "ERR_APP_INTEGRITY_FEATURE_UNSUPPORTED",
+      });
     const keyId = await AppIntegrity.generateKeyAsync();
     const token = await AppIntegrity.attestKeyAsync(keyId, challenge);
     return { platform: "ios", token, keyId };

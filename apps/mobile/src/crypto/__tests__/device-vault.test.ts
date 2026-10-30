@@ -5,15 +5,26 @@ import * as SecureStore from "expo-secure-store";
 
 import * as DeviceLock from "../../../modules/device-lock";
 import {
+  DeviceLockError,
   DevicePinError,
+  forgetDeviceId,
   forgetDeviceVault,
   devicePinLength,
   hasDeviceVault,
+  openCurrentDeviceVault,
+  openDeviceVault,
+  readDeviceId,
   readDeviceRootKey,
+  readReattachToken,
   saveDeviceVault,
   setDevicePin,
+  StaleDeviceVault,
   unlockDeviceVault,
+  writeDeviceId,
+  writeReattachToken,
 } from "../device-vault";
+import { encryptText, importAesKey } from "../envelope";
+import { buildKeyBundle } from "../vault-keys";
 
 // In-memory stand-ins: the native stores only matter here as "where did the
 // device wrap key go, and with which protection".
@@ -103,6 +114,41 @@ describe("device vault", () => {
     await expect(unlockDeviceVault("u3", "Unlock")).rejects.toThrow(
       "No vault key on this device",
     );
+  });
+
+  it("reports a screen lock that refused the key as a DeviceLockError", async () => {
+    (DeviceLock.setItem as jest.Mock).mockRejectedValueOnce(
+      new Error("Authentication canceled"),
+    );
+
+    await expect(
+      saveDeviceVault(
+        "u4",
+        { masterKey: masterKey(), rootKey: null },
+        "Unlock",
+      ),
+    ).rejects.toBeInstanceOf(DeviceLockError);
+    expect(await hasDeviceVault("u4")).toBe(false);
+  });
+
+  it("keeps this phone's device row id across sign-outs", async () => {
+    await writeDeviceId("u4", "device-1");
+    await writeReattachToken("u4", "token-1");
+    await forgetDeviceVault("u4");
+
+    expect(await readDeviceId("u4")).toBe("device-1");
+    expect(await readReattachToken("u4")).toBe("token-1");
+    await writeReattachToken("u4", null);
+    expect(await readReattachToken("u4")).toBeNull();
+  });
+
+  it("forgets the device row id when the server could not keep it", async () => {
+    await writeDeviceId("u5", "device-1");
+    await writeReattachToken("u5", "token-1");
+    await forgetDeviceId("u5");
+
+    expect(await readDeviceId("u5")).toBeNull();
+    expect(await readReattachToken("u5")).toBeNull();
   });
 });
 
@@ -240,5 +286,54 @@ describe("device vault PIN", () => {
     await setDevicePin("p4", "Unlock", "654321", undefined);
     expect(await devicePinLength("p4")).toBeNull();
     expect(await unlockDeviceVault("p4", "Unlock")).toEqual(masterKey());
+  });
+});
+
+describe("device vault after a rotation made on another device", () => {
+  const mk1 = () => new Uint8Array(32).fill(1);
+  /** The account after the rotation: owner key sealed under MasterKey 1. */
+  const rotatedUser = async (id: string, bundleRootKey: Uint8Array) => ({
+    _id: id,
+    encryptedAsymmetricSecretKey: await encryptText(
+      "owner-secret",
+      await importAesKey(mk1()),
+    ),
+    encryptedKeyBundle: await buildKeyBundle(mk1(), bundleRootKey, "salt"),
+  });
+
+  it("opens as before when the stored MasterKey is current", async () => {
+    await saveDeviceVault("r1", { masterKey: mk1(), rootKey: rootKey() }, "U");
+    const user = await rotatedUser("r1", rootKey());
+    expect((await openCurrentDeviceVault(user, "U")).masterKey).toEqual(mk1());
+  });
+
+  it("catches up with the new MasterKey through the RootKey it holds", async () => {
+    // Rotation committed, phone kept MasterKey 0 (lost response, or another
+    // phone before finalize): the RootKey still opens the new bundle.
+    await saveDeviceVault(
+      "r2",
+      { masterKey: masterKey(), rootKey: rootKey() },
+      "U",
+      "1234",
+    );
+    const user = await rotatedUser("r2", rootKey());
+    const keys = await openCurrentDeviceVault(user, "U", "1234");
+    expect(keys.masterKey).toEqual(mk1());
+    // Stored for next time, behind the same PIN.
+    expect((await openDeviceVault("r2", "U", "1234")).masterKey).toEqual(mk1());
+  });
+
+  it("refuses a phone whose keys predate the new RootKey", async () => {
+    // Finalized rotation: new kit, so the old RootKey opens nothing. The
+    // phone must not keep using (or re-publish) the retired MasterKey.
+    await saveDeviceVault(
+      "r3",
+      { masterKey: masterKey(), rootKey: rootKey() },
+      "U",
+    );
+    const user = await rotatedUser("r3", new Uint8Array(32).fill(5));
+    await expect(openCurrentDeviceVault(user, "U")).rejects.toBeInstanceOf(
+      StaleDeviceVault,
+    );
   });
 });

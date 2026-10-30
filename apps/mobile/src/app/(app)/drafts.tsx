@@ -91,7 +91,7 @@ export default function Drafts() {
           title={draft.title.trim() || t("capture.untitled")}
           description={describe(draft)}
           onPress={() => resume(draft)}
-          trailing={
+          action={
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t("drafts.menuTitle")}

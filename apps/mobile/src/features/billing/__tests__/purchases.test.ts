@@ -1,10 +1,12 @@
 import Purchases, { PURCHASES_ERROR_CODE } from "react-native-purchases";
 
+import { isLockHeld } from "@/lib/auto-lock";
 import {
   StoreUnavailableError,
   describePurchaseError,
   getLifetimePrice,
   purchaseLifetime,
+  restoreLifetime,
 } from "../purchases";
 
 jest.mock("@/lib/env", () => ({ env: { revenueCatApiKey: "appl_test" } }));
@@ -63,6 +65,28 @@ describe("purchases", () => {
     expect(error).toBeInstanceOf(StoreUnavailableError);
     expect(describePurchaseError(error)).toEqual({ kind: "unavailable" });
     expect(mocked.purchasePackage).not.toHaveBeenCalled();
+  });
+
+  it("keeps the vault unlocked while the store sheet is open", async () => {
+    // Paying can take minutes (sandbox sign-in, Face ID); an auto-lock on
+    // return would drop the purchase confirmation.
+    let heldWhilePaying = false;
+    mocked.purchasePackage.mockImplementation(async () => {
+      heldWhilePaying = isLockHeld();
+      return {} as never;
+    });
+    let heldWhileRestoring = false;
+    mocked.restorePurchases.mockImplementation(async () => {
+      heldWhileRestoring = isLockHeld();
+      return { entitlements: { active: {} } } as never;
+    });
+
+    await purchaseLifetime("user-1");
+    await restoreLifetime("user-1");
+
+    expect(heldWhilePaying).toBe(true);
+    expect(heldWhileRestoring).toBe(true);
+    expect(isLockHeld()).toBe(false);
   });
 
   it("resolves false when the user cancels the store sheet", async () => {

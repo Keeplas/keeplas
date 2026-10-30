@@ -8,7 +8,6 @@
  * @module
  */
 
-import type * as ResendOTP from "../ResendOTP.js";
 import type * as access_requests from "../access_requests.js";
 import type * as account_deletion from "../account_deletion.js";
 import type * as account_migration from "../account_migration.js";
@@ -30,6 +29,7 @@ import type * as billing from "../billing.js";
 import type * as capture_handoffs from "../capture_handoffs.js";
 import type * as cloud_backup from "../cloud_backup.js";
 import type * as crons from "../crons.js";
+import type * as device_pins from "../device_pins.js";
 import type * as devices from "../devices.js";
 import type * as dispatch from "../dispatch.js";
 import type * as email_auth from "../email_auth.js";
@@ -39,6 +39,7 @@ import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as hub from "../hub.js";
 import type * as lib_audit_secret from "../lib/audit_secret.js";
+import type * as lib_batch from "../lib/batch.js";
 import type * as lib_capture_qr from "../lib/capture_qr.js";
 import type * as lib_contact_key from "../lib/contact_key.js";
 import type * as lib_crypto from "../lib/crypto.js";
@@ -55,6 +56,8 @@ import type * as lib_rate_limit from "../lib/rate_limit.js";
 import type * as lib_require_env from "../lib/require_env.js";
 import type * as lib_sessions from "../lib/sessions.js";
 import type * as lib_storage from "../lib/storage.js";
+import type * as lib_storage_usage from "../lib/storage_usage.js";
+import type * as lib_text from "../lib/text.js";
 import type * as lib_vault_groups from "../lib/vault_groups.js";
 import type * as lib_vault_proof from "../lib/vault_proof.js";
 import type * as life_check from "../life_check.js";
@@ -95,7 +98,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  ResendOTP: typeof ResendOTP;
   access_requests: typeof access_requests;
   account_deletion: typeof account_deletion;
   account_migration: typeof account_migration;
@@ -117,6 +119,7 @@ declare const fullApi: ApiFromModules<{
   capture_handoffs: typeof capture_handoffs;
   cloud_backup: typeof cloud_backup;
   crons: typeof crons;
+  device_pins: typeof device_pins;
   devices: typeof devices;
   dispatch: typeof dispatch;
   email_auth: typeof email_auth;
@@ -126,6 +129,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   hub: typeof hub;
   "lib/audit_secret": typeof lib_audit_secret;
+  "lib/batch": typeof lib_batch;
   "lib/capture_qr": typeof lib_capture_qr;
   "lib/contact_key": typeof lib_contact_key;
   "lib/crypto": typeof lib_crypto;
@@ -142,6 +146,8 @@ declare const fullApi: ApiFromModules<{
   "lib/require_env": typeof lib_require_env;
   "lib/sessions": typeof lib_sessions;
   "lib/storage": typeof lib_storage;
+  "lib/storage_usage": typeof lib_storage_usage;
+  "lib/text": typeof lib_text;
   "lib/vault_groups": typeof lib_vault_groups;
   "lib/vault_proof": typeof lib_vault_proof;
   life_check: typeof life_check;

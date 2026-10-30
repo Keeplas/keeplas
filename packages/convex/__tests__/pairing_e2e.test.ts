@@ -38,6 +38,7 @@ describe("QR link, browser ↔ Convex ↔ phone", () => {
       sessionId,
       keyHash: await pairingKeyHash(browser.publicKey),
       origin: ORIGIN,
+      qrSecret: browser.qrSecret,
     });
 
     // Phone: scan, check the key hash, seal, approve.
@@ -53,6 +54,7 @@ describe("QR link, browser ↔ Convex ↔ phone", () => {
       browserPublicKey: details!.browserPublicKey,
       sessionId: qr.sessionId,
       origin: qr.origin,
+      qrSecret: qr.qrSecret,
       identitySecretKey: identity.secretKey,
     });
     await phone.mutation(api.pairing.approve, {
@@ -78,6 +80,7 @@ describe("QR link, browser ↔ Convex ↔ phone", () => {
       secretKey: browser.secretKey,
       sessionId,
       origin: ORIGIN,
+      qrSecret: browser.qrSecret,
       identityPublicKey: identity.publicKey,
       userId,
     });

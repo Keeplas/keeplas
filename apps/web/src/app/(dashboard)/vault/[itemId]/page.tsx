@@ -53,9 +53,11 @@ import {
   itemMetaJson,
   type CategoryChoice,
 } from "@/lib/item-meta";
+import { safeLinkHref } from "@/lib/link-payload";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
 import { useParams, useRouter } from "@/lib/navigation";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useUploadQueue } from "@/lib/upload-queue";
 import { useSortedCategories, useCategoryLabel } from "@/lib/use-categories";
 import { useDecryptedFiles } from "@/lib/use-decrypted-files";
 import { useItemLabels } from "@/lib/use-item-labels";
@@ -88,6 +90,7 @@ export default function VaultItemPage() {
     useVaultCrypto();
   const { wrap, announcePending } = useItemSharing();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
+  const { showIfStorageFull } = useUploadQueue();
   const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
   const unarchiveItem = useAuditedMutation(api.vault_items.unarchiveItem);
 
@@ -216,10 +219,14 @@ export default function VaultItemPage() {
     if (choiceKey(choice) === choiceKey(opened!)) return;
     const meta = itemMetaJson(choice.category, opened!.icon, choice.categoryId);
     // The item key: its DEK, or the master key for a legacy item.
-    await updateItem({
-      itemId,
-      encryptedMeta: await encryptContentWithKey(meta, opened!.key),
-    });
+    try {
+      await updateItem({
+        itemId,
+        encryptedMeta: await encryptContentWithKey(meta, opened!.key),
+      });
+    } catch (error) {
+      if (!(await showIfStorageFull(error))) throw error;
+    }
   }
 
   async function archive() {
@@ -273,18 +280,25 @@ export default function VaultItemPage() {
           )}
           {opened.links.length > 0 ? (
             <ul className="mt-[16px] flex flex-col gap-[6px]">
-              {opened.links.map((url) => (
-                <li key={url}>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="break-all text-text-link underline"
-                  >
-                    {url}
-                  </a>
-                </li>
-              ))}
+              {opened.links.map((url) => {
+                const href = safeLinkHref(url);
+                return (
+                  <li key={url}>
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="break-all text-text-link underline"
+                      >
+                        {url}
+                      </a>
+                    ) : (
+                      <span className="break-all">{url}</span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
         </article>

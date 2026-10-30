@@ -1,12 +1,15 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { auditedMutation } from "./audit";
-import { requireAuth } from "./helpers";
+import { requireAuth, requireFullAuth } from "./helpers";
+import { requireSessionProof } from "./session_proofs";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { sha256Hex } from "./lib/crypto";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
+import { enforceIpRateLimit } from "./lib/rate_limit";
+import { refuseOnReviewAccount } from "./store_review";
 
 // Settings-side add OR change of the user's email. On success it links a
 // passwordless `email-otp` auth account to the CURRENT user and, when the
@@ -34,7 +37,7 @@ async function assertEmailAvailable(
     .withIndex("email", (q) => q.eq("email", email))
     .first();
   if (owner && owner._id !== userId) {
-    throw new Error("This email is already linked to another account.");
+    throw new ConvexError("This email is already linked to another account.");
   }
 }
 
@@ -44,19 +47,28 @@ async function assertEmailAvailable(
  * Rate-limited to 3 per rolling hour. Refuses if the user is trying to verify
  * the same address they already have, or if the address belongs to someone
  * else.
+ *
+ * The address becomes a login method and the login-OTP channel, so the
+ * session must clear every step-up gate first. Replacing a verified address
+ * also needs a "phone" or "vault" proof, like a number change
+ * (phone_verification.ts).
  */
 export const requestVerification = mutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
+    await refuseOnReviewAccount(ctx, userId);
     const email = normalizeEmail(args.email);
-    if (!isValidEmail(email)) throw new Error("Invalid email address");
+    if (!isValidEmail(email)) throw new ConvexError("Invalid email address");
 
     // Block re-verifying the same address. Add (no current email) and change
     // (current verified, but new value differs) flows are both allowed.
     const user = await ctx.db.get(userId);
     if (user?.emailVerificationTime && user.email === email) {
-      throw new Error("New email is the same as the current one.");
+      throw new ConvexError("New email is the same as the current one.");
+    }
+    if (user?.emailVerificationTime) {
+      await requireSessionProof(ctx, "phone", "vault");
     }
     await assertEmailAvailable(ctx, email, userId);
 
@@ -67,8 +79,16 @@ export const requestVerification = mutation({
       .filter((q) => q.gt(q.field("_creationTime"), now - RATE_LIMIT_WINDOW_MS))
       .collect();
     if (recent.length >= RATE_LIMIT_MAX) {
-      throw new Error("Too many verification attempts. Try again later.");
+      throw new ConvexError("Too many verification attempts. Try again later.");
     }
+    // Per destination too, across accounts: farmed accounts must not send a
+    // stream of codes to someone else's address.
+    await enforceIpRateLimit(
+      ctx,
+      "email_verification_to",
+      email,
+      RATE_LIMIT_MAX,
+    );
     for (const stale of recent) {
       if (stale.expiresAt > now)
         await ctx.db.patch(stale._id, { expiresAt: now });
@@ -87,6 +107,7 @@ export const requestVerification = mutation({
     await ctx.scheduler.runAfter(0, internal.dispatch.sendEmailOtp, {
       email,
       code,
+      purpose: "verify_email",
       language: user?.language,
     });
 
@@ -110,7 +131,7 @@ export const verifyCodeAndLink = auditedMutation({
   resourceType: "user",
   args: { code: v.string() },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const now = Date.now();
     const candidates = await ctx.db
       .query("email_verification_codes")
@@ -129,7 +150,7 @@ export const verifyCodeAndLink = auditedMutation({
     const previousEmail = user?.email ?? null;
     if (user?.emailVerificationTime && previousEmail === email) {
       await ctx.db.delete(active._id);
-      throw new Error("New email is the same as the current one.");
+      throw new ConvexError("New email is the same as the current one.");
     }
     await assertEmailAvailable(ctx, email, userId);
 
@@ -155,7 +176,9 @@ export const verifyCodeAndLink = auditedMutation({
           .first();
         if (clash && clash._id !== acc._id) {
           await ctx.db.delete(active._id);
-          throw new Error("This email is already linked to another account.");
+          throw new ConvexError(
+            "This email is already linked to another account.",
+          );
         }
         await ctx.db.patch(acc._id, {
           providerAccountId: email,

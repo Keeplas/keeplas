@@ -9,6 +9,7 @@ import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
+import { setPendingInvite } from "@/features/people/pending-invite";
 import { serverMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -17,7 +18,8 @@ import { useSession } from "@/providers/session-provider";
 
 /**
  * M06-5: resolves the deep-link token and binds acceptance to the signed-in
- * contact's verified channel and public key.
+ * contact's verified channel and public key. Signed out, the invitation
+ * waits through sign-in and reopens once the vault is unlocked.
  */
 export default function Invite() {
   const { token = "" } = useLocalSearchParams<{ token: string }>();
@@ -30,9 +32,14 @@ export default function Invite() {
   const accept = useAuditedMutation(api.trusted_contacts.acceptInvitation);
   const decline = useAuditedMutation(api.trusted_contacts.declineInvitation);
   const [busy, setBusy] = useState(false);
+  const [openedAt] = useState(() => Date.now());
+  const open =
+    invitation?.invitationStatus === "pending" &&
+    openedAt < invitation.expiresAt;
 
   async function answer(choice: "accept" | "decline") {
     if (!viewer) {
+      setPendingInvite(token);
       router.replace("/");
       return;
     }
@@ -41,7 +48,9 @@ export default function Invite() {
       if (choice === "accept")
         await accept({ token, contactPublicKey: viewer.publicKey });
       else await decline({ token });
-      router.replace("/");
+      // Opened over the app: go back to it, not into a second copy of it.
+      if (router.canGoBack()) router.back();
+      else router.replace("/");
     } catch (error) {
       toast({
         variant: "error",
@@ -60,7 +69,7 @@ export default function Invite() {
         {t("invite.title")}
       </Text>
       <Text variant="body-lg" color="text.muted" align="center">
-        {invitation
+        {open
           ? t("invite.from", { name: invitation.inviterName })
           : t("invite.invalid")}
       </Text>
@@ -68,10 +77,10 @@ export default function Invite() {
         label={viewer ? t("invite.accept") : t("invite.signIn")}
         style={styles.full}
         loading={busy}
-        disabled={!invitation || invitation.invitationStatus !== "pending"}
+        disabled={!open}
         onPress={() => void answer("accept")}
       />
-      {viewer && invitation?.invitationStatus === "pending" ? (
+      {viewer && open ? (
         <Button
           label={t("invite.decline")}
           variant="text"

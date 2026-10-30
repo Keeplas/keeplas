@@ -16,6 +16,7 @@ import type { StorageRef } from "@keeplas/backend/lib/storage";
 import { uint8ToHex } from "@keeplas/crypto/encoding";
 
 import { randomBytes } from "@/crypto/envelope";
+import { loadOwnerKeys } from "@/crypto/owner-keys";
 import { sealCapture, type CaptureDraft } from "@/features/capture/seal";
 import {
   createSink,
@@ -26,6 +27,7 @@ import {
 } from "@/lib/files";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useSession } from "@/providers/session-provider";
+import { useVault } from "@/providers/vault-provider";
 import { draftStore } from "@/features/capture/draft-store";
 import {
   pendingEntries,
@@ -61,6 +63,7 @@ const OutboxContext = createContext<OutboxValue | null>(null);
  */
 export function OutboxProvider({ children }: { children: ReactNode }) {
   const { viewer } = useSession();
+  const { masterKey } = useVault();
   const network = useNetworkState();
   const online =
     network.isConnected !== false && network.isInternetReachable !== false;
@@ -217,12 +220,16 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
     if (online) retry();
   }, [online, retry]);
 
-  const ownerPublicKey = viewer?.publicKey;
   const capture = useCallback(
     async (draft: CaptureDraft) => {
-      if (!userId || !ownerPublicKey) {
+      if (!userId || !viewer?.publicKey || !masterKey) {
         throw new Error("Vault keys are not ready");
       }
+      // The owner's key as embedded in their secret key, not the server copy.
+      const { publicKey: ownerPublicKey } = await loadOwnerKeys(
+        viewer,
+        masterKey,
+      );
       const id = uint8ToHex(randomBytes(16));
       const sealed = await sealCapture(id, draft, ownerPublicKey, {
         open: openSource,
@@ -240,7 +247,7 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
       void flush();
       return id;
     },
-    [userId, ownerPublicKey, reload, flush],
+    [userId, viewer, masterKey, reload, flush],
   );
 
   const discard = useCallback(

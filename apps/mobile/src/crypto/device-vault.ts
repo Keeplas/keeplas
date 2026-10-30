@@ -4,6 +4,8 @@ import { deriveDeviceWrapKey } from "@keeplas/crypto/kdf";
 
 import * as DeviceLock from "../../modules/device-lock";
 import { fresh, importAesKey, randomBytes } from "./envelope";
+import { opensOwnerKey, type OwnerKeyFields } from "./owner-keys";
+import { openKeyBundleWithRootKey } from "./vault-keys";
 
 /**
  * Per-device unlock (M08-6). The MasterKey (and the RootKey, when known) is
@@ -15,6 +17,7 @@ import { fresh, importAesKey, randomBytes } from "./envelope";
 const dwkKey = (userId: string) => `keeplas.dwk.${userId}`;
 const wrappedKey = (userId: string) => `keeplas.mk.${userId}`;
 const deviceIdKey = (userId: string) => `keeplas.device.${userId}`;
+const reattachKey = (userId: string) => `keeplas.device.reattach.${userId}`;
 
 const LOCAL: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
@@ -52,6 +55,18 @@ export class DevicePinError extends Error {
   ) {
     super(`Device PIN ${code}`);
     this.name = "DevicePinError";
+  }
+}
+
+/**
+ * The screen lock didn't take the device wrap key: the Android prompt was
+ * cancelled, or the phone has no screen lock (iOS refuses the Keychain item).
+ * Never a sign that the secret that opened the vault was wrong.
+ */
+export class DeviceLockError extends Error {
+  constructor() {
+    super("The screen lock didn't keep the vault key");
+    this.name = "DeviceLockError";
   }
 }
 
@@ -106,8 +121,13 @@ export async function saveDeviceVault(
       },
     };
   }
-  await DeviceLock.setItem(dwkKey(userId), uint8ToBase64(dwk), prompt);
-  dwk.fill(0);
+  try {
+    await DeviceLock.setItem(dwkKey(userId), uint8ToBase64(dwk), prompt);
+  } catch {
+    throw new DeviceLockError();
+  } finally {
+    dwk.fill(0);
+  }
   await SecureStore.setItemAsync(
     wrappedKey(userId),
     JSON.stringify(stored),
@@ -213,6 +233,55 @@ export async function openDeviceVault(
   }
 }
 
+/**
+ * This phone's keys predate a master-key rotation made on another device:
+ * neither its MasterKey nor its RootKey opens the account's keys any more.
+ * The vault must be opened again (cloud backup, 24 words or a QR link).
+ */
+export class StaleDeviceVault extends Error {
+  constructor() {
+    super("This phone holds keys from before a key rotation");
+    this.name = "StaleDeviceVault";
+  }
+}
+
+/**
+ * {@link openDeviceVault}, checked against the account. When the stored
+ * MasterKey no longer opens the owner key (rotated elsewhere, or this phone
+ * lost the rotation's response), the stored RootKey may still open the new
+ * bundle: the current MasterKey is then stored instead. Otherwise throws
+ * {@link StaleDeviceVault}, so a retired key is never used (nor re-sealed
+ * into a new kit).
+ */
+export async function openCurrentDeviceVault(
+  user: Pick<OwnerKeyFields, "_id" | "encryptedAsymmetricSecretKey"> & {
+    encryptedKeyBundle?: string;
+  },
+  prompt: string,
+  pin?: string,
+): Promise<{ masterKey: Uint8Array; rootKey: Uint8Array | null }> {
+  const keys = await openDeviceVault(user._id, prompt, pin);
+  const opens = async (raw: Uint8Array) =>
+    opensOwnerKey(user, await importAesKey(raw));
+  if (await opens(keys.masterKey)) return keys;
+  keys.masterKey.fill(0);
+  const current =
+    keys.rootKey && user.encryptedKeyBundle
+      ? await openKeyBundleWithRootKey(
+          user.encryptedKeyBundle,
+          keys.rootKey,
+        ).catch(() => null)
+      : null;
+  if (current && (await opens(current))) {
+    const caughtUp = { masterKey: current, rootKey: keys.rootKey };
+    await saveDeviceVault(user._id, caughtUp, prompt, pin);
+    return caughtUp;
+  }
+  current?.fill(0);
+  keys.rootKey?.fill(0);
+  throw new StaleDeviceVault();
+}
+
 export async function setDevicePin(
   userId: string,
   prompt: string,
@@ -256,10 +325,13 @@ export async function readDeviceRootKey(
   return rootKey;
 }
 
+/**
+ * Delete this phone's vault key. The device row id stays: the phone keeps one
+ * `devices` row across sign-ins.
+ */
 export async function forgetDeviceVault(userId: string): Promise<void> {
   await DeviceLock.deleteItem(dwkKey(userId));
   await SecureStore.deleteItemAsync(wrappedKey(userId), LOCAL);
-  await SecureStore.deleteItemAsync(deviceIdKey(userId), LOCAL);
 }
 
 /** Convex `devices` row id of this phone for `userId` (from devices.register). */
@@ -269,4 +341,27 @@ export function readDeviceId(userId: string): Promise<string | null> {
 
 export function writeDeviceId(userId: string, deviceId: string): Promise<void> {
   return SecureStore.setItemAsync(deviceIdKey(userId), deviceId, LOCAL);
+}
+
+/**
+ * One-time token from devices.signOut: the next sign-in hands it to
+ * devices.register to take the row back. Null once used.
+ */
+export function readReattachToken(userId: string): Promise<string | null> {
+  return SecureStore.getItemAsync(reattachKey(userId), LOCAL);
+}
+
+export function writeReattachToken(
+  userId: string,
+  token: string | null,
+): Promise<void> {
+  return token === null
+    ? SecureStore.deleteItemAsync(reattachKey(userId), LOCAL)
+    : SecureStore.setItemAsync(reattachKey(userId), token, LOCAL);
+}
+
+/** The next sign-in registers this phone as a new device. */
+export async function forgetDeviceId(userId: string): Promise<void> {
+  await SecureStore.deleteItemAsync(deviceIdKey(userId), LOCAL);
+  await writeReattachToken(userId, null);
 }

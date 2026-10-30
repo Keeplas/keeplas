@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { wrapDek } from "@keeplas/crypto/kem";
+import { contactKeyMaterial } from "@keeplas/crypto/sig";
 
-import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useVerifiedKey } from "./use-contact-trust";
 import { useVaultData } from "./vault-data";
 
 /**
@@ -18,7 +18,7 @@ import { useVaultData } from "./vault-data";
 export function useBackfillShares() {
   const { itemKey } = useVaultData();
   const items = useQuery(api.vault_items.getItemsNeedingRewrap);
-  const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
+  const verifiedKey = useVerifiedKey();
   const addRecipientKeys = useAuditedMutation(api.vault_items.addRecipientKeys);
   // Keyed by item + contact set, so a later contact on the same item is
   // picked up; addRecipientKeys is idempotent if a retry overlaps.
@@ -38,13 +38,8 @@ export function useBackfillShares() {
           const dek = await itemKey(item);
           const recipientKeys = [];
           for (const contact of item.readyContacts) {
-            const publicKey = await requireVerifiedKey(
+            const publicKey = await verifiedKey(
               contactKeyMaterial(contact),
-              (contactId, fingerprint) =>
-                pin({
-                  contactId: contactId as Id<"trusted_contacts">,
-                  fingerprint,
-                }),
             ).catch(() => null);
             if (publicKey) {
               recipientKeys.push({
@@ -62,5 +57,5 @@ export function useBackfillShares() {
         }
       }
     })();
-  }, [items, itemKey, pin, addRecipientKeys]);
+  }, [items, itemKey, verifiedKey, addRecipientKeys]);
 }
