@@ -166,7 +166,7 @@ export function CodeVerification({
         value={code}
         onChange={setCode}
         onComplete={submit}
-        label={title}
+        label={t("verify.codeLabel")}
       />
       <Button
         label={confirmLabel}

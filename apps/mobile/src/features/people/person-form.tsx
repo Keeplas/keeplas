@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { isValidEmail, normalizeEmail } from "@keeplas/backend/lib/email";
 
+import { ErrorText } from "@/components/error-text";
 import { PhoneInput } from "@/components/phone-input";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
@@ -89,18 +90,12 @@ export function PersonFields({
         autoCorrect={false}
         textContentType="emailAddress"
       />
-      {emailError ? (
-        <Text variant="body-sm" color="status.revoked">
-          {t("people.emailInvalid")}
-        </Text>
-      ) : null}
+      <ErrorText>{emailError ? t("people.emailInvalid") : null}</ErrorText>
       <Text variant="label">{t("people.phone")}</Text>
       <PhoneInput {...phone.inputProps} onSubmit={onSubmit} />
-      {phone.inputProps.invalid ? (
-        <Text variant="body-sm" color="status.revoked">
-          {t("phone.invalid")}
-        </Text>
-      ) : null}
+      <ErrorText>
+        {phone.inputProps.invalid ? t("phone.invalid") : null}
+      </ErrorText>
     </>
   );
 }

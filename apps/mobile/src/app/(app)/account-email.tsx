@@ -5,6 +5,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { isValidEmail, normalizeEmail } from "@keeplas/backend/lib/email";
 
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
@@ -73,11 +74,7 @@ export default function AccountEmail() {
         onSubmitEditing={submit}
         autoFocus
       />
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
+      <ErrorText>{error}</ErrorText>
       <Button
         label={t("account.emailStep.cta")}
         chevron

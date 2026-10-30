@@ -5,6 +5,7 @@ import { useConvex } from "convex/react";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { LanguageSegment } from "@/components/language";
 import { PhoneInput } from "@/components/phone-input";
 import { RequiredSteps } from "@/components/stepper";
@@ -107,11 +108,7 @@ export default function PhoneScreen() {
       // the terms it accepts ride above the keyboard.
       footer={
         <>
-          {error ? (
-            <Text variant="body-sm" color="status.revoked">
-              {error}
-            </Text>
-          ) : null}
+          <ErrorText>{error}</ErrorText>
           {switchTo ? (
             <Button
               variant="text"

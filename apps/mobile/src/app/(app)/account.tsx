@@ -7,7 +7,7 @@ import type { StorageRef } from "@keeplas/backend/lib/storage";
 
 import { Button } from "@/components/button";
 import { NavBar } from "@/components/nav-bar";
-import { DetailRows } from "@/components/rows";
+import { DetailRows, SectionHeader } from "@/components/rows";
 import { Screen } from "@/components/screen";
 import { ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
@@ -186,7 +186,7 @@ export default function Account() {
         disabled={!nameChanged}
         onPress={saveName}
       />
-      <Text variant="label">{t("account.contact")}</Text>
+      <SectionHeader title={t("account.contact")} />
       <ListRow
         icon="mail"
         title={t("account.email")}
@@ -215,7 +215,7 @@ export default function Account() {
         }
         onPress={() => router.push("/account-phone")}
       />
-      <Text variant="label">{t("account.legal.title")}</Text>
+      <SectionHeader title={t("account.legal.title")} />
       <Text variant="body-sm" color="text.muted">
         {t("account.legal.body")}
       </Text>

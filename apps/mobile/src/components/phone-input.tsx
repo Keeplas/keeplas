@@ -73,6 +73,11 @@ export function PhoneInput({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("phone.chooseCountry")}
+        accessibilityValue={
+          selected
+            ? { text: `${selected.name} ${selected.dialCode}` }
+            : undefined
+        }
         onPress={() => setPicking(true)}
         style={styles.country}
       >
@@ -153,6 +158,8 @@ export function PhoneInput({
                 keyboardShouldPersistTaps="handled"
                 renderItem={({ item }) => (
                   <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: item.code === country }}
                     onPress={() => {
                       onCountryChange(item.code);
                       setPicking(false);

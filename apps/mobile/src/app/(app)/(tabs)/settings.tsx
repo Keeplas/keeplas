@@ -7,6 +7,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Radio } from "@/components/controls";
+import { SectionHeader } from "@/components/rows";
 import { Screen } from "@/components/screen";
 import { Card, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
@@ -79,7 +80,7 @@ export default function Settings() {
         }
         onPress={() => router.push("/account")}
       />
-      <Text variant="label">{t("settings.storage")}</Text>
+      <SectionHeader title={t("settings.storage")} />
       {usage ? (
         <Card>
           <View style={styles.between}>
@@ -150,7 +151,7 @@ export default function Settings() {
           />
         </Card>
       )}
-      <Text variant="label">{t("settings.account")}</Text>
+      <SectionHeader title={t("settings.account")} />
       <ListRow
         icon="laptop"
         title={t("privacy.devices")}
@@ -215,7 +216,7 @@ export default function Settings() {
         description={t("importArchive.rowBody")}
         onPress={() => router.push("/import")}
       />
-      <Text variant="label">{t("settings.help")}</Text>
+      <SectionHeader title={t("settings.help")} />
       <ListRow
         icon="help"
         title={t("help.title")}
@@ -228,7 +229,7 @@ export default function Settings() {
         description={t("help.supportBody")}
         onPress={() => router.push("/support")}
       />
-      <Text variant="label">{t("settings.appearance")}</Text>
+      <SectionHeader title={t("settings.appearance")} />
       <Card>
         {APPEARANCES.map((mode) => (
           <Radio

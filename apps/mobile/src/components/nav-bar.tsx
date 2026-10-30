@@ -35,6 +35,7 @@ export function NavBar({
         ) : null}
       </View>
       <Text
+        accessibilityRole="header"
         variant="label"
         align="center"
         numberOfLines={1}

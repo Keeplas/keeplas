@@ -70,7 +70,10 @@
     "resend": "Resend code",
     "resendIn": "Resend code in {seconds} s",
     "resent": "We sent you a new code.",
-    "note": "WhatsApp only carries your codes and alerts. Nothing from your vault is sent there."
+    "note": "WhatsApp only carries your codes and alerts. Nothing from your vault is sent there.",
+    "codeLabel": "Verification code",
+    "field_one": "{label}, {count} digit",
+    "field": "{label}, {count} digits"
   },
   "codeErrors": {
     "wrongTitle": "That code isn't right",
@@ -1161,6 +1164,8 @@
     "voiceNote": "Voice note",
     "attachments_one": "{count} attachment",
     "attachments": "{count} attachments",
+    "sharedWith_one": "Shared with {count} person",
+    "sharedWith": "Shared with {count} people",
     "noResults": "No items match your search.",
     "time": {
       "today": "Today",

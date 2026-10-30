@@ -5,6 +5,7 @@ import { api } from "@keeplas/backend/_generated/api";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { Screen } from "@/components/screen";
 import { Callout, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
@@ -88,11 +89,7 @@ export default function RecoveryKitEntry() {
         />
       ) : null}
       <KitWordsField value={words} onChangeText={setWords} />
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
+      <ErrorText>{error}</ErrorText>
       <Button
         label={t("recoveryKit.cta")}
         chevron

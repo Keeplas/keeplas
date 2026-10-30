@@ -5,6 +5,7 @@ import { api } from "@keeplas/backend/_generated/api";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { PhoneInput } from "@/components/phone-input";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
@@ -82,11 +83,7 @@ export function PhoneNumberStep({
       ) : null}
       <Text variant="label">{t("phone.label")}</Text>
       <PhoneInput {...phone.inputProps} onSubmit={submit} />
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
+      <ErrorText>{error}</ErrorText>
       <Button
         label={t("migration.sendCode")}
         chevron

@@ -140,6 +140,11 @@ export function VaultItemList({
           icon={visual.icon}
           color={visual.color}
           access={accessIcon(item)}
+          accessLabel={
+            item.sharedWith.length === 0
+              ? t("item.onlyYou")
+              : t("vaultList.sharedWith", { count: item.sharedWith.length })
+          }
           onMore={openActions}
           first={index === 0}
           last={index === listItems.length - 1}

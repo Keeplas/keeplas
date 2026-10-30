@@ -1,5 +1,13 @@
 import type { ReactNode } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -47,11 +55,13 @@ export function BottomSheet({
       onRequestClose={onDismiss}
     >
       <KeyboardAvoidingView behavior="padding" style={styles.scrim}>
-        <Pressable
+        <Backdrop
+          onDismiss={onDismiss}
           style={[styles.backdrop, { paddingTop: insets.top + TOP_GAP }]}
-          onPress={onDismiss}
         >
+          {/* Catches taps so they don't reach the backdrop. */}
           <Pressable
+            accessible={false}
             style={[
               styles.sheet,
               {
@@ -85,10 +95,39 @@ export function BottomSheet({
               {children}
             </ScrollView>
           </Pressable>
-        </Pressable>
+        </Backdrop>
       </KeyboardAvoidingView>
       <Toaster />
     </Modal>
+  );
+}
+
+/**
+ * Tap-outside-to-close layer of a transparent Modal (sheets, menus). Not an
+ * accessibility element itself, so screen readers reach each control inside
+ * it one by one. Modal for VoiceOver (the screen behind is not read) and
+ * closed by its escape gesture (two-finger scrub); Android's back button
+ * goes through the Modal's `onRequestClose`.
+ */
+export function Backdrop({
+  onDismiss,
+  style,
+  children,
+}: {
+  onDismiss: () => void;
+  style?: StyleProp<ViewStyle>;
+  children: ReactNode;
+}) {
+  return (
+    <Pressable
+      accessible={false}
+      accessibilityViewIsModal
+      onAccessibilityEscape={onDismiss}
+      onPress={onDismiss}
+      style={style}
+    >
+      {children}
+    </Pressable>
   );
 }
 

@@ -5,6 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
@@ -111,11 +112,7 @@ function EditPersonForm({
         <Callout icon="info" text={t("people.editReinvite")} />
       ) : null}
       <PersonFields form={form} onSubmit={save} />
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
+      <ErrorText>{error}</ErrorText>
     </Screen>
   );
 }

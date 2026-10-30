@@ -203,7 +203,13 @@ export interface ListRowProps {
   description?: string;
   icon?: IconName;
   leading?: ReactNode;
+  /** Status shown at the end of the row (chip); part of the row's press. */
   trailing?: ReactNode;
+  /** Button at the end of the row (⋯, delete, remove), pressed on its own:
+   * kept out of the row's press so screen readers reach it too. */
+  action?: ReactNode;
+  /** Choice lists: a check marks the chosen row, announced as selected. */
+  selected?: boolean;
   onPress?: () => void;
 }
 
@@ -217,36 +223,53 @@ export const ListRow = memo(function ListRow({
   icon,
   leading,
   trailing,
+  action,
+  selected,
   onPress,
 }: ListRowProps) {
   const { colors } = useTheme();
   return (
-    <Pressable
-      accessibilityRole={onPress ? "button" : undefined}
-      onPress={onPress}
-      disabled={!onPress}
-      style={({ pressed }) => [
+    <View
+      style={[
         styles.row,
         {
-          backgroundColor: pressed ? colors["bg.subtle"] : colors["bg.surface"],
+          backgroundColor: colors["bg.surface"],
           borderColor: colors["border.default"],
         },
       ]}
     >
-      {leading ?? (icon ? <IconTile icon={icon} /> : null)}
-      <View style={styles.rowText}>
-        <Text variant="label">{title}</Text>
-        {description ? (
-          <Text variant="body-sm" color="text.muted">
-            {description}
-          </Text>
-        ) : null}
-      </View>
-      {trailing ??
-        (onPress ? (
-          <Icon name="chevron-right" size={20} color="text.muted" />
-        ) : null)}
-    </Pressable>
+      <Pressable
+        // Without a press the row is not one element: its parts (and a
+        // trailing status) are read one by one.
+        accessible={Boolean(onPress)}
+        accessibilityRole={onPress ? "button" : undefined}
+        accessibilityState={selected === undefined ? undefined : { selected }}
+        onPress={onPress}
+        disabled={!onPress}
+        style={({ pressed }) => [
+          styles.rowMain,
+          action ? null : styles.rowEnd,
+          pressed && { backgroundColor: colors["bg.subtle"] },
+        ]}
+      >
+        {leading ?? (icon ? <IconTile icon={icon} /> : null)}
+        <View accessible={!onPress} style={styles.rowText}>
+          <Text variant="label">{title}</Text>
+          {description ? (
+            <Text variant="body-sm" color="text.muted">
+              {description}
+            </Text>
+          ) : null}
+        </View>
+        {trailing ??
+          (selected ? (
+            <Icon name="check" size={18} color="status.active" />
+          ) : onPress ? (
+            <Icon name="chevron-right" size={20} color="text.muted" />
+          ) : null)}
+      </Pressable>
+      {action ? <View style={styles.rowAction}>{action}</View> : null}
+    </View>
   );
 });
 
@@ -308,13 +331,21 @@ const styles = StyleSheet.create({
   row: {
     minHeight: 68,
     flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
     borderWidth: 1,
     borderRadius: radius.md,
+    overflow: "hidden",
   },
+  rowMain: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingLeft: 14,
+    paddingVertical: 12,
+  },
+  rowEnd: { paddingRight: 14 },
+  // Same 14 pt gap and edge as content inside the row.
+  rowAction: { justifyContent: "center", paddingHorizontal: 14 },
   rowText: { flex: 1, gap: 2 },
   infoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   bulletHeader: { flexDirection: "row", alignItems: "center", gap: 8 },

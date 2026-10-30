@@ -631,11 +631,7 @@ export default function ItemDetails() {
               icon={FILE_ICON[attachment.kind]}
               title={attachment.name}
               description={formatBytes(attachment.size, language)}
-              trailing={
-                index === current ? (
-                  <Icon name="check" size={18} color="status.active" />
-                ) : undefined
-              }
+              selected={index === current}
               onPress={() => setSelected(index)}
             />
           ))}

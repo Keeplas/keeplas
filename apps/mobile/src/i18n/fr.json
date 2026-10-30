@@ -65,7 +65,10 @@
     "resend": "Renvoyer le code",
     "resendIn": "Renvoyer le code dans {seconds} s",
     "resent": "Nous vous avons envoyé un nouveau code.",
-    "note": "WhatsApp ne sert qu'à vos codes et alertes. Rien de votre coffre n'y est envoyé."
+    "note": "WhatsApp ne sert qu'à vos codes et alertes. Rien de votre coffre n'y est envoyé.",
+    "codeLabel": "Code de vérification",
+    "field_one": "{label}, {count} chiffre",
+    "field": "{label}, {count} chiffres"
   },
   "codeErrors": {
     "wrongTitle": "Ce code n'est pas le bon",
@@ -1151,6 +1154,8 @@
     "voiceNote": "Note vocale",
     "attachments_one": "{count} pièce jointe",
     "attachments": "{count} pièces jointes",
+    "sharedWith_one": "Partagé avec {count} personne",
+    "sharedWith": "Partagé avec {count} personnes",
     "noResults": "Aucun élément ne correspond à votre recherche.",
     "time": {
       "today": "Aujourd’hui",

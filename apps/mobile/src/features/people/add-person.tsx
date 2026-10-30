@@ -5,6 +5,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { formatSenderIdentity } from "@keeplas/backend/lib/identity";
 
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { Icon, type IconName } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
@@ -219,11 +220,7 @@ export function AddPerson() {
         <Permission icon="check-circle" text={t("people.permReceive")} />
         <Permission icon="revoke" text={t("people.permNoFiles")} />
       </View>
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
+      <ErrorText>{error}</ErrorText>
     </Screen>
   );
 }

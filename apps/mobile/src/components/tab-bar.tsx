@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TAB_NAMES, type TabName } from "@/features/navigation/tab-routes";
@@ -61,6 +61,9 @@ export function TabBar({ active, onSelect, onAdd }: TabBarProps) {
 
   return (
     <View
+      // iOS has no "tab" trait: VoiceOver announces the items as tabs ("1 of
+      // 4") only inside a "tabbar" container. Android reads the items' "tab".
+      accessibilityRole={Platform.OS === "ios" ? "tabbar" : undefined}
       style={[
         styles.bar,
         {
