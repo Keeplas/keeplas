@@ -10,7 +10,7 @@ import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { vaultGroupValidator } from "./validators";
 import { auditedMutation, createAuditLog } from "./audit";
 import {
-  claimUpload,
+  claimNewUpload,
   deleteBlob,
   generateBlobUploadUrl,
   getBlobDownloadUrl,
@@ -120,12 +120,18 @@ export const setAvatarImage = auditedMutation({
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
 
+    // Same blob again = a retried save. Otherwise only a brand-new upload:
+    // the avatar deletes its blob later, so it must never take a vault file's.
+    const isCurrent = user.avatarStorageId === args.storageId;
     const url = await getBlobDownloadUrl(ctx, args.storageId);
-    if (!url || !(await claimUpload(ctx, args.storageId, userId))) {
+    if (
+      !url ||
+      (!isCurrent && !(await claimNewUpload(ctx, args.storageId, userId)))
+    ) {
       throw new Error("Uploaded image could not be resolved");
     }
 
-    if (user.avatarStorageId && user.avatarStorageId !== args.storageId) {
+    if (user.avatarStorageId && !isCurrent) {
       await deleteBlob(ctx, user.avatarStorageId, userId);
     }
 

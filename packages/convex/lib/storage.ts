@@ -126,6 +126,20 @@ export async function claimUpload(
 }
 
 /**
+ * {@link claimUpload} for a blob that must not be bound to anything yet, even
+ * to this account: the avatar deletes its blob when replaced or removed, so
+ * it must never take over a blob a vault file already uses.
+ */
+export async function claimNewUpload(
+  ctx: MutationCtx,
+  ref: StorageRef,
+  userId: Id<"users">,
+): Promise<boolean> {
+  if (await blobOwner(ctx, ref)) return false;
+  return await claimUpload(ctx, ref, userId);
+}
+
+/**
  * Delete one of the account's blobs. Idempotent, as on an object store (a
  * blob already gone is a no-op), and a blob bound to another account is left
  * alone: wiping one's own rows never removes someone else's file.
