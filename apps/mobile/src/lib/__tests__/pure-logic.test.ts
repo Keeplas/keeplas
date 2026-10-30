@@ -137,16 +137,33 @@ describe("resolveStage after a lost number", () => {
 });
 
 describe("auto-lock", () => {
+  // Both clocks advance together unless a test says otherwise.
+  const at = (ms: number) => ({ wall: ms, uptime: ms });
+
   it("locks only after the background grace period", () => {
-    expect(shouldLockOnResume(null, 10)).toBe(false);
-    expect(shouldLockOnResume(0, BACKGROUND_GRACE_MS)).toBe(false);
-    expect(shouldLockOnResume(0, BACKGROUND_GRACE_MS + 1)).toBe(true);
+    expect(shouldLockOnResume(null, at(10))).toBe(false);
+    expect(shouldLockOnResume(at(0), at(BACKGROUND_GRACE_MS))).toBe(false);
+    expect(shouldLockOnResume(at(0), at(BACKGROUND_GRACE_MS + 1))).toBe(true);
   });
 
   it("waits up to ten minutes while the app has a system screen open", () => {
-    expect(shouldLockOnResume(0, BACKGROUND_GRACE_MS + 1, true)).toBe(false);
-    expect(shouldLockOnResume(0, HELD_GRACE_MS, true)).toBe(false);
-    expect(shouldLockOnResume(0, HELD_GRACE_MS + 1, true)).toBe(true);
+    expect(shouldLockOnResume(at(0), at(BACKGROUND_GRACE_MS + 1), true)).toBe(
+      false,
+    );
+    expect(shouldLockOnResume(at(0), at(HELD_GRACE_MS), true)).toBe(false);
+    expect(shouldLockOnResume(at(0), at(HELD_GRACE_MS + 1), true)).toBe(true);
+  });
+
+  it("still locks when the phone's clock is turned back in the background", () => {
+    const away = { wall: 1_000_000, uptime: 0 };
+    const back = { wall: 0, uptime: BACKGROUND_GRACE_MS + 1 };
+    expect(shouldLockOnResume(away, back)).toBe(true);
+  });
+
+  it("counts the time the phone slept, which the uptime clock skips", () => {
+    const away = { wall: 0, uptime: 0 };
+    const woke = { wall: BACKGROUND_GRACE_MS + 1, uptime: 5 };
+    expect(shouldLockOnResume(away, woke)).toBe(true);
   });
 
   it("holds the lock only while a task runs", async () => {
@@ -297,7 +314,7 @@ describe("formatters", () => {
     expect(toE164("CA", "416 555 0123")).toBe("+14165550123");
     expect(toE164("CA", "123")).toBeNull();
     // Ofcom drama range: never assigned, used for the UK review accounts.
-    expect(toE164("GB", "07700 900101")).toBe("+447700900101");
+    expect(toE164("GB", "07700 900842")).toBe("+447700900842");
     expect(toE164("GB", "7700 9001")).toBeNull();
     expect(formatPhone("+14165550123")).toBe("+1 416 555 0123");
     expect(flagEmoji("FR")).toBe("🇫🇷");

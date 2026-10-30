@@ -14,6 +14,7 @@ import { Note } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { toast } from "@/lib/toast";
+import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useI18n } from "@/providers/i18n-provider";
 import { colors as palette, radius } from "@/theme";
 import { kitWords } from "./kit-open";
@@ -28,6 +29,7 @@ export function KitWordsField({
 }) {
   const { t } = useI18n();
   const [permission, requestPermission] = useCameraPermissions();
+  useNoScreenCapture();
   const [scanning, setScanning] = useState(false);
   const lastScan = useRef("");
 

@@ -3,7 +3,7 @@ import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
+import { sha256Hex, verifierMatches } from "./lib/crypto";
 import { hasPasswordAccount, optionalAuth, requireAuth } from "./helpers";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 import { maskPhone } from "./lib/phone";
@@ -43,7 +43,8 @@ function maskDestination(channel: Channel, destination: string): string {
  * Gate state for the current Convex Auth session: tells the dashboard
  * layout whether to redirect to /login/otp. Login OTP is ALWAYS required
  * (no enrollment check, unlike TOTP) — a session is cleared only by an
- * explicit code submission, recovery, or the post-signup credit.
+ * explicit code submission or the recovery phrase — never by a channel the
+ * same session just verified (a password alone could add one).
  */
 export const getMyLoginOtpGate = query({
   args: {},
@@ -242,7 +243,7 @@ export const submitLoginOtpRecovery = mutation({
     if (!user || !user.recoveryPhraseHash) {
       throw new Error("Recovery via seed is not configured for this account.");
     }
-    if (!constantTimeStringEquals(user.recoveryPhraseHash, verifierHash)) {
+    if (!(await verifierMatches(user.recoveryPhraseHash, verifierHash))) {
       throw new Error("Recovery phrase did not match. Try again.");
     }
 
@@ -261,44 +262,5 @@ export const submitLoginOtpRecovery = mutation({
       });
     }
     return { success: true };
-  },
-});
-
-/**
- * Credit the current session immediately after signup verification — the
- * signup flow already proved channel ownership via its own OTP, so we don't
- * double-prompt. Guarded: only honored when the account's channel was
- * verified within the OTP window (prevents reuse to bypass login OTP later).
- */
-export const creditSignupSession = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
-    const sessionId = await getAuthSessionId(ctx);
-    if (!sessionId) throw new Error("No active session.");
-
-    const user = await ctx.db.get(userId);
-    if (!user) throw new Error("User not found");
-
-    const now = Date.now();
-    const verifiedRecently =
-      (user.emailVerificationTime !== undefined &&
-        now - user.emailVerificationTime < OTP_TTL_MS) ||
-      (user.phoneNumberVerifiedAt !== undefined &&
-        now - user.phoneNumberVerifiedAt < OTP_TTL_MS);
-    if (!verifiedRecently) return { credited: false };
-
-    const existing = await ctx.db
-      .query("auth_session_login_otp")
-      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
-      .first();
-    if (!existing) {
-      await ctx.db.insert("auth_session_login_otp", {
-        sessionId,
-        userId,
-        verifiedAt: now,
-      });
-    }
-    return { credited: true };
   },
 });

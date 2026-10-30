@@ -27,7 +27,7 @@ captures/android/fr/01.png … 06.png   Android, French  → Google Play and the
 
 ## Before capturing
 
-1. Sign in to **Demo Owner** (`+44 7700 900101`) on the phone, as in [`APP_REVIEW.md`](../APP_REVIEW.md#how-reviewers-sign-in). Its rules apply here too: never create a kit or rotate keys on a demo account.
+1. Sign in to **Demo Owner** (`<OWNER_NUMBER>`, the 1st in `REVIEW_PHONES`) on the phone, as in [`APP_REVIEW.md`](../APP_REVIEW.md#how-reviewers-sign-in). Its rules apply here too: never create a kit or rotate keys on a demo account.
 2. Pick the language from the EN / FR menu at the top of Home. Capture all six screens in English, then all six in French.
 3. Keep the status bar clean: full battery, Wi-Fi, no notification icons (turn on Do Not Disturb). On Android, turn on System UI demo mode in Developer options.
 4. Take the screenshot: side button and volume up on iPhone, power and volume down on Android. Copy the files to this folder and rename them as above.

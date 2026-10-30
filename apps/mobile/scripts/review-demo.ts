@@ -5,10 +5,17 @@
 import { spawnSync } from "node:child_process";
 import { base64ToUint8 } from "@keeplas/crypto/encoding";
 import { derivePhraseVerifier } from "@keeplas/crypto/recovery";
+import { listedPhones } from "@keeplas/backend/lib/phone";
 
-export const OWNER = { phone: "+447700900101", name: "Demo Owner" };
-export const ALEX = { phone: "+447700900102", name: "Alex Demo" };
-export const SAM = { phone: "+447700900103", name: "Sam Demo" };
+// The demo accounts are the first three REVIEW_PHONES numbers (APP_REVIEW.md
+// → Review numbers): the numbers are kept out of this public repo. Empty when
+// the env doesn't list them; review-seed.ts refuses to run then.
+const [ownerPhone = "", alexPhone = "", samPhone = ""] = listedPhones(
+  process.env.REVIEW_PHONES,
+);
+export const OWNER = { phone: ownerPhone, name: "Demo Owner" };
+export const ALEX = { phone: alexPhone, name: "Alex Demo" };
+export const SAM = { phone: samPhone, name: "Sam Demo" };
 export const DEMO_PEOPLE = [OWNER, ALEX, SAM];
 /** What review-seed.ts gives Alex and Sam each: a vault of their own. */
 export const CONTACT_SEED = { items: 2, contacts: 0 };

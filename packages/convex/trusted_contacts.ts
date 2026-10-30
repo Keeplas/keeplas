@@ -16,17 +16,26 @@ import {
   requireFullAuth,
   resolveItemRecipients,
 } from "./helpers";
-import { auditedMutation } from "./audit";
+import { auditedMutation, type ActorIdentity } from "./audit";
 import { contactRoleValidator } from "./validators";
 import { isReviewPhone, normalizeE164 } from "./lib/phone";
-import { takeRateLimitSlot } from "./lib/rate_limit";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
+import { batchArgs, batchPage, scheduleNextBatch } from "./lib/batch";
 import { isNotificationsPaused } from "./lib/pause";
+import { enforceIpRateLimit, takeRateLimitSlot } from "./lib/rate_limit";
 import { resolveLocale, type Locale } from "./lib/locale";
-import { formatSenderIdentity, ownerDisplay } from "./lib/identity";
+import { cleanName } from "./lib/text";
+import {
+  formatSenderIdentity,
+  ownerDisplay,
+  verifiedChannels,
+} from "./lib/identity";
 import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
-import { publishContactKeyToOwnerRows } from "./lib/contact_key";
+import {
+  contactHasWraps,
+  publishContactKeyToOwnerRows,
+} from "./lib/contact_key";
 import { trustContactsHealth } from "./recovery";
 
 /**
@@ -37,17 +46,24 @@ import { trustContactsHealth } from "./recovery";
 export const MIN_TRUST_CONTACTS_FOR_RECOVERY = 2;
 
 /**
- * Get all trusted contacts for the authenticated user.
+ * Get all trusted contacts for the authenticated user, each with `hasWraps`
+ * (already sealed to) for verify-before-wrap.
  */
 export const getContacts = query({
   args: {},
   handler: async (ctx) => {
     const userId = await requireFullAuth(ctx);
-    return await ctx.db
+    const contacts = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
       .collect();
+    return await Promise.all(
+      contacts.map(async (contact) => ({
+        ...contact,
+        hasWraps: await contactHasWraps(ctx, contact._id),
+      })),
+    );
   },
 });
 
@@ -251,6 +267,7 @@ export const inviteContact = auditedMutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
+    const name = cleanName(args.name);
     const { email, phoneNumber } = await checkContactChannels(
       ctx,
       userId,
@@ -261,7 +278,7 @@ export const inviteContact = auditedMutation({
 
     const baseFields = {
       userId,
-      name: args.name,
+      name,
       email,
       phoneNumber,
       role: args.role,
@@ -295,7 +312,7 @@ export const inviteContact = auditedMutation({
       userId,
       type: "contact_invited",
       title: "Invitation sent",
-      body: `You invited ${args.name} as a trusted contact.`,
+      body: `You invited ${name} as a trusted contact.`,
       actionUrl: "/trusted-contacts",
       relatedId: contactId,
       relatedType: "trusted_contact",
@@ -340,7 +357,7 @@ export const updateContact = auditedMutation({
     ) {
       throw new Error("Contact not found");
     }
-    const name = args.name.trim();
+    const name = cleanName(args.name);
     if (!name) throw new Error("Add a name");
 
     const { email, phoneNumber } = await checkContactChannels(
@@ -449,6 +466,13 @@ function newInvitationToken(): string {
     .join("");
 }
 
+// Every delivery sends a Keeplas-branded email and/or a paid WhatsApp template
+// to an address the owner typed (invite, resend, or a pending contact's
+// changed channel). Cap them per owner so an account can't turn invitations
+// into a spam or harassment channel. Far above what setting up a few contacts
+// and fixing a typo needs.
+const INVITE_DELIVERIES_PER_HOUR = 10;
+const INVITE_DELIVERIES_PER_DAY = 30;
 /** Invitations one owner may send to the same email or number per day. */
 const INVITATIONS_PER_DAY = 3;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -456,9 +480,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /**
  * Send the accept link on every channel on file. Email is the canonical
  * channel; WhatsApp carries the same link and is the only one for phone-only
- * contacts. Each channel takes at most INVITATIONS_PER_DAY from one owner
- * (first invitation, resends, re-invitations after removal or an edit), so a
- * number can't be flooded; the throw rolls the whole mutation back.
+ * contacts. Throws once the owner exceeded their delivery budget, or once a
+ * channel took INVITATIONS_PER_DAY from this owner (first invitation, resends,
+ * re-invitations after removal or an edit), so a number can't be flooded; the
+ * throw rolls the whole invite / resend / edit back.
  * Nothing leaves a review account (REVIEW_PHONES): reviewers try the flow on
  * shared demo accounts, and their test invitations must not reach real
  * people. The invitation still shows in the app.
@@ -475,6 +500,20 @@ async function deliverInvitation(
 ) {
   const inviter = await ctx.db.get(userId);
   if (isReviewPhone(inviter?.phoneNumber)) return;
+  // Keyed by the authenticated owner, not the caller's IP.
+  await enforceIpRateLimit(
+    ctx,
+    "invite_delivery_hour",
+    userId,
+    INVITE_DELIVERIES_PER_HOUR,
+  );
+  await enforceIpRateLimit(
+    ctx,
+    "invite_delivery_day",
+    userId,
+    INVITE_DELIVERIES_PER_DAY,
+    DAY_MS,
+  );
   for (const channel of [invite.email, invite.phoneNumber]) {
     if (
       channel &&
@@ -507,37 +546,92 @@ async function deliverInvitation(
   }
 }
 
+/** The trusted-contact row an invitation link points at, if any. */
+async function invitationByToken(ctx: QueryCtx, token: string) {
+  return await ctx.db
+    .query("trusted_contacts")
+    .withIndex("by_invitation_token", (q) => q.eq("invitationToken", token))
+    .first();
+}
+
 /**
- * Get a contact invitation by token (public - no auth required).
+ * Get a contact invitation by token (public - no auth required). Invite links
+ * outlive the invitation (mailboxes, chat backups), so this returns only what
+ * the invite screen shows: the status, the inviter's display name and when the
+ * link stops working. Never the invitee's or the inviter's email / phone.
  */
 export const getInvitationByToken = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    const contact = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_invitation_token", (q) =>
-        q.eq("invitationToken", args.token),
-      )
-      .first();
-
+    const contact = await invitationByToken(ctx, args.token);
     if (!contact) return null;
 
-    // Get inviter info
     const inviter = await ctx.db.get(contact.userId);
-
     return {
-      _id: contact._id,
-      name: contact.name,
-      email: contact.email ?? null,
-      phoneNumber: contact.phoneNumber ?? null,
-      role: contact.role,
       invitationStatus: contact.invitationStatus,
-      invitedAt: contact.invitedAt,
       inviterName: resolveInviterName(inviter),
-      inviterEmail: inviter?.email ?? null,
+      expiresAt: contact.invitedAt + INVITE_EXPIRY_MS,
     };
   },
 });
+
+/**
+ * The pending, unexpired invitation behind `token`, for `answerer` to accept
+ * or decline. #5: only the person the invite was addressed to may answer it —
+ * a link leaked or forwarded to anyone else must not let an unrelated account
+ * take or refuse the seat. The answering account must own (verified) the email
+ * OR phone the invite was sent to. Unverified identifiers don't count — they'd
+ * let an attacker self-assert the invited channel.
+ */
+async function requireInvitationFor(
+  ctx: MutationCtx,
+  token: string,
+  answerer: Doc<"users">,
+): Promise<Doc<"trusted_contacts">> {
+  const contact = await invitationByToken(ctx, token);
+  if (!contact) throw new Error("Invalid invitation token");
+  if (contact.invitationStatus !== "pending") {
+    throw new Error("This invitation has already been processed");
+  }
+  if (Date.now() > contact.invitedAt + INVITE_EXPIRY_MS) {
+    throw new Error("This invitation has expired");
+  }
+  if (contact.userId === answerer._id) {
+    throw new Error("You cannot answer your own invitation");
+  }
+
+  const invitedEmail = contact.email?.trim().toLowerCase() || undefined;
+  const invitedPhone = normalizeE164(contact.phoneNumber);
+  const verified = verifiedChannels(answerer);
+  const answererEmail = verified.email?.trim().toLowerCase() || undefined;
+  const answererPhone = normalizeE164(verified.phoneNumber);
+
+  const emailMatches =
+    invitedEmail !== undefined && answererEmail === invitedEmail;
+  const phoneMatches =
+    invitedPhone !== undefined && answererPhone === invitedPhone;
+  if (!emailMatches && !phoneMatches) {
+    throw new Error(
+      "This invitation was sent to a different email or phone number.",
+    );
+  }
+  return contact;
+}
+
+/** Audit actor for an invitee answering: the entry lives on the owner's chain. */
+async function invitationActor(
+  ctx: MutationCtx,
+  token: string,
+): Promise<ActorIdentity> {
+  const contactUserId = await requireAuth(ctx);
+  const contact = await invitationByToken(ctx, token);
+  if (!contact) throw new Error("Invalid invitation token");
+  return {
+    chainUserId: contact.userId,
+    actorType: "trusted_contact",
+    actorId: contactUserId,
+  };
+}
 
 /**
  * Resolve an invitee's identifiers to an existing Keeplas account, if any.
@@ -592,23 +686,11 @@ export const acceptInvitation = auditedMutation({
   resourceType: "trusted_contact",
   args: {
     token: v.string(),
+    // Ignored: still accepted so shipped clients validate. The row gets the
+    // accepter's registered key (users row), never one the client picks.
     contactPublicKey: v.optional(v.string()),
   },
-  resolveActor: async (ctx, args) => {
-    const contactUserId = await requireAuth(ctx);
-    const contact = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_invitation_token", (q) =>
-        q.eq("invitationToken", args.token),
-      )
-      .first();
-    if (!contact) throw new Error("Invalid invitation token");
-    return {
-      chainUserId: contact.userId,
-      actorType: "trusted_contact",
-      actorId: contactUserId,
-    };
-  },
+  resolveActor: (ctx, args) => invitationActor(ctx, args.token),
   getResourceId: (_args, result) =>
     (result as { contactRecordId: string }).contactRecordId,
   handler: async (ctx, args) => {
@@ -617,56 +699,9 @@ export const acceptInvitation = auditedMutation({
     // their session may not have cleared the login-OTP gate yet. Gating here
     // would deadlock a just-signed-up contact out of accepting.
     const contactUserId = await requireAuth(ctx);
-
-    const contact = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_invitation_token", (q) =>
-        q.eq("invitationToken", args.token),
-      )
-      .first();
-
-    if (!contact) throw new Error("Invalid invitation token");
-    if (contact.invitationStatus !== "pending") {
-      throw new Error("This invitation has already been processed");
-    }
-
-    const expiresAt = contact.invitedAt + INVITE_EXPIRY_MS;
-    if (Date.now() > expiresAt) {
-      throw new Error("This invitation has expired");
-    }
-
-    if (contact.userId === contactUserId) {
-      throw new Error("You cannot accept your own invitation");
-    }
-
-    // #5: bind acceptance to the invited recipient. A token leaked/forwarded
-    // to anyone else must not let an unrelated account become the trusted
-    // contact. The accepting account must own (verified) the email OR phone the
-    // invite was addressed to. Unverified identifiers don't count — they'd let
-    // an attacker self-assert the invited channel.
     const accepter = await ctx.db.get(contactUserId);
     if (!accepter) throw new Error("Invalid invitation token");
-
-    const invitedEmailNorm = contact.email?.trim().toLowerCase() || undefined;
-    const invitedPhoneNorm = normalizeE164(contact.phoneNumber);
-    const accepterEmail =
-      accepter.emailVerificationTime !== undefined
-        ? accepter.email?.trim().toLowerCase() || undefined
-        : undefined;
-    const accepterPhone =
-      accepter.phoneNumberVerifiedAt !== undefined
-        ? normalizeE164(accepter.phoneNumber)
-        : undefined;
-
-    const emailMatches =
-      invitedEmailNorm !== undefined && accepterEmail === invitedEmailNorm;
-    const phoneMatches =
-      invitedPhoneNorm !== undefined && accepterPhone === invitedPhoneNorm;
-    if (!emailMatches && !phoneMatches) {
-      throw new Error(
-        "This invitation was sent to a different email or phone number.",
-      );
-    }
+    const contact = await requireInvitationFor(ctx, args.token, accepter);
 
     // C1: never attach a `contactUserId` that already backs another non-revoked
     // contact row for the same owner. A single human must map to at most one
@@ -688,49 +723,23 @@ export const acceptInvitation = auditedMutation({
 
     const now = Date.now();
 
-    // Mirror the accepting contact's identity material onto the row so the
-    // owner can verify `contactPublicKey` before wrapping (finding #2). The
-    // accepter IS the contact user, so we copy from their own user record.
+    // Mirror the accepting contact's key material onto the row so the owner
+    // can verify `contactPublicKey` before wrapping (finding #2). The accepter
+    // IS the contact user, so we copy from their own user record.
     await ctx.db.patch(contact._id, {
       contactUserId,
       invitationStatus: "accepted",
       acceptedAt: now,
-      contactPublicKey: args.contactPublicKey,
+      contactPublicKey: accepter.publicKey,
       contactIdentityPublicKey: accepter.identityPublicKey,
       contactPublicKeySignature: accepter.publicKeySignature,
       updatedAt: now,
     });
 
-    // Backfill the contact's other identifier onto their user record. The
-    // invite holds both email and phone, but signup only persists the one the
-    // contact signed in with (e.g. phone signup drops the invited email). We
-    // copy any missing identifier so it is on file. It is stored UNVERIFIED —
-    // no `emailVerificationTime` / `phoneNumberVerifiedAt` and no auth account
-    // — so it is contact info only, never a login method until the contact
-    // proves ownership themselves. Skipped if it would collide with another
-    // user's identifier.
-    const user = accepter;
-    const invitedEmail = invitedEmailNorm;
-    const invitedPhone = invitedPhoneNorm;
-    const backfill: { email?: string; phoneNumber?: string } = {};
-
-    if (user && !user.email && invitedEmail) {
-      const clash = await ctx.db
-        .query("users")
-        .withIndex("email", (q) => q.eq("email", invitedEmail))
-        .first();
-      if (!clash) backfill.email = invitedEmail;
-    }
-    if (user && !user.phoneNumber && invitedPhone) {
-      const clash = await ctx.db
-        .query("users")
-        .withIndex("by_phone", (q) => q.eq("phoneNumber", invitedPhone))
-        .first();
-      if (!clash) backfill.phoneNumber = invitedPhone;
-    }
-    if (Object.keys(backfill).length > 0) {
-      await ctx.db.patch(contactUserId, { ...backfill, updatedAt: now });
-    }
+    // The invite's other identifier is NOT copied onto the accepter's account:
+    // the inviting owner typed it, so it may not be theirs, and an account's
+    // email / phone receive its own Life Check check-ins and security alerts.
+    // The owner keeps it on this contact row to reach the contact.
 
     await createNotification(ctx, {
       userId: contact.userId,
@@ -754,40 +763,17 @@ export const declineInvitation = auditedMutation({
   action: "trusted_contact.declined",
   resourceType: "trusted_contact",
   args: { token: v.string() },
-  resolveActor: async (ctx, args) => {
-    const contactUserId = await requireAuth(ctx);
-    const contact = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_invitation_token", (q) =>
-        q.eq("invitationToken", args.token),
-      )
-      .first();
-    if (!contact) throw new Error("Invalid invitation token");
-    return {
-      chainUserId: contact.userId,
-      actorType: "trusted_contact",
-      actorId: contactUserId,
-    };
-  },
+  resolveActor: (ctx, args) => invitationActor(ctx, args.token),
   getResourceId: (_args, result) =>
     (result as { contactRecordId: string }).contactRecordId,
   handler: async (ctx, args) => {
     // Same rationale as acceptInvitation: a contact may decline right after
     // signing up, before clearing the login-OTP gate — left on requireAuth so
     // the gate can't lock them out of responding to the invitation.
-    await requireAuth(ctx);
-
-    const contact = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_invitation_token", (q) =>
-        q.eq("invitationToken", args.token),
-      )
-      .first();
-
-    if (!contact) throw new Error("Invalid invitation token");
-    if (contact.invitationStatus !== "pending") {
-      throw new Error("This invitation has already been processed");
-    }
+    const userId = await requireAuth(ctx);
+    const answerer = await ctx.db.get(userId);
+    if (!answerer) throw new Error("Invalid invitation token");
+    const contact = await requireInvitationFor(ctx, args.token, answerer);
 
     await ctx.db.patch(contact._id, {
       invitationStatus: "declined",
@@ -933,32 +919,34 @@ export const resendInvitation = auditedMutation({
 });
 
 /**
- * Re-publish the calling user's ML-KEM public key on every trusted_contacts
+ * Re-publish the calling user's registered key material (ML-KEM key, identity
+ * key, signature — all read from their users row) on every trusted_contacts
  * row where they are the contact (contactUserId === me). Used to backfill
  * rows accepted before the contact's crypto was ready, so the vault owner
  * can later wrap a verification envelope to them.
  *
- * Only patches rows whose contactPublicKey is missing or different from the
- * provided value — idempotent and safe to call repeatedly.
+ * Only patches rows whose material is missing or different — idempotent and
+ * safe to call repeatedly.
  */
 export const republishContactPublicKey = auditedMutation({
   action: "trusted_contact.public_key_republished",
   resourceType: "trusted_contact",
   getResourceId: () => "self",
-  args: { contactPublicKey: v.string() },
-  handler: async (ctx, args) => {
+  // Ignored: still accepted so existing clients validate. The server publishes
+  // the registered key, never one the client picks.
+  args: { contactPublicKey: v.optional(v.string()) },
+  handler: async (ctx) => {
     // Intentionally NOT step-up gated: this runs as part of a contact bringing
     // their crypto online right after accepting (often same session as signup),
-    // mirroring the acceptInvitation rationale. Gating it would block a fresh
-    // contact from publishing the public key the owner needs to wrap to them.
+    // mirroring the acceptInvitation rationale. It only copies the caller's own
+    // write-once material (users.setPublicKey), so it cannot change any key.
     const userId = await requireAuth(ctx);
-    // The republishing caller IS the contact user, so we mirror their identity
-    // material (finding #2) onto every owner's row alongside the ML-KEM key.
     const me = await ctx.db.get(userId);
+    if (!me?.publicKey) throw new Error("No public key to publish");
     const patched = await publishContactKeyToOwnerRows(ctx, userId, {
-      contactPublicKey: args.contactPublicKey,
-      contactIdentityPublicKey: me?.identityPublicKey,
-      contactPublicKeySignature: me?.publicKeySignature,
+      contactPublicKey: me.publicKey,
+      contactIdentityPublicKey: me.identityPublicKey,
+      contactPublicKeySignature: me.publicKeySignature,
     });
     return { patched };
   },
@@ -967,12 +955,14 @@ export const republishContactPublicKey = auditedMutation({
 /**
  * TOFU pin (finding #2). The OWNER pins a contact's identity-key fingerprint
  * the first time the client successfully verifies it for wrapping. The
- * fingerprint is computed client-side (`identityKeyFingerprint`) so the server
- * never decides what is trusted — it only persists the owner's decision.
+ * fingerprint and its `mac` (HMAC under a MasterKey-derived key) are computed
+ * client-side, so the server never decides what is trusted and cannot forge a
+ * pin — it only persists the owner's decision.
  *
- * First-pin only: refuses if the row already carries a pin. A deliberate
- * key change goes through the separate, explicit `repinContactIdentity`, so a
- * silent server substitution can never overwrite an existing pin.
+ * First pin, or the same identity's MAC: a legacy unMACed pin being upgraded,
+ * or a pin re-MACed after a MasterKey rotation. A different identity goes
+ * through the separate, explicit `repinContactIdentity`. `mac` stays optional
+ * for older clients, which may only pin a contact that has no pin yet.
  */
 export const pinContactIdentity = auditedMutation({
   action: "trusted_contact.identity_pinned",
@@ -981,6 +971,7 @@ export const pinContactIdentity = auditedMutation({
   args: {
     contactId: v.id("trusted_contacts"),
     fingerprint: v.string(),
+    mac: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
@@ -988,11 +979,15 @@ export const pinContactIdentity = auditedMutation({
     if (!contact || contact.userId !== userId) {
       throw new Error("Contact not found");
     }
-    if (contact.pinnedIdentityFingerprint) {
+    if (
+      contact.pinnedIdentityFingerprint &&
+      (contact.pinnedIdentityFingerprint !== args.fingerprint || !args.mac)
+    ) {
       throw new Error("Contact identity is already pinned");
     }
     await ctx.db.patch(args.contactId, {
       pinnedIdentityFingerprint: args.fingerprint,
+      pinnedIdentityMac: args.mac,
       updatedAt: Date.now(),
     });
     return { pinned: true };
@@ -1001,8 +996,8 @@ export const pinContactIdentity = auditedMutation({
 
 /**
  * Explicit re-pin (finding #2). Used ONLY when the owner deliberately accepts
- * a contact's identity-key change after the blocking alert — never automatic.
- * Overwrites the existing pin with the new fingerprint the owner reviewed.
+ * a contact's identity after the blocking alert — never automatic. Overwrites
+ * the existing pin with the fingerprint (and MAC) the owner reviewed.
  */
 export const repinContactIdentity = auditedMutation({
   action: "trusted_contact.identity_repinned",
@@ -1011,6 +1006,7 @@ export const repinContactIdentity = auditedMutation({
   args: {
     contactId: v.id("trusted_contacts"),
     fingerprint: v.string(),
+    mac: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
@@ -1020,6 +1016,7 @@ export const repinContactIdentity = auditedMutation({
     }
     await ctx.db.patch(args.contactId, {
       pinnedIdentityFingerprint: args.fingerprint,
+      pinnedIdentityMac: args.mac,
       updatedAt: Date.now(),
     });
     return { repinned: true };
@@ -1088,8 +1085,14 @@ export const getVaultsWhereIAmContact = query({
             .length
         : 0;
 
+      // Only what the contact's screens use: the row is the owner's, and its
+      // label, pins and reminder state are none of the contact's business.
       result.push({
-        ...contact,
+        _id: contact._id,
+        invitationStatus: contact.invitationStatus,
+        lastVerifiedAt: contact.lastVerifiedAt,
+        // The contact's own key, so their client can publish a missing one.
+        contactPublicKey: contact.contactPublicKey,
         ownerName: owner.name,
         ownerEmail: owner.email,
         ownerPhone: owner.phone,
@@ -1266,6 +1269,7 @@ const RECONFIRM_STALE_MS = 30 * 24 * 60 * 60 * 1000; // verification considered 
 const RECONFIRM_THROTTLE_MS = 6 * 24 * 60 * 60 * 1000; // ≤ 1 nudge / weekly run
 const MAX_RECONFIRM_REMINDERS = 3; // then alert the owner to replace
 const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // matches the accept-link TTL + WhatsApp template (keeplas_invite_tc)
+const RECONFIRM_BATCH_SIZE = 200; // contacts per sweep run (≤ 1 WhatsApp each)
 
 /**
  * Weekly availability re-confirmation sweep (driven by crons.ts). Two gaps
@@ -1280,14 +1284,21 @@ const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // matches the accept-link TTL
  *
  * Reuses the existing notification + WhatsApp dispatch infrastructure; no
  * new messaging system. Idempotent via `ownerNotifiedUnavailableAt`.
+ *
+ * Reads one page of contacts per run and schedules the next (lib/batch.ts),
+ * so the sweep stays within the transaction limits however many contacts
+ * there are. Each page commits its own nudge stamps, so a re-run of a page
+ * is throttled by `lastReconfirmAt` instead of nudging twice.
  */
 export const runAvailabilityReconfirm = internalMutation({
-  args: {},
-  handler: async (ctx) => {
+  args: batchArgs,
+  handler: async (ctx, args) => {
     const now = Date.now();
-    const contacts = await ctx.db.query("trusted_contacts").collect();
+    const page = await ctx.db
+      .query("trusted_contacts")
+      .paginate(batchPage(RECONFIRM_BATCH_SIZE, args.cursor));
 
-    for (const c of contacts) {
+    for (const c of page.page) {
       if (
         c.invitationStatus === "revoked" ||
         c.invitationStatus === "declined"
@@ -1392,5 +1403,11 @@ export const runAvailabilityReconfirm = internalMutation({
         });
       }
     }
+
+    await scheduleNextBatch(
+      ctx,
+      page,
+      internal.trusted_contacts.runAvailabilityReconfirm,
+    );
   },
 });

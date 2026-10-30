@@ -3,10 +3,12 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { createSocialRecovery } from "@keeplas/crypto/social";
 
-import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
-import { needsSocialRecoverySetup } from "@/lib/social-recovery-policy";
+import { useVerifiedKey } from "@/features/vault/use-contact-trust";
+import {
+  needsSocialRecoverySetup,
+  targetKeyMaterial,
+} from "@/lib/social-recovery-policy";
 import { useAuditedAction } from "@/lib/use-audited-action";
-import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
 
@@ -15,7 +17,7 @@ export function useSealSocialRecovery() {
   const { exportRawMasterKey } = useVault();
   const targets = useQuery(api.recovery.getSetupTargets);
   const myRequest = useQuery(api.recovery.getMyRequest);
-  const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
+  const verifiedKey = useVerifiedKey();
   const setup = useAuditedAction(api.recovery_node.setup);
 
   const seal = useCallback(async () => {
@@ -25,14 +27,7 @@ export function useSealSocialRecovery() {
       const contacts = await Promise.all(
         targets.contacts.map(async (contact) => ({
           contactId: contact.contactId,
-          publicKey: await requireVerifiedKey(
-            contactKeyMaterial({ _id: contact.contactId, ...contact }),
-            (contactId, fingerprint) =>
-              pin({
-                contactId: contactId as typeof contact.contactId,
-                fingerprint,
-              }),
-          ),
+          publicKey: await verifiedKey(targetKeyMaterial(contact)),
         })),
       );
       const material = await createSocialRecovery({
@@ -54,7 +49,7 @@ export function useSealSocialRecovery() {
     } finally {
       masterKey.fill(0);
     }
-  }, [targets, myRequest, exportRawMasterKey, pin, setup, viewer._id]);
+  }, [targets, myRequest, exportRawMasterKey, verifiedKey, setup, viewer._id]);
 
   return { targets, seal };
 }

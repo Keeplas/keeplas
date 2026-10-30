@@ -13,6 +13,7 @@ import { useWithPin } from "@/features/pin/use-pin-gate";
 import { holdLock } from "@/lib/auto-lock";
 import { formatDate } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useReplaceKit } from "@/lib/use-replace-kit";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -126,6 +127,7 @@ export function KitWords({
 }) {
   const { t, language } = useI18n();
   const card = useRef<View>(null);
+  useNoScreenCapture();
   const [busy, setBusy] = useState<"pdf" | "image" | null>(null);
   const [shared, setShared] = useState<"pdf" | "image" | null>(null);
   // When these words were shown: the kit's creation date on the files.

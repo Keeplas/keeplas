@@ -5,7 +5,11 @@ import { useRouter } from "expo-router";
 import { useConvex } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { pairingKeyHash } from "@keeplas/crypto/pairing";
+import {
+  pairingCode,
+  pairingKeyHash,
+  type PairingQr,
+} from "@keeplas/crypto/pairing";
 
 import { AppHeader } from "@/components/app-header";
 import { Icon } from "@/components/icon";
@@ -14,8 +18,12 @@ import { StateMessage, StateSheet } from "@/components/state-message";
 import { Text } from "@/components/text";
 import { draftStore } from "@/features/capture/draft-store";
 import { claimCaptureQr } from "@/features/link/capture-qr";
+import { PairingApproval } from "@/features/link/pairing-approval";
 import { takePendingLink } from "@/features/link/pending-link";
-import { evaluatePairingQr } from "@/features/link/qr-flow";
+import {
+  evaluatePairingQr,
+  type PairingSession,
+} from "@/features/link/qr-flow";
 import {
   PairingKeyMismatch,
   PresenceDeclined,
@@ -33,7 +41,8 @@ import { draftHref } from "@/features/capture/draft-route";
  * M03-4 Scan the QR code. A web "Scan with my phone" code (W06-7) opens the
  * document scanner; any other scan (or universal link) goes through
  * `evaluatePairingQr`: invalid QR, expired session, key mismatch (M09-3,
- * reported to Convex) or M03-5 to approve.
+ * reported to Convex) or M03-5, where only an explicit Approve (then the
+ * biometric prompt) logs the browser in. A link never approves on its own.
  */
 export default function Scan() {
   const router = useRouter();
@@ -48,6 +57,13 @@ export default function Scan() {
   const [problem, setProblem] = useState<
     "invalid" | "expired" | "failed" | null
   >(null);
+  // M03-5: a checked pairing QR waiting for Approve or Decline.
+  const [pending, setPending] = useState<{
+    qr: PairingQr;
+    session: PairingSession;
+    code: string;
+  } | null>(null);
+  const [approving, setApproving] = useState(false);
   const approvePairing = useApprovePairing();
   const busy = useRef(false);
 
@@ -95,38 +111,61 @@ export default function Scan() {
           });
           return;
         }
-        try {
-          await approvePairing(qr, outcome.session.browserPublicKey);
-        } catch (error) {
-          if (error instanceof PairingKeyMismatch) {
-            await reject({
-              sessionId: qr.sessionId as Id<"pairing_sessions">,
-              reason: "key_mismatch",
-            }).catch(() => undefined);
-            router.replace({
-              pathname: "/link-blocked",
-              params: { expected: qr.keyHash, received: error.receivedHash },
-            });
-          } else if (!(error instanceof PresenceDeclined)) {
-            setProblem("failed");
-          }
-          return;
-        }
-        router.replace({
-          pathname: "/link-connected",
-          params: {
-            ua: outcome.session.userAgent,
-            country: outcome.session.approxLocation,
-            at: String(Date.now()),
-          },
+        setPending({
+          qr,
+          session: outcome.session,
+          code: await pairingCode(qr),
         });
       } finally {
         busy.current = false;
         setChecking(false);
       }
     },
-    [convex, reject, claimHandoff, router, approvePairing],
+    [convex, reject, claimHandoff, router],
   );
+
+  async function approve() {
+    if (!pending) return;
+    const { qr, session } = pending;
+    setApproving(true);
+    try {
+      await approvePairing(qr, session.browserPublicKey);
+    } catch (error) {
+      if (error instanceof PairingKeyMismatch) {
+        await reject({
+          sessionId: qr.sessionId as Id<"pairing_sessions">,
+          reason: "key_mismatch",
+        }).catch(() => undefined);
+        router.replace({
+          pathname: "/link-blocked",
+          params: { expected: qr.keyHash, received: error.receivedHash },
+        });
+      } else if (!(error instanceof PresenceDeclined)) {
+        setPending(null);
+        setProblem("failed");
+      }
+      return;
+    } finally {
+      setApproving(false);
+    }
+    router.replace({
+      pathname: "/link-connected",
+      params: {
+        ua: session.userAgent,
+        country: session.approxLocation,
+        at: String(Date.now()),
+      },
+    });
+  }
+
+  async function decline() {
+    if (!pending) return;
+    await reject({
+      sessionId: pending.qr.sessionId as Id<"pairing_sessions">,
+      reason: "declined",
+    }).catch(() => undefined); // The session expires in 2 minutes anyway.
+    router.back();
+  }
 
   useEffect(() => {
     const link = takePendingLink();
@@ -134,6 +173,20 @@ export default function Scan() {
   }, [handle]);
 
   const header = <AppHeader onBack={router.back} />;
+
+  if (pending) {
+    return (
+      <PairingApproval
+        sessionId={pending.qr.sessionId}
+        session={pending.session}
+        code={pending.code}
+        busy={approving}
+        onApprove={() => void approve()}
+        onDecline={() => void decline()}
+        onClose={() => setPending(null)}
+      />
+    );
+  }
 
   if (camera.denied) {
     return (

@@ -1,36 +1,41 @@
 /**
  * The device's encrypted SQLite database (op-sqlite built with
  * `"sqlcipher": true`, see package.json). The database key is 32 random
- * bytes kept in the Keychain / Keystore (this device only). Holds the
- * capture outbox, the vault summary cache and the capture drafts.
+ * bytes in the device store: this phone only, and readable only while it
+ * is unlocked, so a locked phone does not give it away (once opened, the
+ * database stays open until the app quits). Holds the capture outbox, the
+ * vault summary cache and the capture drafts.
  *
  * The file keeps its historical "outbox" name so existing installs reopen
  * their queue.
  */
 import { open, type DB } from "@op-engineering/op-sqlite";
-import * as SecureStore from "expo-secure-store";
 import { uint8ToHex } from "@keeplas/crypto/encoding";
 
 import { randomBytes } from "@/crypto/envelope";
+import { deviceStore } from "./device-store";
 
 const KEY_NAME = "keeplas.outbox.dbkey";
-const LOCAL: SecureStore.SecureStoreOptions = {
-  keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
-};
 
-async function databaseKey(): Promise<string> {
-  const existing = await SecureStore.getItemAsync(KEY_NAME, LOCAL);
-  if (existing) return existing;
+async function databaseKey(): Promise<{ key: string; created: boolean }> {
+  const existing = deviceStore.getItem(KEY_NAME);
+  if (existing) return { key: existing, created: false };
   const key = uint8ToHex(randomBytes(32));
-  await SecureStore.setItemAsync(KEY_NAME, key, LOCAL);
-  return key;
+  deviceStore.setItem(KEY_NAME, key);
+  return { key, created: true };
 }
 
 let database: Promise<DB> | null = null;
 
 export function secureDb(): Promise<DB> {
-  database ??= databaseKey().then(async (encryptionKey) => {
-    const handle = open({ name: "keeplas-outbox.sqlite", encryptionKey });
+  if (database) return database;
+  database = databaseKey().then(async ({ key: encryptionKey, created }) => {
+    const options = { name: "keeplas-outbox.sqlite", encryptionKey };
+    // The key never leaves this phone, but the file can come back from an
+    // iPhone backup or a phone transfer. Without its key it is unreadable:
+    // drop it so a new key starts a fresh database.
+    if (created) open(options).delete();
+    const handle = open(options);
     await handle.execute(
       `CREATE TABLE IF NOT EXISTS outbox (
         id TEXT PRIMARY KEY NOT NULL,
@@ -77,6 +82,10 @@ export function secureDb(): Promise<DB> {
       )`,
     );
     return handle;
+  });
+  // The key cannot be read while the phone is locked: try again next call.
+  database.catch(() => {
+    database = null;
   });
   return database;
 }

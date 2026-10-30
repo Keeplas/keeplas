@@ -1,4 +1,6 @@
+import { Platform } from "react-native";
 import { Directory, File, Paths } from "expo-file-system";
+import ReactNativeBlobUtil from "react-native-blob-util";
 
 import type { FormDraftDb } from "@/lib/form-drafts";
 import { secureDb } from "@/lib/secure-db";
@@ -33,9 +35,25 @@ export const sqliteDraftDb: DraftDb = {
 
 const root = () => new Directory(Paths.document, "drafts");
 
+/**
+ * Draft files are not sealed yet, so they stay out of backups. iOS backs up
+ * Documents (iCloud, computer backups): flag the drafts folder, each time a
+ * file goes in (the folder is remade after a sign-out) and at sign-in for a
+ * folder an older version made. Android already backs up nothing but
+ * shared preferences (expo-secure-store's backup rules, app.json).
+ */
+export function keepDraftsOutOfBackups(): void {
+  const dir = root();
+  if (Platform.OS !== "ios" || !dir.exists) return;
+  ReactNativeBlobUtil.ios
+    .excludeFromBackupKey(dir.uri.replace(/^file:\/\//, ""))
+    .catch(() => undefined);
+}
+
 function draftFolder(draftId: string): Directory {
   const dir = new Directory(root(), draftId);
   if (!dir.exists) dir.create({ intermediates: true });
+  keepDraftsOutOfBackups();
   return dir;
 }
 

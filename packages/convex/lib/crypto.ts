@@ -34,6 +34,39 @@ export async function sha256Hex(input: string | Uint8Array): Promise<string> {
     .join("");
 }
 
+const VERIFIER_DIGEST_PREFIX = "sha256:";
+
+/**
+ * What the server stores for a 24-word verifier (`recoveryPhraseHash`,
+ * `totpResetVerifierHash`): its SHA-256, never the verifier itself. The
+ * verifier is a bearer credential (recovery sign-in, step-up escape hatches,
+ * password reset), so a stored copy must not be submittable. It is already
+ * high-entropy Argon2id/PBKDF2 output, so a plain hash is enough.
+ */
+export async function verifierDigest(verifier: string): Promise<string> {
+  return VERIFIER_DIGEST_PREFIX + (await sha256Hex(verifier));
+}
+
+/** Whether a stored verifier is still a pre-digest (legacy) value. */
+export function isLegacyVerifier(stored: string): boolean {
+  return !stored.startsWith(VERIFIER_DIGEST_PREFIX);
+}
+
+/**
+ * Constant-time check of a submitted verifier against the stored one. Rows
+ * written before digests hold the verifier itself and keep matching until
+ * `migrations:digestRecoveryVerifiers` rewrites them.
+ */
+export async function verifierMatches(
+  stored: string,
+  submitted: string,
+): Promise<boolean> {
+  return constantTimeStringEquals(
+    stored,
+    isLegacyVerifier(stored) ? submitted : await verifierDigest(submitted),
+  );
+}
+
 /** Decode standard base64 into bytes. Throws on malformed input. */
 export function base64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64);

@@ -69,17 +69,19 @@
       "step1Detail": "on your phone",
       "step2": "Scan the QR code",
       "step2Detail": "with the app",
-      "step3": "You are in",
-      "step3Detail": "this browser opens your vault",
+      "step3": "Check the code",
+      "step3Detail": "then approve on your phone",
       "expiresIn": "Expires in",
       "trust": "Keep me logged in",
       "trustDetail": "On a shared computer, leave this off.",
       "expired": "This code has expired.",
       "newCode": "Generate a new code",
-      "rejected": "Your phone blocked this login because the code didn't match this browser. Refresh the page to get a new code.",
+      "rejected": "This login was declined on your phone, or the code didn't match this browser. Refresh the page to get a new code.",
       "error": "Something went wrong while linking this browser.",
       "retry": "Try again",
-      "linking": "Linking this browser…"
+      "linking": "Linking this browser…",
+      "codeLabel": "Code",
+      "codeDetail": "Approve only if your phone shows the same code."
     }
   },
   "chrome": {
@@ -843,7 +845,7 @@
       "savePin": "Save my code",
       "whyTitle": "Why it matters",
       "why1": "Without a code, you link this browser again from your phone each time Keeplas locks.",
-      "why2": "Your vault key stays encrypted in this browser: only these {n} digits open it.",
+      "why2": "Your vault key stays encrypted in this browser. It opens only with these {n} digits, checked by Keeplas, so a copy of the browser alone can't open it.",
       "why3": "After 10 wrong tries, Keeplas removes the key from this browser. Your vault stays safe."
     },
     "deviceUnlock": {
@@ -996,8 +998,7 @@
       "encrypted": "Encrypted",
       "download": "Download",
       "decrypting": "Decrypting…",
-      "documentReady": "Document ready. Open or download to view.",
-      "open": "Open",
+      "documentReady": "Document ready. Download it to view.",
       "enlarge": "Enlarge",
       "close": "Close"
     }
@@ -1871,6 +1872,9 @@
   },
   "lifeCheckConfirm": {
     "badge": "Life Check",
+    "promptTitle": "Confirm you're well",
+    "promptBody": "Press the button below to answer your Life Check and reset your check-in countdown.",
+    "confirm": "I'm well",
     "okTitle": "Thanks, you're confirmed",
     "okBody": "We've recorded that you're well and reset your check-in countdown. You can safely close this tab.",
     "invalidTitle": "This link is invalid or expired",
@@ -2130,11 +2134,12 @@
     "request": {
       "title": "Recovery request in progress",
       "approved": "{count} of 2 approved",
-      "code": "Recovery code",
+      "code": "Recovery codes",
       "hoursLeft": "{hours} hours remaining",
       "hourLeft": "1 hour remaining",
       "windowEnded": "Protection window ended",
-      "cancel": "Cancel request"
+      "cancel": "Cancel request",
+      "codeOnPhone": "Shown on the phone that started the recovery, one per contact."
     },
     "cancelDialog": {
       "title": "Cancel this recovery request?",
@@ -2204,6 +2209,9 @@
         "device_revoked": "Device revoked",
         "device_not_me": "Unknown device blocked",
         "pairing_session_approved": "Browser linked",
+        "device_pin_enrolled": "PIN set up on a browser",
+        "device_pin_unlocked": "Unlocked with a PIN",
+        "device_pin_removed": "PIN removed from a browser",
         "passkey_registered": "Passkey added",
         "passkey_removed": "Passkey removed",
         "vault_item_created": "Item added",

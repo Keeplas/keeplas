@@ -2,9 +2,9 @@
 // App Store / Google Play review accounts (runbook: apps/mobile/APP_REVIEW.md).
 //
 //   pnpm review:status                 # is every REVIEW_PHONES number ready?
-//   pnpm review:clear +447700900101     # undo what reviewers left on a demo account
-//   pnpm review:reset +447700900104     # erase that review account now
-//   pnpm review:reset +447700900104 --yes   # same, without the prompt
+//   pnpm review:clear <OWNER_NUMBER>    # undo what reviewers left on a demo account
+//   pnpm review:reset <SIGNUP_NUMBER>   # erase that review account now
+//   pnpm review:reset <SIGNUP_NUMBER> --yes   # same, without the prompt
 //
 // They run the internal `store_review` functions on the PROD deployment, where
 // the reviewers sign in: the root scripts wrap this file in
@@ -262,7 +262,7 @@ if (command === "clear") {
 }
 
 if (command === "reset") {
-  const phone = phoneFromArgs("+447700900104");
+  const phone = phoneFromArgs("a sign-up number (4th or 5th in REVIEW_PHONES)");
   // Show what would be erased first: a typo between the demo owner and the
   // spare sign-up number must not go unnoticed.
   const listed = run("store_review:status", {}).accounts.find(

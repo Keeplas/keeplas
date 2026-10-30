@@ -3,18 +3,15 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { wrapDek } from "@keeplas/crypto/kem";
+import { contactKeyMaterial } from "@keeplas/crypto/sig";
 
-import {
-  ContactKeyBlocked,
-  contactKeyMaterial,
-  requireVerifiedKey,
-} from "@/crypto/contact-keys";
+import { ContactKeyBlocked } from "@/crypto/contact-keys";
 import type { TranslateParams } from "@/i18n/translate";
-import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useVerifiedKey } from "./use-contact-trust";
 
 export function useWrapForContacts() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
-  const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
+  const verifiedKey = useVerifiedKey();
 
   return useCallback(
     (dek: CryptoKey, contactIds: Id<"trusted_contacts">[]) =>
@@ -24,21 +21,14 @@ export function useWrapForContacts() {
             (candidate) => candidate._id === contactId,
           );
           if (!contact) throw new Error("Contact unavailable");
-          const publicKey = await requireVerifiedKey(
-            contactKeyMaterial(contact),
-            (id, fingerprint) =>
-              pin({
-                contactId: id as Id<"trusted_contacts">,
-                fingerprint,
-              }),
-          );
+          const publicKey = await verifiedKey(contactKeyMaterial(contact));
           return {
             contactId: contact._id,
             wrappedDek: await wrapDek(dek, publicKey),
           };
         }),
       ),
-    [contacts, pin],
+    [contacts, verifiedKey],
   );
 }
 
@@ -51,7 +41,7 @@ export function useWrapForContacts() {
  */
 export function useEveryoneRecipients() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
-  const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
+  const verifiedKey = useVerifiedKey();
 
   return useCallback(
     async (contactIds?: string[]) => {
@@ -62,24 +52,22 @@ export function useEveryoneRecipients() {
       const pending: Id<"trusted_contacts">[] = [];
       for (const contact of contacts ?? []) {
         if (contactIds && !contactIds.includes(contact._id)) continue;
-        const publicKey = await requireVerifiedKey(
-          contactKeyMaterial(contact),
-          (id, fingerprint) =>
-            pin({ contactId: id as Id<"trusted_contacts">, fingerprint }),
-        ).catch((error: unknown) => {
-          if (
-            error instanceof ContactKeyBlocked &&
-            error.reason === "unverifiable"
-          )
-            return null;
-          throw error;
-        });
+        const publicKey = await verifiedKey(contactKeyMaterial(contact)).catch(
+          (error: unknown) => {
+            if (
+              error instanceof ContactKeyBlocked &&
+              error.reason === "unverifiable"
+            )
+              return null;
+            throw error;
+          },
+        );
         if (publicKey) recipients.push({ contactId: contact._id, publicKey });
         else pending.push(contact._id);
       }
       return { recipients, pending };
     },
-    [contacts, pin],
+    [contacts, verifiedKey],
   );
 }
 

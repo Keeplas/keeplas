@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 
 /**
- * Sealed audit envelope mirrored from the `__keeplas_ctx` cookie. The
- * signature is computed by the Next.js middleware; the client treats the
- * payload as opaque and forwards it to Convex mutations as `_audit`.
+ * Sealed audit envelope mirrored from the HttpOnly audit cookie. The
+ * signature is computed by the request middleware (lib/audit-context.ts); the
+ * client treats the payload as opaque and forwards it to Convex mutations as
+ * `_audit`.
  */
 export interface AuditContext {
   ip: string;

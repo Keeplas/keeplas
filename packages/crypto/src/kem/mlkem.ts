@@ -98,6 +98,11 @@ export function serializePublicKey(publicKey: Uint8Array): string {
   return uint8ToBase64(publicKey);
 }
 
+/**
+ * Decode a base64 public key. Only the canonical encoding (what
+ * `serializePublicKey` writes) is accepted: `atob` also takes whitespace and
+ * missing padding, which would give one key many string forms.
+ */
 export function parsePublicKey(serialized: string): Uint8Array {
   const bytes = base64ToUint8(serialized);
   if (bytes.length !== ML_KEM_PUBLIC_KEY_BYTES) {
@@ -105,7 +110,29 @@ export function parsePublicKey(serialized: string): Uint8Array {
       `Decoded public key must be exactly ${ML_KEM_PUBLIC_KEY_BYTES} bytes`,
     );
   }
+  if (uint8ToBase64(bytes) !== serialized) {
+    throw new Error("Public key must be canonical base64");
+  }
   return bytes;
+}
+
+// FIPS 203 expanded decapsulation key: dk_PKE (1152) ‖ ek (1184) ‖ H(ek) ‖ z.
+const EMBEDDED_PUBLIC_KEY_OFFSET = 1152;
+
+/**
+ * The encapsulation (public) key embedded in an expanded ML-KEM-768 secret
+ * key. Lets a device trust its own public key without storing it apart.
+ */
+export function publicKeyFromSecretKey(secretKey: Uint8Array): Uint8Array {
+  if (secretKey.length !== ML_KEM_SECRET_KEY_BYTES) {
+    throw new Error(
+      `Secret key must be exactly ${ML_KEM_SECRET_KEY_BYTES} bytes`,
+    );
+  }
+  return secretKey.slice(
+    EMBEDDED_PUBLIC_KEY_OFFSET,
+    EMBEDDED_PUBLIC_KEY_OFFSET + ML_KEM_PUBLIC_KEY_BYTES,
+  );
 }
 
 export function serializeSecretKey(secretKey: Uint8Array): string {
@@ -125,6 +152,24 @@ export function parseSecretKey(serialized: string): Uint8Array {
     );
   }
   return bytes;
+}
+
+/**
+ * The owner's own ML-KEM public key, read back from their secret key instead
+ * of trusted from the server. The secret key was unwrapped under the
+ * MasterKey (AES-GCM), so the public key it embeds is authentic; a
+ * server-published copy that differs would seal the owner's DEKs to a key
+ * the server controls, so it is refused.
+ */
+export function verifiedOwnerPublicKey(
+  secretKey: Uint8Array,
+  publishedPublicKeyB64: string,
+): string {
+  const own = serializePublicKey(publicKeyFromSecretKey(secretKey));
+  if (own !== publishedPublicKeyB64) {
+    throw new Error("Published public key does not match the owner's key");
+  }
+  return own;
 }
 
 async function importAesKeyFromSharedSecret(

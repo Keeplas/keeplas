@@ -140,6 +140,37 @@ describe("blob ownership", () => {
 });
 
 describe("avatar", () => {
+  it("refuses the account's own vault file as an avatar, so removing it can't delete the file", async () => {
+    const t = makeT();
+    const { owner, storageId } = await seedOwnerFile(t);
+
+    await expect(
+      asUser(t, owner).mutation(api.users.setAvatarImage, {
+        storageId,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("Uploaded image could not be resolved");
+    await asUser(t, owner).mutation(api.users.removeAvatar, {
+      _audit: await signedAudit(),
+    });
+
+    expect(await blobExists(t, storageId)).toBe(true);
+  });
+
+  it("accepts the current avatar again (a retried save)", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const storageId = await seedStorageRef(t, 16);
+    for (let i = 0; i < 2; i++) {
+      await asUser(t, userId).mutation(api.users.setAvatarImage, {
+        storageId,
+        _audit: await signedAudit(),
+      });
+    }
+
+    expect(await blobExists(t, storageId)).toBe(true);
+  });
+
   it("resolves the avatar URL when read instead of storing it", async () => {
     const t = makeT();
     const userId = await seedUser(t);

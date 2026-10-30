@@ -2,7 +2,7 @@ import { v, Validator, ObjectType, PropertyValidators } from "convex/values";
 import type { RegisteredMutation } from "convex/server";
 import { mutation, MutationCtx, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { optionalAuth, requireAuth } from "./helpers";
+import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { getAuditSecret } from "./lib/audit_secret";
 import { base64ToBytes } from "./lib/crypto";
 
@@ -31,6 +31,16 @@ export async function verifyAuditContext(payload: AuditContext): Promise<void> {
   const age = Date.now() - payload.ts;
   if (age < -60_000 || age > AUDIT_CONTEXT_MAX_AGE_MS) {
     throw new Error("Audit context expired or clock-skewed");
+  }
+  // The web seal always carries a 2-letter country (or "XX") and an integer
+  // millisecond timestamp. Refusing anything else keeps a signature made for
+  // another message of the same `a|b|<number>` shape (e.g. a pre-v2 Life
+  // Check link, see lib/life_check_token.ts) from passing as a seal.
+  if (
+    !/^[A-Z]{2}$/.test(payload.country) ||
+    !Number.isSafeInteger(payload.ts)
+  ) {
+    throw new Error("Invalid audit context");
   }
 
   const enc = new TextEncoder();
@@ -264,21 +274,33 @@ async function defaultActor(ctx: MutationCtx): Promise<ActorIdentity> {
 // helpers on top of `auditedMutation`.
 export type { Validator };
 
+const MAX_LOG_PAGE = 200;
+
 /**
- * Fetch the most recent audit log entries for the authenticated user.
+ * Fetch the most recent audit log entries for the authenticated user, as the
+ * activity screens show them. The chain also holds trusted contacts' actions
+ * (their IP, user id, metadata): those stay server-side, as do the hashes.
  */
 export const listLogs = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return [];
+    const userId = await requireFullAuth(ctx);
 
-    const limit = args.limit ?? 50;
-    return await ctx.db
+    const limit = Math.min(
+      Math.max(1, Math.floor(args.limit ?? 50)),
+      MAX_LOG_PAGE,
+    );
+    const logs = await ctx.db
       .query("audit_logs")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .take(limit);
+    return logs.map(({ _id, action, country, createdAt }) => ({
+      _id,
+      action,
+      country,
+      createdAt,
+    }));
   },
 });
 

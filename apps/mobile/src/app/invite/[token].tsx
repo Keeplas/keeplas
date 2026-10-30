@@ -32,6 +32,10 @@ export default function Invite() {
   const accept = useAuditedMutation(api.trusted_contacts.acceptInvitation);
   const decline = useAuditedMutation(api.trusted_contacts.declineInvitation);
   const [busy, setBusy] = useState(false);
+  const [openedAt] = useState(() => Date.now());
+  const open =
+    invitation?.invitationStatus === "pending" &&
+    openedAt < invitation.expiresAt;
 
   async function answer(choice: "accept" | "decline") {
     if (!viewer) {
@@ -65,7 +69,7 @@ export default function Invite() {
         {t("invite.title")}
       </Text>
       <Text variant="body-lg" color="text.muted" align="center">
-        {invitation
+        {open
           ? t("invite.from", { name: invitation.inviterName })
           : t("invite.invalid")}
       </Text>
@@ -73,10 +77,10 @@ export default function Invite() {
         label={viewer ? t("invite.accept") : t("invite.signIn")}
         style={styles.full}
         loading={busy}
-        disabled={!invitation || invitation.invitationStatus !== "pending"}
+        disabled={!open}
         onPress={() => void answer("accept")}
       />
-      {viewer && invitation?.invitationStatus === "pending" ? (
+      {viewer && open ? (
         <Button
           label={t("invite.decline")}
           variant="text"

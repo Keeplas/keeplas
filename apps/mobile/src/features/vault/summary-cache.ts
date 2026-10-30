@@ -7,8 +7,9 @@
  * - skip the per-item ML-KEM decapsulation at every launch: unchanged items
  *   (same `updatedAt`) are served from here.
  *
- * Cleared on sign-out. Auto-lock keeps it: the database key lives in the
- * Keychain/Keystore, the same trust boundary as the wrapped vault key.
+ * Cleared on sign-out. Auto-lock keeps it (accepted trade-off): the
+ * database key stays on this phone and is readable only while the phone is
+ * unlocked, but unlike the wrapped vault key it needs no Face ID or PIN.
  */
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 

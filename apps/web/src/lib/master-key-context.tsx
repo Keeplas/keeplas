@@ -4,6 +4,7 @@ import {
   useState,
   useCallback,
   useEffect,
+  useRef,
   ReactNode,
 } from "react";
 import { useConvexAuth, useQuery } from "convex/react";
@@ -12,21 +13,33 @@ import {
   persistMasterKey,
   loadMasterKey,
   clearPersistedMasterKeys,
+  touchMasterKey,
 } from "./master-key-store";
+import { clearLegacyMethods } from "./device-unlock";
 import { clearInMemorySecrets } from "./in-memory-secrets";
 import { useIdleTimer } from "./use-idle-timer";
 
+/**
+ * How long a browser linked without "Keep me logged in" stays unlocked, across
+ * refreshes, before it must be linked (or PIN-unlocked) again.
+ */
+const UNTRUSTED_LINK_TTL_MS = 60 * 60 * 1000;
+
+/** Min gap between two writes of the last-activity time to IndexedDB. */
+const ACTIVITY_PERSIST_INTERVAL_MS = 60 * 1000;
+
 interface SetMasterKeyOptions {
   /**
-   * Drop the IndexedDB copy after this time (epoch ms), e.g. a browser linked
-   * without "Keep me logged in". Unset keeps it until sign-out.
+   * Linked with "Keep me logged in": the IndexedDB copy stays until sign-out
+   * (or the inactivity lock). Otherwise it is dropped after
+   * UNTRUSTED_LINK_TTL_MS, whether the key came from the phone or a PIN.
    */
-  expiresAt?: number;
+  trusted: boolean;
 }
 
 interface MasterKeyContextValue {
   masterKey: CryptoKey | null;
-  setMasterKey: (key: CryptoKey, options?: SetMasterKeyOptions) => void;
+  setMasterKey: (key: CryptoKey, options: SetMasterKeyOptions) => void;
   clearMasterKey: () => void;
   hasMasterKey: boolean;
   /** True while attempting to restore a persisted key on load. */
@@ -53,11 +66,15 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
   const userId = user?._id ?? null;
 
   const setMasterKey = useCallback(
-    (key: CryptoKey, { expiresAt }: SetMasterKeyOptions = {}) => {
+    (key: CryptoKey, { trusted }: SetMasterKeyOptions) => {
       setMasterKeyState(key);
       if (userId) {
         // Best-effort: a persistence failure must never block unlocking.
-        void persistMasterKey(userId, key, expiresAt);
+        void persistMasterKey(
+          userId,
+          key,
+          trusted ? undefined : Date.now() + UNTRUSTED_LINK_TTL_MS,
+        );
       }
     },
     [userId],
@@ -74,11 +91,26 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
     void clearPersistedMasterKeys();
   }, []);
 
+  // Activity is also stamped on the persisted copy, so a browser closed while
+  // unlocked comes back locked once the auto-lock window has passed.
+  const lastActivityWrite = useRef(0);
+  const recordActivity = useCallback(() => {
+    const now = Date.now();
+    if (!userId || now - lastActivityWrite.current < ACTIVITY_PERSIST_INTERVAL_MS)
+      return;
+    lastActivityWrite.current = now;
+    void touchMasterKey(userId);
+  }, [userId]);
+
   // Inactivity auto-lock: bounds how long the extractable, persisted MasterKey
   // sits available on this device (defense-in-depth — the key stays extractable
   // + persisted by design so rotation can export it). Only armed while
   // the vault is actually unlocked; genuine activity resets the countdown.
-  useIdleTimer({ onIdle: clearMasterKey, enabled: masterKey !== null });
+  useIdleTimer({
+    onIdle: clearMasterKey,
+    onActivity: recordActivity,
+    enabled: masterKey !== null,
+  });
 
   // The vault is "restoring" while auth/viewer are resolving, or while we still
   // have a persisted key to read for the current user. Derived (not stored) so
@@ -91,7 +123,8 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
   // Restore the persisted MasterKey on load so a refresh (or a browser restart)
   // does not force the user to unlock again. The key is stored only
   // on this device (IndexedDB, never sent to the server) and stays until an
-  // explicit sign-out clears it below.
+  // explicit sign-out clears it below, its link lifetime ends, or it sat idle
+  // for the auto-lock window (master-key-store.ts).
   useEffect(() => {
     if (isLoading || !isAuthenticated || !userId || masterKey) return;
     if (restoredUserId === userId) return;
@@ -112,6 +145,9 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
   // React tree — or anyone reopening this browser after sign-out — could read
   // the previous user's key. Persisting the key so refresh keeps the vault
   // unlocked is the deliberate counterpart to clearing it here on sign-out.
+  // Legacy PIN-only wraps go too: a signed-out browser must keep nothing on
+  // disk that a PIN search can open (server-assisted PINs end with the
+  // session server-side).
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       if (masterKey !== null) {
@@ -123,6 +159,9 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
       }
       clearInMemorySecrets();
       void clearPersistedMasterKeys();
+      void clearLegacyMethods().catch(() => {
+        // No IndexedDB (private mode): nothing was stored.
+      });
     }
   }, [isAuthenticated, isLoading, masterKey, restoredUserId]);
 

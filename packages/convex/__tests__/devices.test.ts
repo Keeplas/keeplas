@@ -42,6 +42,20 @@ async function setup() {
 }
 
 describe("devices", () => {
+  // Every device after the first alerts the owner by push, email and
+  // WhatsApp: registration is capped per account so a loop can't burn the
+  // shared send quotas.
+  it("caps device registrations per account and hour", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const { as } = await signIn(t, userId);
+    for (let i = 0; i < 10; i++) await register(as, "web", `Browser ${i}`);
+
+    await expect(register(as, "web", "One more")).rejects.toThrow(
+      "Too many requests",
+    );
+  });
+
   it("lists active devices with a trimmed label", async () => {
     const { phone, browserId, phoneId } = await setup();
     const devices = await phone.as.query(api.devices.list, {});

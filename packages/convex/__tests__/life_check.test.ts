@@ -361,6 +361,131 @@ describe("LIFE_CHECK_PAUSED kill switch freezes the counting", () => {
   });
 });
 
+describe("travel mode always ends (finding 38)", () => {
+  it("refuses travel mode without a return date", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await seedConfig(t, owner);
+
+    await expect(
+      asUser(t, owner).mutation(api.life_check.toggleTravelMode, {
+        enabled: true,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/return date/);
+  });
+
+  it("caps a legacy open-ended travel mode at 180 days from now", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const configId = await seedConfig(t, owner, { travelModeEnabled: true });
+
+    await t.mutation(internal.life_check.evaluateAllConfigs, {});
+
+    const config = await t.run((ctx) => ctx.db.get(configId));
+    expect(config?.travelModeEnabled).toBe(true);
+    expect(config?.travelModeUntil).toBeGreaterThan(Date.now() + 179 * DAY_MS);
+    expect(config?.travelModeUntil).toBeLessThanOrEqual(
+      Date.now() + 180 * DAY_MS,
+    );
+  });
+});
+
+describe("NOTIFICATIONS_PAUSED also freezes the escalation (finding 37)", () => {
+  // With notifications off the owner gets no check-in and no 72h grace
+  // alert, so the timeline must not move toward a release either.
+  beforeEach(() => {
+    process.env.NOTIFICATIONS_PAUSED = "true";
+  });
+  afterEach(() => {
+    delete process.env.NOTIFICATIONS_PAUSED;
+  });
+
+  it("starts no cycle for an overdue config", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const overdue = Date.now() - 60 * DAY_MS;
+    await seedConfig(t, owner, {
+      lastActivityAt: overdue,
+      nextCheckAt: overdue + 30 * DAY_MS,
+      activeChannels: [{ type: "push", order: 0, isEnabled: true }],
+    });
+
+    await t.mutation(internal.life_check.evaluateAllConfigs, {});
+
+    expect(await countCycles(t, owner)).toBe(0);
+  });
+
+  it("defers Stage 2 instead of asking contacts", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const configId = await seedConfig(t, owner);
+    const cycleId = await seedRunningCycle(t, owner, configId);
+
+    await t.mutation(internal.life_check.enterConfirmationStage, { cycleId });
+
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId));
+    expect(cycle?.status).toBe("running");
+  });
+
+  it("refuses contact votes, whose grace alert could not reach the owner", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await seedAwaitingConfirmation(t, owner);
+    const contactUser = await seedUser(t);
+    const contactId = await seedTrustContact(t, owner, { n: 1 });
+    await t.run((ctx) =>
+      ctx.db.patch(contactId, { contactUserId: contactUser }),
+    );
+
+    await expect(
+      asUser(t, contactUser).mutation(api.access_requests.markUserUnreachable, {
+        contactId,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/paused/);
+  });
+});
+
+describe("postponeCycle (finding 32)", () => {
+  it("postpones a Stage-1 check-in", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const configId = await seedConfig(t, owner);
+    const cycleId = await seedRunningCycle(t, owner, configId);
+
+    await asUser(t, owner).mutation(api.life_check.postponeCycle, {
+      duration: "48h",
+      _audit: await signedAudit(),
+    });
+
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId));
+    expect(cycle?.status).toBe("cancelled");
+  });
+
+  it("refuses during Stage 2 so it can't look like it stopped a release", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const cycleId = await seedAwaitingConfirmation(t, owner);
+    const before = await t.run(async (ctx) => {
+      const cycle = await ctx.db.get(cycleId);
+      return await ctx.db.get(cycle!.configId);
+    });
+
+    await expect(
+      asUser(t, owner).mutation(api.life_check.postponeCycle, {
+        duration: "48h",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/Confirm you're well/);
+
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId));
+    expect(cycle?.status).toBe("awaiting_confirmation");
+    const config = await t.run((ctx) => ctx.db.get(cycle!.configId));
+    expect(config?.nextCheckAt).toBe(before?.nextCheckAt);
+  });
+});
+
 describe("I'm okay", () => {
   it("resets the countdown and returns the next check date", async () => {
     const t = makeT();
@@ -408,6 +533,7 @@ async function seedAccessRequest(
   extra: Partial<{
     sectionsRequested: string[];
     quorumReached: boolean;
+    quorumRequired: number;
     gracePeriodEndsAt: number;
   }> = {},
 ): Promise<Id<"access_requests">> {
@@ -466,8 +592,13 @@ describe("no Life check loop after a release (post-release-life-check-loop)", ()
       }),
     );
     const contactId = await seedTrustContact(t, owner, { n: 1 });
+    // releaseAfterConfirmation recounts the votes from accepted contacts, so
+    // the voter is a real accepted account and the quorum is one.
+    const voter = await seedUser(t);
+    await t.run((ctx) => ctx.db.patch(contactId, { contactUserId: voter }));
     const requestId = await seedAccessRequest(t, owner, contactId, "pending", {
       quorumReached: true,
+      quorumRequired: 1,
     });
 
     // The 72h grace ends: the request is approved and the cycle triggered.

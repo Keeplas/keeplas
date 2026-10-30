@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { api } from "../_generated/api";
-import { makeT, seedUser, asUser, signedAudit } from "./test.helpers";
+import {
+  makeT,
+  seedUser,
+  asUser,
+  asUserSession,
+  seedPasswordAccount,
+  seedSession,
+  signedAudit,
+} from "./test.helpers";
 
 describe("setPublicKey — identity key fields (finding #2, step 1)", () => {
   it("persists the ML-KEM keypair plus the 3 identity fields", async () => {
@@ -60,6 +68,99 @@ describe("setPublicKey — identity key fields (finding #2, step 1)", () => {
         _audit: await signedAudit(),
       }),
     ).rejects.toThrow();
+  });
+});
+
+// The identity key backs the "vault" session proof and every owner's TOFU pin:
+// once published, the same ML-KEM key must not let a weaker session swap the
+// identity key, signature or wrapped secrets behind it.
+describe("setPublicKey — published key material is write-once", () => {
+  const published = {
+    publicKey: "ml-kem-public-key",
+    encryptedAsymmetricSecretKey: "wrapped-ml-kem-secret",
+    identityPublicKey: "ml-dsa-public-key",
+    encryptedIdentitySecretKey: "wrapped-ml-dsa-secret",
+    publicKeySignature: "ml-dsa-signature",
+  };
+
+  async function seedPublished() {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await t.run((ctx) => ctx.db.patch(owner, published));
+    return { t, owner };
+  }
+
+  it("refuses an attacker identity key behind the unchanged ML-KEM key", async () => {
+    const { t, owner } = await seedPublished();
+    await expect(
+      asUser(t, owner).mutation(api.users.setPublicKey, {
+        ...published,
+        identityPublicKey: "attacker-ml-dsa",
+        encryptedIdentitySecretKey: "attacker-wrapped",
+        publicKeySignature: "attacker-signature",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("already set");
+    const user = await t.run((ctx) => ctx.db.get(owner));
+    expect(user?.identityPublicKey).toBe("ml-dsa-public-key");
+    expect(user?.publicKeySignature).toBe("ml-dsa-signature");
+  });
+
+  it("refuses to overwrite the wrapped secret keys", async () => {
+    const { t, owner } = await seedPublished();
+    await expect(
+      asUser(t, owner).mutation(api.users.setPublicKey, {
+        ...published,
+        encryptedAsymmetricSecretKey: "junk",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("already set");
+    const user = await t.run((ctx) => ctx.db.get(owner));
+    expect(user?.encryptedAsymmetricSecretKey).toBe("wrapped-ml-kem-secret");
+  });
+
+  it("refuses to add identity fields to a key published without them", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await t.run((ctx) =>
+      ctx.db.patch(owner, {
+        publicKey: published.publicKey,
+        encryptedAsymmetricSecretKey: published.encryptedAsymmetricSecretKey,
+      }),
+    );
+    await expect(
+      asUser(t, owner).mutation(api.users.setPublicKey, {
+        ...published,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("already set");
+    const user = await t.run((ctx) => ctx.db.get(owner));
+    expect(user?.identityPublicKey).toBeUndefined();
+  });
+
+  it("accepts the exact same material again (a retried setup)", async () => {
+    const { t, owner } = await seedPublished();
+    await asUser(t, owner).mutation(api.users.setPublicKey, {
+      ...published,
+      _audit: await signedAudit(),
+    });
+    const user = await t.run((ctx) => ctx.db.get(owner));
+    expect(user?.identityPublicKey).toBe("ml-dsa-public-key");
+  });
+
+  it("needs every step-up gate: a password alone cannot publish", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await seedPasswordAccount(t, owner);
+    const sessionId = await seedSession(t, owner);
+    await expect(
+      asUserSession(t, owner, sessionId).mutation(api.users.setPublicKey, {
+        ...published,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("LOGIN_OTP_REQUIRED");
+    const user = await t.run((ctx) => ctx.db.get(owner));
+    expect(user?.publicKey).toBeUndefined();
   });
 });
 

@@ -30,6 +30,8 @@ import type { OpenedItem } from "@/features/vault/open-sealed-item";
 import { useOpenedItem } from "@/features/vault/use-opened-item";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { useStorageFullPrompt } from "@/features/billing/storage-full";
+import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useFormDraft } from "@/lib/form-drafts";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -52,6 +54,7 @@ const KIND_ICON = {
 } as const;
 
 export default function EditItem() {
+  useNoScreenCapture();
   const { id } = useLocalSearchParams<{ id: string }>();
   const itemId = id as Id<"vault_items">;
   const router = useRouter();
@@ -95,6 +98,7 @@ function EditForm({
   const showSecuring = useShowSecuring();
   const prepare = usePrepareMedia();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
+  const storageFull = useStorageFullPrompt();
   const [draft, updateDraft, clearDraft] = useFormDraft<EditDraft>(
     editDraftKey(itemId),
     () => ({ title: opened.title, note: opened.note, removed: [], added: [] }),
@@ -173,12 +177,14 @@ function EditForm({
       }
       forgetDraft();
       onDone();
-    } catch {
-      toast({
-        variant: "error",
-        title: t("itemEdit.failedTitle"),
-        description: t("itemEdit.failedBody"),
-      });
+    } catch (error) {
+      if (!storageFull.handle(error)) {
+        toast({
+          variant: "error",
+          title: t("itemEdit.failedTitle"),
+          description: t("itemEdit.failedBody"),
+        });
+      }
       setSaving(false);
     }
   }
@@ -293,6 +299,7 @@ function EditForm({
       </View>
       <Callout icon="clock" text={t("itemEdit.historyNote")} />
       <PermissionSheet problem={denied} onDismiss={() => setDenied(null)} />
+      {storageFull.sheet}
     </Screen>
   );
 }

@@ -1,4 +1,4 @@
-import { v, ConvexError } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internalAction, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { optionalAuth } from "./helpers";
@@ -7,10 +7,10 @@ import {
   createAuditLog,
   verifyAuditContext,
 } from "./audit";
-import { enforceIpRateLimit } from "./lib/rate_limit";
 import { requireEnv } from "./lib/require_env";
 import { isValidEmail } from "./lib/email";
 import { isE164 } from "./lib/phone";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 
 const CHANNEL = v.union(v.literal("email"), v.literal("whatsapp"));
 
@@ -32,14 +32,17 @@ const TOPIC_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-/** Tickets one IP may send per hour: each one emails the team inbox. */
-export const SUPPORT_TICKETS_PER_IP = 10;
-const MAX_LENGTH = { Name: 100, Subject: 200, Message: 5000 };
+// Each ticket emails the team through the transactional Resend account (the
+// one OTP and Life Check mail use), so it is throttled and its fields capped.
+/** Tickets one IP (signed out) or one account may send per hour. */
+export const SUPPORT_TICKETS_PER_IP = 5;
+const MAX_LENGTH = { Name: 100, Contact: 254, Subject: 200, Message: 5000 };
 
 /**
  * Submit a contact/support ticket. Authentication is optional so signed-out
  * visitors can reach out too (the phone app's help screen, the web contact
- * form). Rate-limited per IP on the sealed `_audit` envelope.
+ * form). The sealed `_audit` envelope gives the server-attested IP that
+ * throttles signed-out senders; a signed-in one is throttled per account.
  */
 export const submitTicket = mutation({
   args: {
@@ -76,6 +79,7 @@ export const submitTicket = mutation({
     }
     for (const [field, value] of [
       ["Name", name],
+      ["Contact", contact],
       ["Subject", subject],
       ["Message", message],
     ] as const) {
@@ -85,22 +89,22 @@ export const submitTicket = mutation({
         );
       }
     }
-    // After validation: a refused ticket sends nothing, and its throw would
-    // roll the slot back anyway.
-    await enforceIpRateLimit(
-      ctx,
-      "support_ticket",
-      args._audit.ip,
-      SUPPORT_TICKETS_PER_IP,
-    );
-
-    const email = channel === "email" ? contact.toLowerCase() : undefined;
-    const whatsapp = channel === "whatsapp" ? contact : undefined;
 
     // Intentionally NOT step-up gated: this is a public-tolerant boundary
     // (logged-out visitors may submit a ticket), so it stays on optionalAuth.
     // It writes only a support ticket — no vault content / metadata is read.
     const userId = await optionalAuth(ctx);
+    // After validation: a refused ticket sends nothing, and its throw would
+    // roll the slot back anyway.
+    await enforceIpRateLimit(
+      ctx,
+      "support_ticket",
+      userId ?? args._audit.ip,
+      SUPPORT_TICKETS_PER_IP,
+    );
+
+    const email = channel === "email" ? contact.toLowerCase() : undefined;
+    const whatsapp = channel === "whatsapp" ? contact : undefined;
     const now = Date.now();
 
     const ticketId = await ctx.db.insert("support_tickets", {

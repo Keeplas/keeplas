@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { recoveryCode } from "@keeplas/crypto/social";
 import { Loader, toast, useConfirm } from "@keeplas/ui";
 import { useTranslations } from "@/lib/i18n";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -23,20 +22,9 @@ export default function RecoveryCenterPage() {
   const health = useQuery(api.recovery.getHealth);
   const request = useQuery(api.recovery.getMyRequest);
   const cancel = useAuditedMutation(api.recovery.cancel);
-  const [code, setCode] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  // No code here: only the phone that started the request can compute them.
   const active = request && IN_PROGRESS.has(request.status) ? request : null;
-
-  useEffect(() => {
-    if (!active) return;
-    let cancelled = false;
-    void recoveryCode(active.requestId, active.newDevicePublicKey).then(
-      (next) => !cancelled && setCode(next),
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [active]);
 
   if (!viewer || health === undefined || request === undefined) {
     return <Loader />;
@@ -75,12 +63,11 @@ export default function RecoveryCenterPage() {
         recoveryKit: !!health?.recoveryKit,
       }}
       request={
-        active && code
+        active
           ? {
               approved: active.contacts.filter(
                 (contact) => contact.decision === "approve",
               ).length,
-              code,
               windowEndsAt: active.windowEndsAt,
             }
           : null

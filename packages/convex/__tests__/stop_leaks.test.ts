@@ -2,7 +2,13 @@ import { describe, it, expect } from "vitest";
 import { api } from "../_generated/api";
 import * as accessRequests from "../access_requests";
 import * as trustedContacts from "../trusted_contacts";
-import { asUser, makeT, seedUser, signedAudit } from "./test.helpers";
+import {
+  asProvenUser,
+  asUser,
+  makeT,
+  seedUser,
+  signedAudit,
+} from "./test.helpers";
 
 /**
  * v2 phase 2 — "stop the leaks". No trusted contact may ever obtain the
@@ -77,10 +83,18 @@ describe("F2 — the MasterKey is never split", () => {
     const t = makeT();
     const owner = await seedUser(t);
     await t.run((ctx) =>
-      ctx.db.patch(owner, { masterKeyRotationRequired: true }),
+      ctx.db.patch(owner, {
+        masterKeyRotationRequired: true,
+        encryptedAsymmetricSecretKeyPrev: "sk0",
+      }),
     );
 
-    await asUser(t, owner).mutation(api.rotation.finalizeRotation, {
+    const as = await asProvenUser(t, owner, "vault");
+    await as.mutation(api.rotation.finalizeRotation, {
+      encryptedRetiredSecretKeys: "retired",
+      encryptedKeyBundle: "bundle",
+      phraseSalt: "salt",
+      recoveryPhraseHash: "verifier",
       _audit: await signedAudit(),
     });
 

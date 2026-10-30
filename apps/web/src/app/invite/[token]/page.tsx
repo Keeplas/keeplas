@@ -4,6 +4,7 @@ import { buttonVariants, cn, Loader } from "@keeplas/ui";
 import { Link, useParams } from "@/lib/navigation";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
+import { useNow } from "@/lib/use-now";
 import { AuthScreen } from "@/components/auth-screen";
 import { QRCodeSVG } from "@/components/qr-code-svg";
 import { StateMessage } from "@/components/state-message";
@@ -26,14 +27,17 @@ export default function InvitationPage() {
   const invitation = useQuery(api.trusted_contacts.getInvitationByToken, {
     token,
   });
+  const now = useNow();
 
   if (invitation === undefined) {
     return <Loader fullscreen />;
   }
 
   const name = invitation?.inviterName;
+  const expired =
+    invitation?.invitationStatus === "pending" && now > invitation.expiresAt;
   let message;
-  if (!invitation || invitation.invitationStatus === "revoked") {
+  if (!invitation || invitation.invitationStatus === "revoked" || expired) {
     message = (
       <StateMessage
         icon={ICON_PATHS.clock}

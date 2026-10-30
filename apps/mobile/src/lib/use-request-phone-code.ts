@@ -28,9 +28,11 @@ export class AttestationFailed extends Error {
  * Send the WhatsApp sign-up / sign-in code. A sign-up code is only issued
  * after this phone attested itself (createChallenge → App Attest / Play
  * Integrity → attestation_node.verify), and each grant is single use, so a
- * resend attests again. A number with no account (sign-in) or already taken
- * (sign-up) comes back as `{ sent: false, error }` and is thrown here, as the
- * screens expect.
+ * resend attests again. The request carries the sealed context (added by
+ * useAuditedMutation), so the server throttles per connection. A number
+ * already taken (sign-up) comes back as `{ sent: false, error }` and is
+ * thrown here, as the screens expect; an unknown number on sign-in gets the
+ * same `{ sent: true }` as a known one (no account enumeration).
  */
 export function useRequestPhoneCode() {
   const { language } = useI18n();

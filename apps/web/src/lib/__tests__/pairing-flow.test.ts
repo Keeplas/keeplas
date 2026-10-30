@@ -12,6 +12,7 @@ const waiting: PairingState = {
   sessionId,
   expiresAt: 1_000,
   qrUrl: "https://app.keeplas.com/link#s=session1&h=abc",
+  code: "482913",
 };
 
 describe("pairingReducer", () => {
@@ -22,6 +23,7 @@ describe("pairingReducer", () => {
         sessionId,
         expiresAt: 1_000,
         qrUrl: waiting.phase === "waiting" ? waiting.qrUrl : "",
+        code: "482913",
       }),
     ).toEqual(waiting);
   });

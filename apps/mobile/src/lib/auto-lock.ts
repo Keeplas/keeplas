@@ -6,14 +6,36 @@ export const IDLE_LOCK_MS = 5 * 60 * 1000;
 export const BACKGROUND_GRACE_MS = 30 * 1000;
 export const HELD_GRACE_MS = 10 * 60 * 1000;
 
-/** Lock when the app comes back after more than the background grace. */
+/**
+ * A moment read from two clocks. The wall clock keeps counting while the
+ * phone sleeps but can be turned back in Settings; the uptime clock
+ * (`performance.now()`) cannot be changed but pauses while the phone sleeps.
+ */
+export interface Instant {
+  wall: number;
+  uptime: number;
+}
+
+export function instantNow(): Instant {
+  return { wall: Date.now(), uptime: performance.now() };
+}
+
+/**
+ * Lock when the app comes back after more than the background grace. The
+ * time away is the larger of the two clocks, so neither changing the clock
+ * nor the phone sleeping shortens it.
+ */
 export function shouldLockOnResume(
-  backgroundedAt: number | null,
-  now: number,
+  backgroundedAt: Instant | null,
+  now: Instant,
   held = false,
 ): boolean {
-  const grace = held ? HELD_GRACE_MS : BACKGROUND_GRACE_MS;
-  return backgroundedAt !== null && now - backgroundedAt > grace;
+  if (!backgroundedAt) return false;
+  const away = Math.max(
+    now.wall - backgroundedAt.wall,
+    now.uptime - backgroundedAt.uptime,
+  );
+  return away > (held ? HELD_GRACE_MS : BACKGROUND_GRACE_MS);
 }
 
 let holds = 0;

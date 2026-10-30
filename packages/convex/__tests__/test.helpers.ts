@@ -16,8 +16,16 @@ const modules = import.meta.glob("../**/*.*s");
 
 export type TestConvex = ReturnType<typeof convexTest>;
 
-export function makeT(): TestConvex {
-  return convexTest(schema, modules);
+/**
+ * `enforceLimits` makes every transaction fail like production does past the
+ * Convex limits (16 MiB / 32k documents read, 1000 scheduled functions…).
+ */
+export function makeT(opts: { enforceLimits?: boolean } = {}): TestConvex {
+  return convexTest({
+    schema,
+    modules,
+    transactionLimits: opts.enforceLimits ?? false,
+  });
 }
 
 /**
@@ -31,6 +39,22 @@ export function runDueJobs(t: TestConvex) {
 /** Insert a bare user (all user fields are optional) and return its id. */
 export async function seedUser(t: TestConvex): Promise<Id<"users">> {
   return await t.run((ctx) => ctx.db.insert("users", {}));
+}
+
+/** Insert a user with a verified email and/or phone. */
+export async function seedVerifiedUser(
+  t: TestConvex,
+  opts: { email?: string; phoneNumber?: string },
+): Promise<Id<"users">> {
+  const now = Date.now();
+  return await t.run((ctx) =>
+    ctx.db.insert("users", {
+      email: opts.email,
+      emailVerificationTime: opts.email ? now : undefined,
+      phoneNumber: opts.phoneNumber,
+      phoneNumberVerifiedAt: opts.phoneNumber ? now : undefined,
+    }),
+  );
 }
 
 /** Mint a real storage handle for fixtures, routed through the wrapper. */
@@ -97,20 +121,30 @@ export async function seedPasswordAccount(
 }
 
 /**
- * Act as a user on a session that proved the account's number (a WhatsApp
- * code, session_proofs.ts): what a phone-otp sign-in opens.
+ * Act as a user on a session holding a proof (session_proofs.ts): "phone"
+ * is what a phone-otp sign-in opens (a WhatsApp code), "vault" what an
+ * identity-key signature over a nonce grants.
  */
-export async function asPhoneProvenUser(t: TestConvex, userId: Id<"users">) {
+export async function asProvenUser(
+  t: TestConvex,
+  userId: Id<"users">,
+  kind: "phone" | "vault",
+) {
   const sessionId = await seedSession(t, userId);
   await t.run((ctx) =>
     ctx.db.insert("auth_session_proofs", {
       sessionId,
       userId,
-      kind: "phone",
+      kind,
       verifiedAt: Date.now(),
     }),
   );
   return asUserSession(t, userId, sessionId);
+}
+
+/** {@link asProvenUser} with a "phone" proof. */
+export function asPhoneProvenUser(t: TestConvex, userId: Id<"users">) {
+  return asProvenUser(t, userId, "phone");
 }
 
 /** Mark a session as having cleared the always-on login-OTP step. */
@@ -161,7 +195,11 @@ export async function clearTotp(
 
 /** Build a fresh, HMAC-signed audit envelope accepted by `verifyAuditContext`. */
 export async function signedAudit(city?: string) {
-  const ip = "127.0.0.1";
+  return signedAuditFrom("127.0.0.1", city);
+}
+
+/** {@link signedAudit} sealed for another caller IP. */
+export async function signedAuditFrom(ip: string, city?: string) {
   const country = "FR";
   const ts = Date.now();
   const enc = new TextEncoder();

@@ -7,11 +7,14 @@ const crons = cronJobs();
  * Hourly scan of vault_items whose trigger is "time_based" and whose
  * releaseDate has passed. Each match fires the per-user release fan-out
  * (release.fanOutRelease) so recipients get an access_request entry.
+ * Like the two sweeps below, it reads one page per run and schedules the
+ * next (lib/batch.ts), so no tick is one transaction over every account.
  */
 crons.interval(
   "release_time_based_items",
   { hours: 1 },
   internal.release.processScheduledReleases,
+  {},
 );
 
 /**
@@ -25,6 +28,7 @@ crons.interval(
   "life_check_evaluator",
   { hours: 1 },
   internal.life_check.evaluateAllConfigs,
+  {},
 );
 
 /**
@@ -36,6 +40,29 @@ crons.interval(
   "trusted_contact_reconfirm",
   { hours: 24 * 7 },
   internal.trusted_contacts.runAvailabilityReconfirm,
+  {},
+);
+
+/**
+ * Daily delete of uploads nobody attached within the upload window
+ * (lib/storage.ts UNCLAIMED_BLOB_TTL_MS). They count toward no quota.
+ */
+crons.interval(
+  "sweep_unclaimed_uploads",
+  { hours: 24 },
+  internal.vault_items.sweepUnclaimedUploads,
+  {},
+);
+
+/**
+ * Daily delete of expired passkey challenges: sign-in challenges are
+ * requested signed out and only removed when consumed.
+ */
+crons.interval(
+  "sweep_expired_webauthn_challenges",
+  { hours: 24 },
+  internal.webauthn.sweepExpiredChallenges,
+  {},
 );
 
 export default crons;

@@ -17,6 +17,26 @@ export function formatSenderIdentity(
   return ids.length ? ids.join(" · ") : fallback;
 }
 
+// The user's email / phone, each only once they proved owning it. An
+// unverified identifier may have been typed by someone else (legacy accounts
+// carry ones an inviting owner chose), so it must never receive a Life Check
+// check-in or the 72h grace alert: whoever answers it could keep the user's
+// dead-man's switch from ever firing.
+export function verifiedChannels(
+  user: {
+    email?: string;
+    emailVerificationTime?: number;
+    phoneNumber?: string;
+    phoneNumberVerifiedAt?: number;
+  } | null,
+): { email?: string; phoneNumber?: string } {
+  return {
+    email: user?.emailVerificationTime !== undefined ? user.email : undefined,
+    phoneNumber:
+      user?.phoneNumberVerifiedAt !== undefined ? user.phoneNumber : undefined,
+  };
+}
+
 // How a vault owner is named to their trusted contacts: their name, else the
 // email local part, else their phone (phone-only accounts may have no name).
 export function ownerDisplay(

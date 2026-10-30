@@ -115,7 +115,7 @@ async function seedAdmin(t: TestConvex) {
 }
 
 async function submitRequest(t: TestConvex, newPhone = NEW) {
-  return t.mutation(api.number_change.submit, {
+  const result = await t.mutation(api.number_change.submit, {
     oldPhone: OLD,
     newPhone,
     name: "Ada Lovelace",
@@ -123,6 +123,8 @@ async function submitRequest(t: TestConvex, newPhone = NEW) {
     message: "Phone stolen in the metro.",
     _audit: await signedAudit(),
   });
+  if (!result.ok) throw new Error(result.error);
+  return result;
 }
 
 afterEach(() => {
@@ -245,6 +247,101 @@ describe("I — attacker holding the owner's iCloud / Google account", () => {
         phoneNumber: ATTACKER,
       }),
     ).rejects.toThrow("PROOF_REQUIRED");
+  });
+
+  it("nor swap in its own identity key to forge the vault proof", async () => {
+    const t = makeT();
+    const { userId } = await seedOwner(t);
+    const owner = { publicKey: "owner-kem", encryptedAsymmetricSecretKey: "w" };
+    await t.run((ctx) => ctx.db.patch(userId, owner));
+    const { sessionId, as } = await passkeySession(t, userId);
+    const attacker = generateIdentityKeyPair();
+    await expect(
+      as.mutation(api.users.setPublicKey, {
+        ...owner,
+        identityPublicKey: attacker.publicKey,
+        publicKeySignature: "attacker-signature",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("already set");
+    const { signature } = await proveVault(
+      t,
+      userId,
+      sessionId,
+      attacker.secretKey,
+    );
+    await expect(
+      as.action(api.session_proofs_node.proveVault, { signature }),
+    ).resolves.toEqual({ success: false });
+  });
+
+  it("nor read or plant the 24-word verifier to clear the step-up gates", async () => {
+    const t = makeT();
+    const { userId } = await seedOwner(t);
+    await t.run((ctx) =>
+      ctx.db.patch(userId, {
+        encryptedKeyBundle: "owner-bundle",
+        phraseSalt: "owner-salt",
+        recoveryPhraseHash: "owner-verifier",
+        totpResetVerifierHash: "owner-totp-verifier",
+      }),
+    );
+    const { as } = await passkeySession(t, userId);
+    const viewer = await as.query(api.users.viewer, {});
+    expect(viewer).not.toHaveProperty("recoveryPhraseHash");
+    expect(viewer).not.toHaveProperty("totpResetVerifierHash");
+    await expect(
+      as.mutation(api.onboarding.storeRecoveryPhraseHash, {
+        recoveryPhraseHash: "attacker-verifier",
+        phraseSalt: "owner-salt",
+      }),
+    ).rejects.toThrow("PROOF_REQUIRED");
+    await expect(
+      as.mutation(api.onboarding.storeKeyBundle, {
+        encryptedKeyBundle: "junk",
+        phraseSalt: "owner-salt",
+      }),
+    ).rejects.toThrow("PROOF_REQUIRED");
+    const user = await t.run((ctx) => ctx.db.get(userId));
+    expect(user?.recoveryPhraseHash).toBe("owner-verifier");
+    expect(user?.encryptedKeyBundle).toBe("owner-bundle");
+  });
+
+  it("nor swap the account's email for their own", async () => {
+    const t = makeT();
+    const { userId } = await seedOwner(t);
+    await t.run((ctx) =>
+      ctx.db.patch(userId, { emailVerificationTime: Date.now() }),
+    );
+    const { as } = await passkeySession(t, userId);
+    await expect(
+      as.mutation(api.email_verification.requestVerification, {
+        email: "attacker@example.com",
+      }),
+    ).rejects.toThrow("PROOF_REQUIRED");
+  });
+
+  it("nor rotate in its own keys", async () => {
+    const t = makeT();
+    const { userId } = await seedOwner(t);
+    const { as } = await passkeySession(t, userId);
+    const attacker = generateIdentityKeyPair();
+    await expect(
+      as.mutation(api.rotation.rotateKeyMaterial, {
+        encryptedKeyBundle: "junk",
+        publicKey: "attacker-kem",
+        publicKeySignature: "attacker-signature",
+        identityPublicKey: attacker.publicKey,
+        encryptedIdentitySecretKey: "attacker-wrapped",
+        encryptedAsymmetricSecretKey: "attacker-wrapped",
+        encryptedAsymmetricSecretKeyPrev: "attacker-wrapped",
+        encryptedRetiredSecretKeys: "attacker-wrapped",
+        categoryNames: [],
+        folderNames: [],
+        contactPins: [],
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("VAULT_PROOF_REQUIRED");
   });
 
   it("a first number (migration) is not gated", async () => {
@@ -428,11 +525,29 @@ describe("B / D / F — lost number, no 24 words: support + 72 h", () => {
         name: "X",
         _audit: await signedAudit(),
       }),
-    ).rejects.toThrow("NO_ACCOUNT");
+    ).resolves.toEqual({ ok: false, error: "NO_ACCOUNT" });
     await expect(submitRequest(t, OLD)).rejects.toThrow("SAME_NUMBER");
-    await expect(submitRequest(t, ATTACKER)).rejects.toThrow("already linked");
+    await expect(submitRequest(t, ATTACKER)).rejects.toThrow("NUMBER_TAKEN");
     await submitRequest(t);
     await expect(submitRequest(t)).rejects.toThrow("REQUEST_IN_PROGRESS");
+  });
+
+  // A refusal is returned, not thrown, so the probe still counts (a throw
+  // rolls the rate-limit row back): number sweeps stay throttled per IP.
+  it("counts refused requests toward the per-IP limit", async () => {
+    const t = makeT();
+    await seedOwner(t);
+    const _audit = await signedAudit();
+    const probe = (oldPhone: string) =>
+      t.mutation(api.number_change.submit, {
+        oldPhone,
+        newPhone: NEW,
+        name: "X",
+        _audit,
+      });
+    for (let n = 0; n < 5; n++) await probe(`+3360000000${n}`);
+
+    await expect(probe(OLD)).rejects.toThrow("Too many requests");
   });
 
   it("completes only once approved and past 72 h, then signs in on the new number", async () => {

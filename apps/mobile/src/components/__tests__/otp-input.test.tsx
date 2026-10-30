@@ -67,7 +67,7 @@ describe("OTP paste", () => {
   });
 
   it("ignores a clipboard that doesn't hold a whole code", async () => {
-    const { onChange } = setup("+44 7700 900101");
+    const { onChange } = setup("+44 7700 900123");
     await longPress();
     expect(onChange).not.toHaveBeenCalled();
   });

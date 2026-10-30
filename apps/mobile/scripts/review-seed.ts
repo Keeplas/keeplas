@@ -23,7 +23,9 @@ import type { FunctionArgs } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
-import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
+import { contactKeyMaterial, deriveContactTrust } from "@keeplas/crypto/sig";
+
+import { requireVerifiedKey } from "@/crypto/contact-keys";
 import {
   decryptFile,
   decryptText,
@@ -57,12 +59,16 @@ import { ALEX, KIT, KIT_PATH, OWNER, readKit, SAM } from "./review-demo";
 
 const ASSETS = resolve("apps/mobile/scripts/review-seed");
 
-type Person = typeof OWNER;
+interface Person {
+  phone: string;
+  name: string;
+}
 
 interface Account {
   person: Person;
   client: ConvexHttpClient;
   material: VaultMaterial;
+  userId: string;
 }
 
 function need(name: string): string {
@@ -120,6 +126,13 @@ if (!(process.env.CONVEX_DEPLOYMENT ?? "").startsWith("prod:")) {
 const CONVEX_URL = need("NEXT_PUBLIC_CONVEX_URL");
 const APP_URL = need("NEXT_PUBLIC_APP_URL");
 const REVIEW_CODE = need("REVIEW_CODE");
+// The demo accounts are the first three REVIEW_PHONES numbers (review-demo.ts).
+need("REVIEW_PHONES");
+if (!SAM.phone) {
+  throw new Error(
+    "REVIEW_PHONES must start with the owner, contact 1 and contact 2 numbers",
+  );
+}
 
 interface AuditContext {
   ip: string;
@@ -178,7 +191,9 @@ async function createAccount(person: Person, kit: string[]): Promise<Account> {
     platform: "ios",
   });
   const client = await session(person.phone, "signUp", person.name);
-  const material = await createVaultMaterial(kit);
+  const viewer = await client.query(api.users.viewer, {});
+  if (!viewer) throw new Error(`${person.phone}: no account after sign-up`);
+  const material = await createVaultMaterial(viewer._id, kit);
   await client.mutation(api.onboarding.storeRecoveryPhraseHash, {
     recoveryPhraseHash: material.recoveryPhraseHash,
     phraseSalt: material.phraseSalt,
@@ -191,7 +206,7 @@ async function createAccount(person: Person, kit: string[]): Promise<Account> {
     ...material.publicKeys,
     _audit: await auditContext(),
   });
-  return { person, client, material };
+  return { person, client, material, userId: viewer._id };
 }
 
 /** Invite by phone only (no message reaches anyone), then accept. */
@@ -226,6 +241,10 @@ async function addContact(owner: Account, contact: Account): Promise<string> {
 /** Verify-before-wrap and the TOFU pin, as the phone does. */
 async function verifiedKeys(owner: Account): Promise<Map<string, string>> {
   const _audit = await auditContext();
+  const trust = await deriveContactTrust(
+    owner.userId,
+    await importMasterKey(owner.material.rawMasterKey),
+  );
   const keys = new Map<string, string>();
   for (const row of await owner.client.query(
     api.trusted_contacts.getContacts,
@@ -235,10 +254,11 @@ async function verifiedKeys(owner: Account): Promise<Map<string, string>> {
       row._id,
       await requireVerifiedKey(
         contactKeyMaterial(row),
-        (contactId, fingerprint) =>
+        trust,
+        (contactId, pin) =>
           owner.client.mutation(api.trusted_contacts.pinContactIdentity, {
             contactId: contactId as Id<"trusted_contacts">,
-            fingerprint,
+            ...pin,
             _audit,
           }),
       ),

@@ -1,0 +1,5 @@
+Contact: mailto:security@keeplas.com
+Contact: https://github.com/Keeplas/keeplas/security/advisories/new
+Expires: 2027-10-30T00:00:00.000Z
+Policy: https://github.com/Keeplas/keeplas/blob/main/SECURITY.md
+Preferred-Languages: en, fr

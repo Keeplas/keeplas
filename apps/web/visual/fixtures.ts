@@ -48,8 +48,8 @@ export const hub: HubViewProps = {
 export const recovery: RecoveryCenterViewProps = {
   identifier: "+1 415 555 0123",
   ready: { anotherDevice: false, trustContacts: false, recoveryKit: false },
-  // D3 / D4: 72 h window and a 6-digit code (Figma shows 36 h and 4729).
-  request: { approved: 1, code: "472915", windowEndsAt: NOW + 36 * HOUR },
+  // D3: 72 h window (Figma shows 36 h). D4 codes are only on the phone.
+  request: { approved: 1, windowEndsAt: NOW + 36 * HOUR },
   onCancel: noop,
   cancelling: false,
 };
@@ -61,15 +61,9 @@ function sharedVault(
 ): SharedVault {
   return {
     _id: id as SharedVault["_id"],
-    _creationTime: NOW - 30 * DAY,
-    userId: `owner-${id}` as SharedVault["userId"],
-    name: "Alex",
-    role: "family",
     invitationStatus: "accepted",
-    invitationToken: id,
-    invitedAt: NOW - 30 * DAY,
-    createdAt: NOW - 30 * DAY,
-    updatedAt: NOW - DAY,
+    lastVerifiedAt: NOW - DAY,
+    contactPublicKey: "pk",
     ownerEmail: "",
     confirmationThreshold: 2,
     ownerCycleStatus: "running",

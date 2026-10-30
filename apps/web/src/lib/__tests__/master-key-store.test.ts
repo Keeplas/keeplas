@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { clearPersistedMasterKeys } from "../master-key-store";
+import {
+  clearPersistedMasterKeys,
+  isPersistedKeyExpired,
+} from "../master-key-store";
+import { AUTO_LOCK_TIMEOUT_MS } from "../use-idle-timer";
 
 // Pre-v2 builds left a plaintext Shamir share under this key (v2 F2).
 const LEGACY_DEVICE_SHARD_KEY = "keeplas_device_shard";
@@ -39,5 +43,34 @@ describe("clearPersistedMasterKeys", () => {
     await clearPersistedMasterKeys();
 
     expect(localStorage.getItem(LEGACY_DEVICE_SHARD_KEY)).toBeNull();
+  });
+});
+
+describe("isPersistedKeyExpired", () => {
+  const NOW = 10 * AUTO_LOCK_TIMEOUT_MS;
+
+  it("drops a copy left idle for the auto-lock window (browser closed)", () => {
+    expect(
+      isPersistedKeyExpired({ lastActiveAt: NOW - AUTO_LOCK_TIMEOUT_MS }, NOW),
+    ).toBe(true);
+  });
+
+  it("keeps a copy used within the auto-lock window", () => {
+    expect(
+      isPersistedKeyExpired(
+        { lastActiveAt: NOW - AUTO_LOCK_TIMEOUT_MS + 1 },
+        NOW,
+      ),
+    ).toBe(false);
+  });
+
+  it("drops a copy past the link's lifetime, even if active", () => {
+    expect(
+      isPersistedKeyExpired({ expiresAt: NOW, lastActiveAt: NOW }, NOW),
+    ).toBe(true);
+  });
+
+  it("keeps a copy saved before activity tracking", () => {
+    expect(isPersistedKeyExpired({}, NOW)).toBe(false);
   });
 });

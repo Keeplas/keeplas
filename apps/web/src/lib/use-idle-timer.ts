@@ -27,6 +27,8 @@ const ACTIVITY_THROTTLE_MS = 1000;
 interface UseIdleTimerOptions {
   /** Called once when the idle timeout elapses with no activity. */
   onIdle: () => void;
+  /** Called on genuine activity (throttled), e.g. to persist its time. */
+  onActivity?: () => void;
   /** When false, no listeners/timers run (e.g. vault already locked). */
   enabled: boolean;
   /** Override only in tests; defaults to the shared constant. */
@@ -41,15 +43,19 @@ interface UseIdleTimerOptions {
  */
 export function useIdleTimer({
   onIdle,
+  onActivity: onUserActivity,
   enabled,
   timeoutMs = AUTO_LOCK_TIMEOUT_MS,
 }: UseIdleTimerOptions): void {
-  // Keep the latest onIdle without re-running the effect (and so re-attaching
-  // listeners) on every render. Updated in an effect, not during render.
+  // Keep the latest callbacks without re-running the effect (and so
+  // re-attaching listeners) on every render. Updated in an effect, not during
+  // render.
   const onIdleRef = useRef(onIdle);
+  const onActivityRef = useRef(onUserActivity);
   useEffect(() => {
     onIdleRef.current = onIdle;
-  }, [onIdle]);
+    onActivityRef.current = onUserActivity;
+  }, [onIdle, onUserActivity]);
 
   useEffect(() => {
     if (enabled === false) return;
@@ -70,6 +76,7 @@ export function useIdleTimer({
       if (now - lastResetAt < ACTIVITY_THROTTLE_MS) return;
       lastResetAt = now;
       arm();
+      onActivityRef.current?.();
     };
 
     arm();

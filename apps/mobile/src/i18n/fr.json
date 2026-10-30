@@ -182,7 +182,9 @@
     "cta": "Continuer avec la clé d'accès",
     "lost": "Accès perdu ?",
     "lostBody": "Votre sauvegarde, vos 24 mots ou vos contacts de confiance",
-    "failed": "Impossible de déverrouiller votre coffre. Réessayez."
+    "failed": "Impossible de déverrouiller votre coffre. Réessayez.",
+    "staleTitle": "Vos clés ont changé",
+    "staleBody": "Les clés de votre coffre ont été renouvelées sur un autre appareil : celles de ce téléphone ne fonctionnent plus. Rouvrez votre coffre avec votre sauvegarde cloud, vos 24 mots ou un QR code depuis votre autre appareil."
   },
   "otherOptions": {
     "title": "Autres options",
@@ -385,7 +387,7 @@
     "title": "Récupérer avec mes contacts",
     "body": "Deux contacts doivent approuver. Keeplas attend ensuite 72 heures avant de libérer la clé protégée.",
     "start": "Démarrer la récupération",
-    "codeBody": "Comparez ce code avec vos contacts par téléphone ou en appel vidéo. Ne l’envoyez jamais par message.",
+    "codeBody": "Chaque contact a son propre code. Lisez-le-lui par téléphone ou en appel vidéo. Ne l’envoyez jamais par message.",
     "waiting": "En attente",
     "restore": "Restaurer mon coffre",
     "cancel": "Annuler la demande",
@@ -410,7 +412,11 @@
     "expired": "Votre dernière demande a expiré avant d'être validée. Vous pouvez en lancer une nouvelle.",
     "rejected": "{name} a refusé votre demande, la récupération est donc arrêtée. Appelez cette personne pour confirmer que c'était bien vous, puis lancez une nouvelle demande.",
     "notReady": "Vous n’avez pas encore 2 contacts de confiance prêts : ils ne peuvent pas ouvrir votre coffre. Utilisez plutôt votre kit de récupération.",
-    "useKit": "Utiliser mon kit de récupération"
+    "useKit": "Utiliser mon kit de récupération",
+    "codeWaiting": "Votre code pour {name} s’affiche quand cette personne ouvre la demande.",
+    "otherPhone": "Cette demande a été lancée sur un autre téléphone. Les codes s’affichent sur celui-ci.",
+    "keyMismatch": "Cette demande ne correspond plus à la clé créée par ce téléphone : aucun code n’est affiché. Si vous ne l’avez pas lancée depuis un autre téléphone, annulez-la maintenant.",
+    "codeTampered": "Un code de cette demande n’a pas été créé par ce téléphone. Ne laissez personne la valider : annulez la demande et lancez-en une nouvelle."
   },
   "home": {
     "greetingMorning": "Bonjour",
@@ -458,6 +464,11 @@
     "on": "Activées pour les nouvelles connexions, les demandes de récupération et les Life checks",
     "off": "Désactivées. Touchez pour être alerté des nouvelles connexions, des demandes de récupération et des Life checks.",
     "blocked": "Désactivées. Autorisez les notifications de Keeplas dans les réglages de votre téléphone."
+  },
+  "storageFull": {
+    "title": "Stockage plein",
+    "body": "Cette modification ne rentre pas dans vos 100 Mo. Rien n'a été perdu. Passez à Lifetime pour 10 Go.",
+    "bodyLifetime": "Cette modification ne rentre pas dans vos 10 Go. Rien n'a été perdu."
   },
   "upgrade": {
     "title": "Passer à Lifetime",
@@ -550,15 +561,17 @@
     "noRoot": "Ce téléphone ne détient pas la Root Key. Créez d'abord un nouveau kit.",
     "legacy": "Certains anciens fichiers utilisent encore directement l'ancienne Master Key. Ouvrez-les une fois pour les migrer.",
     "failed": "Le renouvellement n'a pas pu finir",
-    "note": "Gardez Keeplas ouvert et connecté jusqu'à 100 %.",
+    "contactKey": "Keeplas n'a pas pu vérifier le code de sécurité de {name}, rien n'a donc été modifié. Vérifiez-le dans Contacts, puis réessayez.",
+    "note": "Gardez Keeplas ouvert et connecté jusqu'à 100 %. S'il s'arrête, relancez-le : il reprend là où il s'était arrêté.",
     "whenTitle": "Quand le faire",
     "when1": "Un téléphone ou un ordinateur où votre coffre était ouvert a été perdu ou volé.",
     "when2": "Vous avez retiré un appareil en qui vous n'avez pas confiance.",
     "when3": "Le support Keeplas vous l'a demandé.",
     "whatTitle": "Ce qui se passe",
-    "what1": "Ce téléphone crée de nouvelles clés et reverrouille chaque élément et chaque partage.",
-    "what2": "Les anciennes clés ne peuvent plus ouvrir votre coffre.",
-    "what3": "Rien d'autre ne change : vos éléments, contacts, clé d'accès, 24 mots et sauvegarde cloud restent les mêmes.",
+    "what1": "Ce téléphone crée de nouvelles clés et reverrouille avec elles chaque élément et chaque partage.",
+    "what2": "Les anciennes clés et vos anciens 24 mots ne fonctionnent plus. Vos autres téléphones et navigateurs sont déconnectés jusqu'à ce que vous y rouvriez le coffre.",
+    "what3": "Vos éléments et contacts restent les mêmes, et votre sauvegarde cloud est renouvelée. Si vous gardez un kit de récupération papier, refaites-en un dans les Réglages.",
+    "what4": "Le contenu de chaque élément n'est pas rechiffré : quelqu'un qui a déjà ouvert un élément avec les anciennes clés pourrait encore le lire s'il en obtenait une copie. Les nouveaux éléments sont protégés.",
     "confirmTitle": "Renouveler vos clés maintenant ?",
     "confirmBody": "Keeplas va reverrouiller chaque élément de votre coffre ({items} au total). Cela prend en général environ une minute.",
     "confirmBodyShared": "Keeplas va reverrouiller chaque élément de votre coffre ({items} au total) et ce que vous partagez avec vos contacts ({contacts}). Cela prend en général environ une minute.",
@@ -628,6 +641,9 @@
     "stillDifferentBody": "{name} reçoit une alerte de sécurité et la demande s'arrête.",
     "decline": "Refuser la demande",
     "compareAgain": "Comparer à nouveau",
+    "waitingForPhone": "En attente du nouveau téléphone de {name}. Demandez à {name} d'y ouvrir Keeplas : votre code s'affiche ici quelques instants après.",
+    "openedElsewhere": "Vous avez ouvert cette demande sur un autre téléphone : le code s'affiche sur celui-ci. Si ce n'était pas vous, refusez la demande.",
+    "unverified": "Keeplas n'a pas pu vérifier le code de cette demande. Ne la validez pas : refusez-la, puis appelez {name} sur un numéro que vous aviez déjà.",
     "goneTitle": "Cette demande n'est plus ouverte",
     "goneBody": "Elle a déjà reçu une réponse, a été annulée ou a expiré. Vous n'avez rien à faire."
   },
@@ -661,7 +677,15 @@
     "deviceOn": "{browser} sur {os}",
     "unknownLocation": "Lieu inconnu",
     "today": "Aujourd'hui à {time}",
-    "confirmTitle": "Confirmez que c'est vous pour connecter ce navigateur"
+    "confirmTitle": "Confirmez que c'est vous pour connecter ce navigateur",
+    "title": "Connecter ce navigateur ?",
+    "body": "Un navigateur demande à ouvrir votre coffre Keeplas. Approuver lui donne un accès complet.",
+    "codeLabel": "Code",
+    "codeOnComputer": "Code sur votre ordinateur",
+    "codeBody": "Votre ordinateur affiche un code à côté du QR code. Il doit être identique.",
+    "warning": "N'approuvez que si vous vous connectez sur cet ordinateur maintenant et qu'il affiche ce code. N'approuvez jamais un code ou un lien que quelqu'un vous a envoyé.",
+    "approve": "Approuver",
+    "decline": "Refuser"
   },
   "connected": {
     "title": "Vous êtes connecté",
@@ -1045,6 +1069,7 @@
     "notFound": "Ce contact n'existe plus."
   },
   "categories": {
+    "unnamed": "Catégorie sans nom",
     "new": "Nouvelle catégorie",
     "newBody": "Les noms de catégorie sont chiffrés comme les éléments qu'elles contiennent.",
     "name": "Nom de la catégorie",
@@ -1426,7 +1451,7 @@
     "body": "Votre autre téléphone envoie la clé de votre coffre à celui-ci, chiffrée de bout en bout. Keeplas ne la voit jamais.",
     "step1": "Ouvrez Keeplas sur le téléphone où vous êtes connecté.",
     "step2": "Allez dans Réglages → Appareils → {menu}.",
-    "step3": "Scannez ce code, puis approuvez.",
+    "step3": "Scannez ce code, vérifiez qu’il affiche le code ci-dessous, puis approuvez.",
     "expires": "Ce code est valable 2 minutes.",
     "preparing": "Préparation d’un code sécurisé…",
     "opening": "Ouverture de votre coffre sur ce téléphone…",
@@ -1434,7 +1459,8 @@
     "rejected": "L’autre téléphone a refusé. Si ce n’était pas vous, sécurisez votre compte depuis ce téléphone.",
     "failed": "Ce téléphone n’a pas pu être associé. Vérifiez votre connexion, puis générez un nouveau code.",
     "retry": "Générer un nouveau code",
-    "note": "Seul un téléphone déjà connecté à votre compte peut approuver ce code."
+    "note": "Seul un téléphone déjà connecté à votre compte peut approuver ce code.",
+    "codeDetail": "N’approuvez sur l’autre téléphone que s’il affiche ce même code."
   },
   "itemEdit": {
     "title": "Modifier",

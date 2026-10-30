@@ -36,7 +36,7 @@ As of 29 October 2026.
 - [ ] Upload a new iOS build, version 1.0.0. It must include the UK review numbers fix and the store review audit fixes.
 - [ ] Android: upload the launch AAB (it must include the same fixes), then create the `keeplas_lifetime` product in the Play Console. Play refuses the product until an AAB with billing is on a track.
 - [ ] Deploy the backend of the store review audit fixes (`pnpm deploy:convex`) before the new builds reach reviewers: error messages, review-number limits and the review tooling depend on it. Upload the new builds the same day: after this deploy, older builds (TestFlight, internal track) can't request a sign-in code or send a support request until they update, because the server now requires the audit envelope with the IP.
-- [ ] Right after that deploy, run `pnpm review:clear` on +447700900101, +447700900102 and +447700900103: it pauses Alex's and Sam's Life check and turns their cloud backup off, which the first seed missed. Then `pnpm review:status`.
+- [ ] Right after that deploy, run `pnpm review:clear` on `<OWNER_NUMBER>`, `<CONTACT_1_NUMBER>` and `<CONTACT_2_NUMBER>`: it pauses Alex's and Sam's Life check and turns their cloud backup off, which the first seed missed. Then `pnpm review:status`.
 - [ ] Capture the six store screenshots on a real phone, in English and French, and render them ([`store-screenshots/`](./store-screenshots/)). The old set showed Figma mockups with screens the app doesn't have (Apple 2.3.3).
 - [ ] Fix the store descriptions in AFFiNE before pasting them: sharing is chosen per item, not per category. EN "• For each item, choose who receives it."; FR "• Pour chaque élément, choisissez qui le recevra."
 - [ ] Fill in ASC and the Play Console: review notes, App Privacy, Data safety, deletion URL, Play App content declarations ([checklist](#before-each-submission)).
@@ -91,13 +91,15 @@ Both stores accept this:
 
 All the review numbers are British, from the range Ofcom keeps for drama (07700 900000 to 900999): nobody can own them, so no message ever reaches a real person. The app's phone check accepts them (`toE164` in `apps/mobile/src/lib/phone.ts` lets the range through, since libphonenumber rejects it).
 
-| Number          | Role           | Account                                                       |
-| --------------- | -------------- | ------------------------------------------------------------- |
-| +44 7700 900101 | Demo owner     | Seeded vault, recovery kit, 2 accepted contacts, Free plan    |
-| +44 7700 900102 | Demo contact 1 | Seeded vault, recovery kit; accepted the owner's invitation   |
-| +44 7700 900103 | Demo contact 2 | Seeded vault, recovery kit; accepted the owner's invitation   |
-| +44 7700 900104 | Sign-up test   | Apple's: no account, reviewers create one; reset after review |
-| +44 7700 900105 | Sign-up test   | Google's: same                                                |
+The numbers themselves are not in this public repo: anyone who knows them can request codes for them and use up their hourly budget of wrong guesses at the fixed code, locking reviewers out. They live only in `REVIEW_PHONES` (Infisical `prod` → `/keeplas_app`, and prod Convex), in this order:
+
+| Position in `REVIEW_PHONES`    | Role           | Account                                                       |
+| ------------------------------ | -------------- | ------------------------------------------------------------- |
+| 1st (`<OWNER_NUMBER>`)         | Demo owner     | Seeded vault, recovery kit, 2 accepted contacts, Free plan    |
+| 2nd (`<CONTACT_1_NUMBER>`)     | Demo contact 1 | Seeded vault, recovery kit; accepted the owner's invitation   |
+| 3rd (`<CONTACT_2_NUMBER>`)     | Demo contact 2 | Seeded vault, recovery kit; accepted the owner's invitation   |
+| 4th (`<APPLE_SIGNUP_NUMBER>`)  | Sign-up test   | Apple's: no account, reviewers create one; reset after review |
+| 5th (`<GOOGLE_SIGNUP_NUMBER>`) | Sign-up test   | Google's: same                                                |
 
 Each store gets its own sign-up number, so a reviewer never lands on the other store's account ("Sign in with this number", then "Lost access to your vault?"). The demo owner is shared: the notes ask reviewers to leave it as it is and to try the irreversible actions (purchase, deletion, new recovery kit) on the account they create.
 
@@ -114,7 +116,7 @@ Done on prod on 26 October 2026. Steps 1 to 3 also rotate the code. A new deploy
    ```
 
 2. **Store the values** in Infisical `prod` → `/keeplas_app`:
-   - `REVIEW_PHONES=+447700900101,+447700900102,+447700900103,+447700900104,+447700900105`
+   - `REVIEW_PHONES=<the five E.164 numbers, comma-separated, in the order above>`
    - `REVIEW_CODE=<the 6 digits>`
 
    Infisical also copies them to Vercel. The web app doesn't read them, so Vercel needs no redeploy.
@@ -141,11 +143,13 @@ Done on prod on 26 October 2026. Steps 1 to 3 also rotate the code. A new deploy
 - **Proof:** it ends by opening each account again like a new phone.
 - **No devices:** the accounts have none yet, so the first reviewer's phone becomes the first one.
 
-| Account                     | Number          |
-| --------------------------- | --------------- |
-| Demo Owner                  | +44 7700 900101 |
-| Alex Demo (owner's contact) | +44 7700 900102 |
-| Sam Demo (owner's contact)  | +44 7700 900103 |
+| Account                     | Number                             |
+| --------------------------- | ---------------------------------- |
+| Demo Owner                  | 1st in `REVIEW_PHONES` (owner)     |
+| Alex Demo (owner's contact) | 2nd in `REVIEW_PHONES` (contact 1) |
+| Sam Demo (owner's contact)  | 3rd in `REVIEW_PHONES` (contact 2) |
+
+The script reads them from `REVIEW_PHONES`, like the server.
 
 - **One set of 24 words for all three**: `REVIEW_KIT` in Infisical `prod` → `/keeplas_mobile`. A new seed keeps it, so the review notes stay valid. Each vault still has its own salt and MasterKey.
 
@@ -197,9 +201,9 @@ To seed again, for example after a reviewer changed the demo vault:
    - It also checks that no earlier reviewer changed the demo accounts: the 24 words still open them; no device alert is pending; no key rotation is flagged; cloud backup is off; no email was added; the language is English; travel mode lasts at least 14 more days; no Life check, contact access request or recovery request is in progress; the owner is still on the Free plan with no deletion scheduled; Alex and Sam still have their seeded items and no contacts. Each problem names its fix:
      - `pnpm review:clear <number>` (only the `REVIEW_PHONES` numbers): device alerts, cloud backup, email, language, travel mode (set again for 180 days), open requests (recovery, contact access, "Lost your number?"), invitations never accepted;
      - re-seed ([above](#demo-accounts)): a new kit, a key rotation, a purchase, a deletion, a released vault, or changed items or contacts on Alex or Sam.
-   - If a reviewer used a sign-up number last time, free it first: `pnpm review:reset +447700900104` (or `+447700900105`).
+   - If a reviewer used a sign-up number last time, free it first: `pnpm review:reset <APPLE_SIGNUP_NUMBER>` (or `<GOOGLE_SIGNUP_NUMBER>`).
    - Travel mode pauses the Life check on the three demo accounts. `status` warns 14 days before it ends; `pnpm review:clear` sets it again.
-2. Paste the notes below into ASC and the Play Console, with the current code and words from Infisical, and each store's own sign-up number.
+2. Paste the notes below into ASC and the Play Console, with the current numbers, code and words from Infisical, and each store's own sign-up number. Write each number the way the app's form takes it (United Kingdom, then the national number, e.g. 07700 900xxx).
 3. Each new sign-in to the demo owner raises a new-device alert on the phones already signed in to it, such as an earlier reviewer's. The notes tell reviewers to tap "It was me".
    - If you sign in to the demo account yourself during a review, never answer "It wasn't me": that revokes the reviewer's session.
    - Never rotate the demo account's keys.
@@ -212,7 +216,7 @@ To seed again, for example after a reviewer changed the demo vault:
 ### App Store Connect: App Review Information
 
 - **Sign-in required**: on.
-- **User name**: `+447700900101`.
+- **User name**: `<OWNER_NUMBER>` (E.164).
 - **Password**: the review code.
 - **Notes**:
 
@@ -223,7 +227,7 @@ The device needs a screen lock (passcode or PIN): Keeplas keeps the vault key be
 
 SIGN IN TO THE DEMO ACCOUNT
 1. Tap "I already have an account".
-2. Choose United Kingdom (search "United Kingdom" or "UK") and enter 07700 900101, or type the full number +447700900101. Then tap "Verify with WhatsApp".
+2. Choose United Kingdom (search "United Kingdom" or "UK") and enter <OWNER_NUMBER> (national format), or type the full number in E.164. Then tap "Verify with WhatsApp".
 3. Enter the code <REVIEW_CODE>, then tap "Confirm number".
 4. This device has no vault key yet: choose "Use recovery kit", paste the 24 words below, then tap "Open my vault". If the app first offers to restore a backup, tap "Other options", then "Other ways back in", then "Use recovery kit".
    <24 WORDS>
@@ -238,7 +242,7 @@ Sign-up checks that the app is genuine (App Attest on iPhone and iPad, Play Inte
 WHAT TO TRY
 - Add an item: scan a document, take a photo, record a voice note or write a note. Items are encrypted on the device before upload.
 - Contacts and sharing: the demo account has two trusted contacts (People tab). Each item shows who receives it after a release: Family items go to Alex, the others to both.
-- The contacts' side: Alex (07700 900102) and Sam (07700 900103) sign in with steps 1 to 5, the same code and the same 24 words. As Alex, open Vault > Shared with me: Demo Owner's vault is listed and stays locked until a release (two contacts confirm they can't reach the owner, then 72 hours). Alex's own People tab is empty: Alex hasn't chosen contacts.
+- The contacts' side: Alex (<CONTACT_1_NUMBER>) and Sam (<CONTACT_2_NUMBER>) sign in with steps 1 to 5, the same code and the same 24 words. As Alex, open Vault > Shared with me: Demo Owner's vault is listed and stays locked until a release (two contacts confirm they can't reach the owner, then 72 hours). Alex's own People tab is empty: Alex hasn't chosen contacts.
 - In-app purchase, on the account you created: Settings > Upgrade to Lifetime (non-consumable "keeplas_lifetime"). New accounts are on the Free plan.
 - Account deletion, on the account you created: Settings > Delete my account (erased 7 days later, can be cancelled).
 
@@ -252,9 +256,9 @@ The Life check (a periodic "are you OK?" check), succession (two contacts confir
 
 - **All or some functionality in my app is restricted**.
 - **Instruction name**: "Demo account (phone number and code)".
-- **Username**: `+447700900101`.
+- **Username**: `<OWNER_NUMBER>` (E.164).
 - **Password**: the review code.
-- **Any other instructions**: the same notes as above, with `07700 900105` as the sign-up number (ASC gets `07700 900104`).
+- **Any other instructions**: the same notes as above, with `<GOOGLE_SIGNUP_NUMBER>` as the sign-up number (ASC gets `<APPLE_SIGNUP_NUMBER>`).
 
 ### Play Console: App content declarations
 
@@ -346,7 +350,7 @@ Payment records stay after deletion. The security log (with its IP addresses and
 
 - [ ] The backend the build calls is deployed on prod (`pnpm deploy:convex`).
 - [ ] `pnpm review:status` says **Ready for review**.
-- [ ] Notes pasted with the current code and words, in ASC (sign-up number 07700 900104) and in the Play Console App access section (07700 900105).
+- [ ] Notes pasted with the current code and words, in ASC (sign-up number `<APPLE_SIGNUP_NUMBER>`) and in the Play Console App access section (`<GOOGLE_SIGNUP_NUMBER>`).
 - [ ] Export compliance answered for the build (see [`APP_STORE.md`](./APP_STORE.md#export-compliance)).
 - [ ] App Privacy (ASC) and Data safety (Play) match the table above.
 - [ ] The privacy policy URL is in both listings and opens from Settings in the app.

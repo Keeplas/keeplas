@@ -12,8 +12,6 @@ export const RESET = "\x1b[0m";
 
 export const nonEmpty = (v) => typeof v === "string" && v.length > 0;
 export const isHttpUrl = (v) => typeof v === "string" && /^https?:\/\//.test(v);
-export const isNodeEnv = (v) =>
-  ["development", "production", "test"].includes(v);
 export const isConvexMode = (v) => ["cloud", "selfhosted"].includes(v);
 export const isAuditSecret = (v) => {
   if (!nonEmpty(v) || v.startsWith("replace-me")) return false;
@@ -28,7 +26,6 @@ export const isAuditSecret = (v) => {
 export const WEB_REQUIRED = [
   { key: "NEXT_PUBLIC_APP_URL", test: isHttpUrl },
   { key: "APP_URL", test: isHttpUrl },
-  { key: "NODE_ENV", test: isNodeEnv },
   { key: "CONVEX_MODE", test: isConvexMode },
   {
     key: "CONVEX_DEPLOYMENT",

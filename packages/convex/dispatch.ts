@@ -13,6 +13,7 @@ import {
   userLanguageForLocale,
 } from "./lib/locale";
 import { isNotificationsPaused } from "./lib/pause";
+import { verifiedChannels } from "./lib/identity";
 
 const CHANNEL_TYPE = v.union(
   v.literal("push"),
@@ -122,6 +123,8 @@ async function buildConfirmUrl(
 
 async function sendEmail({ cycle, user }: DispatchContext): Promise<string> {
   if (!user.email) return "no_email";
+  const { email } = verifiedChannels(user);
+  if (!email) return "email_unverified";
 
   const verifyUrl = await buildConfirmUrl(cycle._id, user._id);
   const locale = resolveLocale(user.language);
@@ -145,7 +148,7 @@ async function sendEmail({ cycle, user }: DispatchContext): Promise<string> {
     },
     body: JSON.stringify({
       from,
-      to: [user.email],
+      to: [email],
       subject: copy.subject,
       html: lifeCheckEmailHtml(user.name, verifyUrl, locale),
       text: copy.text(user.name, verifyUrl),
@@ -238,9 +241,11 @@ async function sendWhatsAppTemplate(args: {
 
 async function sendWhatsApp({ user }: DispatchContext): Promise<string> {
   if (!user.phoneNumber) return "no_phone";
+  const { phoneNumber } = verifiedChannels(user);
+  if (!phoneNumber) return "phone_unverified";
   const locale = resolveLocale(user.language);
   return sendWhatsAppTemplate({
-    to: user.phoneNumber,
+    to: phoneNumber,
     templateName: localizedTemplateName(
       process.env.WHATSAPP_LIFE_CHECK_TEMPLATE_NAME,
       "keeplas_life_check",

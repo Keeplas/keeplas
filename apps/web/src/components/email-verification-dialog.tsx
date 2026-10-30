@@ -18,6 +18,7 @@ import {
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useProveVault } from "@/lib/use-prove-vault";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { useTranslations } from "@/lib/i18n";
 
@@ -57,6 +58,17 @@ export function EmailVerificationDialog({
   const verifyCodeAndLink = useAuditedMutation(
     api.email_verification.verifyCodeAndLink,
   );
+  const proofs = useQuery(api.session_proofs.getMine);
+  const proveVault = useProveVault();
+
+  // Replacing a verified email needs the session to have proved the number
+  // or the vault; a linked browser holds the vault, so prove it silently.
+  async function requestCode(address: string) {
+    if (status?.verifiedAt && !proofs?.phone && !proofs?.vault) {
+      await proveVault();
+    }
+    await requestVerification({ email: address });
+  }
 
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState(initialEmail ?? "");
@@ -95,7 +107,7 @@ export function EmailVerificationDialog({
     setBusy(true);
     setError(null);
     try {
-      await requestVerification({ email: email.trim() });
+      await requestCode(email.trim());
       cooldown.start();
       setStep("code");
     } catch (err) {
@@ -134,7 +146,7 @@ export function EmailVerificationDialog({
     setBusy(true);
     setError(null);
     try {
-      await requestVerification({ email: email.trim() });
+      await requestCode(email.trim());
       cooldown.start();
       setCode("");
     } catch (err) {

@@ -188,7 +188,9 @@
     "cta": "Continue with passkey",
     "lost": "Lost access?",
     "lostBody": "Your backup, your 24 words or your trusted contacts",
-    "failed": "We couldn't unlock your vault. Try again."
+    "failed": "We couldn't unlock your vault. Try again.",
+    "staleTitle": "Your keys were changed",
+    "staleBody": "Your vault's keys were rotated on another device, so this phone's keys no longer work. Open your vault again with your cloud backup, your 24 words or a QR code from your other device."
   },
   "otherOptions": {
     "title": "Other options",
@@ -390,7 +392,7 @@
     "title": "Recover with contacts",
     "body": "Two trusted contacts must approve. Keeplas then waits 72 hours before releasing the protected key.",
     "start": "Start recovery",
-    "codeBody": "Compare this code with your contacts by phone or video call. Never send it by message.",
+    "codeBody": "Each contact gets their own code. Read it to them on a phone or video call. Never send it by message.",
     "waiting": "Waiting",
     "restore": "Restore my vault",
     "cancel": "Cancel request",
@@ -413,7 +415,11 @@
     "expired": "Your last request expired before it was approved. You can start a new one.",
     "rejected": "{name} declined your request, so this recovery stopped. Call them to check it was really you, then start a new request.",
     "notReady": "You don’t have 2 trusted contacts ready yet, so they can’t open your vault. Use your recovery kit instead.",
-    "useKit": "Use my recovery kit"
+    "useKit": "Use my recovery kit",
+    "codeWaiting": "Your code for {name} shows up when they open the request.",
+    "otherPhone": "This request was started on another phone. The codes are shown there.",
+    "keyMismatch": "This request no longer matches the key this phone made, so no codes are shown. If you didn't start it on another phone, cancel it now.",
+    "codeTampered": "A code on this request wasn't made by this phone. Don't let anyone approve it: cancel the request and start a new one."
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -461,6 +467,11 @@
     "on": "On for new sign-ins, recovery requests and Life checks",
     "off": "Off. Tap to get alerts about new sign-ins, recovery requests and Life checks.",
     "blocked": "Off. Allow notifications for Keeplas in your phone's settings."
+  },
+  "storageFull": {
+    "title": "Storage full",
+    "body": "This change does not fit in your 100 MB. Nothing was lost. Upgrade to Lifetime for 10 GB.",
+    "bodyLifetime": "This change does not fit in your 10 GB. Nothing was lost."
   },
   "upgrade": {
     "title": "Upgrade to Lifetime",
@@ -554,15 +565,17 @@
     "noRoot": "This phone does not hold the Root Key. Create a new recovery kit first.",
     "legacy": "Some legacy files still use the old Master Key directly. Open them once to migrate before rotating.",
     "failed": "Key rotation could not finish",
-    "note": "Keep Keeplas open and connected until every item reaches 100%.",
+    "contactKey": "Keeplas couldn't verify {name}'s security code, so nothing was changed. Check it in People, then try again.",
+    "note": "Keep Keeplas open and connected until every item reaches 100%. If it stops, start it again: it picks up where it left off.",
     "whenTitle": "When to do it",
     "when1": "A phone or computer that had your vault open was lost or stolen.",
     "when2": "You removed a device you don't trust.",
     "when3": "Keeplas support asked you to.",
     "whatTitle": "What happens",
-    "what1": "This phone creates new keys and re-locks every item and every share.",
-    "what2": "The old keys can no longer open your vault.",
-    "what3": "Nothing else changes: your items, contacts, passkey, 24 words and cloud backup stay the same.",
+    "what1": "This phone creates new keys and re-locks every item and every share with them.",
+    "what2": "The old keys and your old 24 words stop working. Your other phones and browsers are signed out until you open the vault on them again.",
+    "what3": "Your items and contacts stay the same, and your cloud backup is renewed. If you keep a paper recovery kit, make a new one in Settings.",
+    "what4": "What's inside each item is not re-encrypted: someone who already opened an item with the old keys could still read it if they got a copy. New items are safe.",
     "confirmTitle": "Rotate your keys now?",
     "confirmBody": "Keeplas will re-lock every item in your vault ({items} in total). It usually takes about a minute.",
     "confirmBodyShared": "Keeplas will re-lock every item in your vault ({items} in total) and what you share with your contacts ({contacts}). It usually takes about a minute.",
@@ -632,6 +645,9 @@
     "stillDifferentBody": "{name} gets a security alert and the request stops.",
     "decline": "Decline request",
     "compareAgain": "Compare again",
+    "waitingForPhone": "Waiting for {name}'s new phone. Ask {name} to open Keeplas on it: your code appears here a moment later.",
+    "openedElsewhere": "You opened this request on another phone, so the code is shown there. If it wasn't you, decline the request.",
+    "unverified": "Keeplas couldn't check the code of this request. Don't approve it: decline, then call {name} on a number you already had.",
     "goneTitle": "This request is no longer open",
     "goneBody": "It was already answered, cancelled or has expired. There's nothing for you to do."
   },
@@ -665,7 +681,15 @@
     "deviceOn": "{browser} on {os}",
     "unknownLocation": "Unknown location",
     "today": "Today at {time}",
-    "confirmTitle": "Confirm it's you to log this browser in"
+    "confirmTitle": "Confirm it's you to log this browser in",
+    "title": "Log this browser in?",
+    "body": "A browser is asking to open your Keeplas vault. Approving gives it full access.",
+    "codeLabel": "Code",
+    "codeOnComputer": "Code on your computer",
+    "codeBody": "Your computer shows a code next to the QR code. It must be the same.",
+    "warning": "Approve only if you are logging in on this computer right now and it shows this code. Never approve a code or link someone sent you.",
+    "approve": "Approve",
+    "decline": "Decline"
   },
   "connected": {
     "title": "You're logged in",
@@ -1048,6 +1072,7 @@
     "notFound": "This contact no longer exists."
   },
   "categories": {
+    "unnamed": "Unnamed category",
     "new": "New category",
     "newBody": "Category names are encrypted like the items inside them.",
     "name": "Category name",
@@ -1436,7 +1461,7 @@
     "body": "Your other phone sends your vault key to this one, encrypted end to end. Keeplas never sees it.",
     "step1": "Open Keeplas on the phone where you’re signed in.",
     "step2": "Go to Settings → Devices → {menu}.",
-    "step3": "Scan this code, then approve.",
+    "step3": "Scan this code, check it shows the code below, then approve.",
     "expires": "This code works for 2 minutes.",
     "preparing": "Preparing a secure code…",
     "opening": "Opening your vault on this phone…",
@@ -1444,7 +1469,8 @@
     "rejected": "The other phone declined. If it wasn’t you, secure your account from that phone.",
     "failed": "This phone couldn’t be linked. Check your connection, then generate a new code.",
     "retry": "Generate a new code",
-    "note": "Only a phone already signed in to your account can approve this code."
+    "note": "Only a phone already signed in to your account can approve this code.",
+    "codeDetail": "Approve on the other phone only if it shows this same code."
   },
   "itemEdit": {
     "title": "Edit",

@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import type { FunctionArgs, SchedulableFunctionReference } from "convex/server";
 import {
   action,
@@ -10,13 +10,18 @@ import {
   QueryCtx,
 } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { createNotification, requireFullAuth } from "./helpers";
+import {
+  countQuorumVotes,
+  createNotification,
+  requireFullAuth,
+} from "./helpers";
 import { formatSenderIdentity, ownerIdentity } from "./lib/identity";
 import { auditedMutation, createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
 import { internal } from "./_generated/api";
 import { verifyLifeCheckToken } from "./lib/life_check_token";
-import { isLifeCheckPaused } from "./lib/pause";
+import { isEscalationPaused } from "./lib/pause";
+import { batchArgs, batchPage, scheduleNextBatch } from "./lib/batch";
 
 const FREQUENCY_DAYS: Record<string, number> = {
   weekly: 7,
@@ -27,6 +32,9 @@ const FREQUENCY_DAYS: Record<string, number> = {
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** How often a paused cycle re-checks whether it may resume its timeline. */
 const PAUSE_RECHECK_MS = DAY_MS;
+/** Longest travel mode: it suspends the dead-man's switch, so it must end. */
+export const TRAVEL_MODE_MAX_DAYS = 180;
+const TRAVEL_MODE_MAX_MS = TRAVEL_MODE_MAX_DAYS * DAY_MS;
 
 /**
  * Stage-1 user check-in window: once the cadence elapses the user has this many
@@ -43,6 +51,14 @@ const REMINDER_DAYS = [3, 7, 10] as const;
 export const DEFAULT_CONFIRMATION_THRESHOLD = 2;
 /** Stage-2: how long trusted contacts have to confirm before the fallback. */
 const CONFIRMATION_WINDOW_DAYS = 7;
+/** How long after a quorum's grace the window re-checks the cycle ended. */
+const RESOLVE_RECHECK_MS = 60 * 60 * 1000;
+/**
+ * Configs the evaluator reads per run. A cycle start schedules at most 7
+ * functions (3 channels + 3 reminders + the handoff), so a full page stays
+ * well under the 1000 scheduled functions a mutation may create.
+ */
+const EVALUATOR_BATCH_SIZE = 100;
 
 /**
  * Resolve the inactivity threshold for a config. Falls back to the legacy
@@ -85,7 +101,7 @@ export const getConfig = query({
       .query("life_check_configs")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
-    return config ? { ...config, paused: isLifeCheckPaused() } : null;
+    return config ? { ...config, paused: isEscalationPaused() } : null;
   },
 });
 
@@ -117,6 +133,12 @@ export const saveConfig = auditedMutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
+    // One entry per channel: every enabled entry is a send at each reminder,
+    // so a repeated one would multiply the check-in messages.
+    const types = new Set(args.activeChannels.map((c) => c.type));
+    if (types.size !== args.activeChannels.length) {
+      throw new ConvexError("Each channel can only be listed once");
+    }
     const now = Date.now();
     const thresholdDays = FREQUENCY_DAYS[args.frequency];
     const nextCheckAt = now + thresholdDays * DAY_MS;
@@ -157,9 +179,6 @@ export const saveConfig = auditedMutation({
   },
 });
 
-/** The longest travel mode an owner can set. */
-export const TRAVEL_MODE_MAX_DAYS = 180;
-
 /**
  * Put a Life check in travel mode until `until` and suspend any cycle already
  * in flight. Shared by `toggleTravelMode` and `store_review.clearDrift`.
@@ -167,7 +186,7 @@ export const TRAVEL_MODE_MAX_DAYS = 180;
 export async function enterTravelMode(
   ctx: MutationCtx,
   config: Doc<"life_check_configs">,
-  until: number | undefined,
+  until: number,
   now: number,
 ) {
   await ctx.db.patch(config._id, {
@@ -202,14 +221,17 @@ export const toggleTravelMode = auditedMutation({
     if (!config) throw new Error("Life Check not configured");
 
     const now = Date.now();
-    if (args.enabled && args.until) {
-      const maxUntil = now + TRAVEL_MODE_MAX_DAYS * DAY_MS;
-      if (args.until > maxUntil) {
-        throw new Error(`Travel mode maximum is ${TRAVEL_MODE_MAX_DAYS} days`);
-      }
-    }
-
+    // Travel mode suspends the dead-man's switch, so it always ends: a return
+    // date is required, at most 180 days out.
     if (args.enabled) {
+      if (args.until === undefined) {
+        throw new ConvexError("Choose a return date for travel mode");
+      }
+      if (args.until > now + TRAVEL_MODE_MAX_MS) {
+        throw new ConvexError(
+          `Travel mode maximum is ${TRAVEL_MODE_MAX_DAYS} days`,
+        );
+      }
       await enterTravelMode(ctx, config, args.until, now);
     } else {
       // Returning early — clear travel mode and start a fresh window.
@@ -289,13 +311,16 @@ export const postponeCycle = auditedMutation({
       throw new Error("Custom date required for custom duration");
     }
 
-    // Cancel active cycle if any
-    const activeCycle = await ctx.db
-      .query("life_check_cycles")
-      .withIndex("by_status", (q) =>
-        q.eq("userId", userId).eq("status", "running"),
-      )
-      .first();
+    // Cancel active cycle if any. Stage 2 can't be postponed: contacts are
+    // already being asked to confirm, and a postpone that left their votes
+    // and the scheduled release running would only look like it stopped
+    // them. The owner confirms they're well instead (validateCycle).
+    const activeCycle = await findInFlightCycle(ctx, userId);
+    if (activeCycle?.status === "awaiting_confirmation") {
+      throw new ConvexError(
+        "Your trusted contacts are being asked to confirm your status. Confirm you're well instead of postponing.",
+      );
+    }
 
     if (activeCycle) {
       await ctx.db.patch(activeCycle._id, {
@@ -366,8 +391,19 @@ type ChannelEntry = {
   isEnabled: boolean;
 };
 
+/**
+ * The enabled channels, once each. Configs saved before `saveConfig` refused
+ * repeated entries may list a channel many times: each must still be one send.
+ */
 function enabledChannels(channels: ChannelEntry[]): ChannelEntry[] {
-  return channels.filter((c) => c.isEnabled);
+  const seen = new Set<ChannelEntry["type"]>();
+  const enabled: ChannelEntry[] = [];
+  for (const channel of channels) {
+    if (!channel.isEnabled || seen.has(channel.type)) continue;
+    seen.add(channel.type);
+    enabled.push(channel);
+  }
+  return enabled;
 }
 
 /**
@@ -492,18 +528,20 @@ async function startCycleForConfig(
 }
 
 /**
- * Internal: Initiate a new Life Check cycle (legacy entry, kept for
- * backwards compatibility with any caller scheduling cycles directly).
+ * Internal: Initiate a new Life Check cycle. The evaluator runs it as a
+ * subtransaction per config, so one config that fails to start rolls back
+ * alone. Returns the new cycle ID, or null when none was started.
  */
 export const initiateCycle = internalMutation({
   args: { configId: v.id("life_check_configs") },
   handler: async (ctx, args) => {
-    await startCycleForConfig(ctx, args.configId);
+    return await startCycleForConfig(ctx, args.configId);
   },
 });
 
 /**
- * Kill switch for the escalation timeline (`LIFE_CHECK_PAUSED`). When set,
+ * Kill switch for the escalation timeline (`LIFE_CHECK_PAUSED`, or
+ * `NOTIFICATIONS_PAUSED`: see lib/pause). When set,
  * a scheduled timeline step re-schedules itself instead of running, so the
  * cycle keeps its state and resumes where it stopped once the flag is cleared.
  * Returns true when the step was deferred and the caller must bail.
@@ -514,7 +552,7 @@ async function deferWhilePaused<F extends SchedulableFunctionReference>(
   fn: F,
   args: FunctionArgs<F>,
 ): Promise<boolean> {
-  if (!isLifeCheckPaused()) return false;
+  if (!isEscalationPaused()) return false;
   const id = await ctx.scheduler.runAfter(PAUSE_RECHECK_MS, fn, args);
   await ctx.db.patch(cycle._id, {
     pendingScheduleIds: [...(cycle.pendingScheduleIds ?? []), id],
@@ -721,14 +759,19 @@ async function suspendInFlightCycle(
  * A mere read receipt is NOT routed here: only a deliberate reply counts as
  * liveness. No-ops silently when the phone maps to no user or there is no
  * cycle in flight.
+ *
+ * Only a VERIFIED number counts: a legacy account can carry an unverified
+ * number someone else chose, and a reply from that phone must not keep the
+ * account's dead-man's switch from firing.
  */
 export const validateFromWhatsApp = internalMutation({
   args: { phoneNumber: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db
+    const candidates = await ctx.db
       .query("users")
       .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
-      .first();
+      .take(10);
+    const user = candidates.find((u) => u.phoneNumberVerifiedAt !== undefined);
     if (!user) return { matched: false };
 
     const now = Date.now();
@@ -740,8 +783,14 @@ export const validateFromWhatsApp = internalMutation({
 
 /**
  * Validate a cycle from the one-click email link. The HMAC token is verified
- * upstream in `confirmFromEmailToken`; here we just confirm the cycle belongs
- * to the user, then run the shared `confirmAlive`. Idempotent.
+ * upstream in `confirmFromEmailToken`. The link answers the ONE Stage-1
+ * check-in it was sent for:
+ *  - that cycle still `running` → confirm alive;
+ *  - already `validated` → nothing to do, report success (a second click);
+ *  - anything else (escalated to Stage 2, closed, or an old cycle) → refuse.
+ *    Cancelling a Stage-2 confirmation needs the owner signed in (step-up
+ *    gated `validateCycle`), never a link that sat in a mailbox.
+ * So a replayed or scanner-opened link can't reset the clock of a later cycle.
  */
 export const confirmFromEmail = internalMutation({
   args: {
@@ -751,31 +800,36 @@ export const confirmFromEmail = internalMutation({
   handler: async (ctx, args) => {
     const cycle = await ctx.db.get(args.cycleId);
     if (!cycle || cycle.userId !== args.userId) return { ok: false };
+    if (cycle.status === "validated") return { ok: true };
+    if (cycle.status !== "running") return { ok: false };
     await confirmAlive(ctx, args.userId, Date.now(), "email_link");
     return { ok: true };
   },
 });
 
 /**
- * Public unauthenticated action invoked from the Next.js confirm page when the
- * user clicks the "I am well" button in the check-in email. Verifies the
- * HMAC-signed token (proves the call came from a real check-in email) and
- * runs the shared confirmation mutation. Never exposes vault data — the token
- * only authorises resetting a liveness timer. Kept as an `action` (not a
- * mutation) because token verification uses WebCrypto, which is only available
- * in the action runtime.
+ * Public unauthenticated action invoked from the web confirm page when the
+ * user clicks its "I'm well" button (the page itself never calls it on load:
+ * mail scanners open links). Verifies the HMAC-signed token (proves the call
+ * came from a real check-in email) and runs the confirmation mutation. Never
+ * exposes vault data — the token only answers a check-in. Kept as an `action`
+ * (not a mutation) because token verification uses WebCrypto, which is only
+ * available in the action runtime.
  */
 export const confirmFromEmailToken = action({
   args: { token: v.string() },
   returns: v.union(v.literal("ok"), v.literal("invalid")),
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<"ok" | "invalid"> => {
     const payload = await verifyLifeCheckToken(args.token);
     if (!payload) return "invalid";
-    await ctx.runMutation(internal.life_check.confirmFromEmail, {
-      cycleId: payload.cycleId as Id<"life_check_cycles">,
-      userId: payload.userId as Id<"users">,
-    });
-    return "ok";
+    const result: { ok: boolean } = await ctx.runMutation(
+      internal.life_check.confirmFromEmail,
+      {
+        cycleId: payload.cycleId as Id<"life_check_cycles">,
+        userId: payload.userId as Id<"users">,
+      },
+    );
+    return result.ok ? "ok" : "invalid";
   },
 });
 
@@ -783,28 +837,38 @@ export const confirmFromEmailToken = action({
  * Cron-driven evaluator. For every active config, decide whether the user
  * has crossed their inactivity threshold. If yes and no cycle is in flight,
  * initiate a new cycle. Travel mode skips evaluation (and auto-disables
- * once expired). Escalation timing across channels is handled in PR2.
+ * once expired).
+ *
+ * Reads one page of configs per run and schedules itself on the next page
+ * (lib/batch.ts), so the work per transaction stays bounded however many
+ * accounts there are. Each cycle starts in its own subtransaction: a config
+ * that can't start fails alone instead of halting every user's Life Check.
+ * Re-running a page is harmless: a config with a cycle in flight is skipped.
  */
 export const evaluateAllConfigs = internalMutation({
-  args: {},
-  handler: async (ctx) => {
+  args: batchArgs,
+  handler: async (ctx, args) => {
     // Kill switch: the inactivity counting is frozen — no new cycle starts.
-    if (isLifeCheckPaused()) return { evaluated: 0, initiated: 0 };
+    if (isEscalationPaused()) return { evaluated: 0, initiated: 0 };
 
     const now = Date.now();
-    const configs = await ctx.db
+    const page = await ctx.db
       .query("life_check_configs")
       .withIndex("by_active_activity", (q) => q.eq("isActive", true))
-      .collect();
+      .paginate(batchPage(EVALUATOR_BATCH_SIZE, args.cursor));
 
     let initiated = 0;
 
-    for (const config of configs) {
+    for (const config of page.page) {
       if (config.travelModeEnabled) {
-        if (
-          config.travelModeUntil !== undefined &&
-          now >= config.travelModeUntil
-        ) {
+        if (config.travelModeUntil === undefined) {
+          // Legacy open-ended travel mode (before a return date was
+          // required): give it the 180-day maximum, counted from now.
+          await ctx.db.patch(config._id, {
+            travelModeUntil: now + TRAVEL_MODE_MAX_MS,
+            updatedAt: now,
+          });
+        } else if (now >= config.travelModeUntil) {
           // Travel mode expired — the user is presumed back. Clear it and
           // restart the clock so they get a full fresh window, then skip this
           // tick (no immediate cycle from a stale lastActivityAt).
@@ -825,11 +889,22 @@ export const evaluateAllConfigs = internalMutation({
       const inFlight = await findInFlightCycle(ctx, config.userId);
       if (inFlight) continue;
 
-      const cycleId = await startCycleForConfig(ctx, config._id);
-      if (cycleId) initiated++;
+      try {
+        const cycleId: Id<"life_check_cycles"> | null = await ctx.runMutation(
+          internal.life_check.initiateCycle,
+          { configId: config._id },
+        );
+        if (cycleId) initiated++;
+      } catch (error) {
+        console.error(
+          `Life Check evaluator: no cycle started for config ${config._id}`,
+          error,
+        );
+      }
     }
 
-    return { evaluated: configs.length, initiated };
+    await scheduleNextBatch(ctx, page, internal.life_check.evaluateAllConfigs);
+    return { evaluated: page.page.length, initiated };
   },
 });
 
@@ -1049,10 +1124,11 @@ export const enterConfirmationStage = internalMutation({
 
 /**
  * Confirmation window elapsed. If contacts reached the confirmation threshold,
- * a release is already pending behind its owner-cancel grace — do nothing.
- * Otherwise close the cycle without releasing anything and notify the owner:
- * a missed Life Check alone must never cause disclosure (v2 F5 — the former
- * "release_anyway" fallback is gone).
+ * a release is already pending behind its owner-cancel grace: check back once
+ * that grace is over, so a release that did not fire (its quorum fell apart)
+ * still ends the cycle. Otherwise close the cycle without releasing anything
+ * and notify the owner: a missed Life Check alone must never cause disclosure
+ * (v2 F5 — the former "release_anyway" fallback is gone).
  */
 export const resolveConfirmationWindow = internalMutation({
   args: { cycleId: v.id("life_check_cycles") },
@@ -1069,6 +1145,7 @@ export const resolveConfirmationWindow = internalMutation({
     )
       return;
 
+    const now = Date.now();
     const confirmed = await ctx.db
       .query("access_requests")
       .withIndex("by_status", (q) =>
@@ -1076,11 +1153,22 @@ export const resolveConfirmationWindow = internalMutation({
       )
       .filter((q) => q.eq(q.field("quorumReached"), true))
       .first();
-    if (confirmed) return; // release will fire after its grace window
+    if (confirmed) {
+      const recheckAt =
+        Math.max(confirmed.gracePeriodEndsAt ?? now, now) + RESOLVE_RECHECK_MS;
+      const id = await ctx.scheduler.runAt(
+        recheckAt,
+        internal.life_check.resolveConfirmationWindow,
+        args,
+      );
+      await ctx.db.patch(cycle._id, {
+        pendingScheduleIds: [...(cycle.pendingScheduleIds ?? []), id],
+      });
+      return;
+    }
 
     // No human quorum → no release. An attacker who suppresses the owner's
     // check-ins must not be able to force a release purely on cron timers.
-    const now = Date.now();
     await ctx.db.patch(cycle._id, {
       status: "cancelled",
       cancelledAt: now,
@@ -1127,7 +1215,10 @@ export const resolveConfirmationWindow = internalMutation({
  * Fired after the owner-cancel grace window once enough trusted contacts have
  * confirmed unreachability (scheduled by access_requests.markUserUnreachable).
  * Re-checks state, then releases. Bails if the user came back (cycle no longer
- * `awaiting_confirmation`) or the request was cancelled during grace.
+ * `awaiting_confirmation`) or the request was cancelled during grace. Votes
+ * are re-counted: if a voter was revoked during the grace and the quorum no
+ * longer holds, nothing is released and the request goes back to collecting
+ * votes (a new quorum opens a fresh 72h grace).
  */
 export const releaseAfterConfirmation = internalMutation({
   args: {
@@ -1156,6 +1247,16 @@ export const releaseAfterConfirmation = internalMutation({
       return;
 
     const now = Date.now();
+    const votes = await countQuorumVotes(ctx, request.contactsInitiated ?? []);
+    if (votes < (request.quorumRequired ?? DEFAULT_CONFIRMATION_THRESHOLD)) {
+      await ctx.db.patch(request._id, {
+        quorumReached: false,
+        gracePeriodEndsAt: undefined,
+        updatedAt: now,
+      });
+      return;
+    }
+
     await ctx.db.patch(request._id, {
       status: "approved",
       respondedAt: now,

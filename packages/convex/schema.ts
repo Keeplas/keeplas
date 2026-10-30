@@ -64,9 +64,16 @@ export default defineSchema({
     // Transitional only — set during a master-key rotation (return-after-release
     // flow). The PREVIOUS owner ML-KEM secret key, re-wrapped under the NEW
     // MasterKey, so items still wrapped to the old keypair stay readable while
-    // they are re-encrypted item-by-item. Cleared by `rotation.finalizeRotation`
-    // once every item has migrated to the new keypair.
+    // their DEKs are re-wrapped item-by-item. Its presence marks a rotation in
+    // progress; `rotation.finalizeRotation` moves it into
+    // `encryptedRetiredSecretKeys` and clears it.
     encryptedAsymmetricSecretKeyPrev: v.optional(v.string()),
+    // JSON { ciphertext, iv } under the CURRENT MasterKey of a JSON array of
+    // every ML-KEM secret key retired by a rotation (base64). Kept for good:
+    // other owners' item wraps and recovery shares sealed to an older key,
+    // and wraps written late by a stale device, must still open. Re-sealed
+    // under each new MasterKey by `rotation.rotateKeyMaterial`.
+    encryptedRetiredSecretKeys: v.optional(v.string()),
     // Identity key (finding #2 — malicious-server key substitution). Base64
     // ML-DSA-65 public key (FIPS 204). The long-lived signing key that binds
     // this user's ML-KEM public key to their identity so contacts can detect a
@@ -90,8 +97,8 @@ export default defineSchema({
     recoveryVerified: v.optional(v.boolean()),
     // Set by the v2 shard purge (Oct 2026) for owners whose MasterKey was once
     // Shamir-split to trusted contacts: those shards may still sit on a
-    // contact's device, so the owner must rotate the MasterKey. Cleared by
-    // `rotation.finalizeRotation`.
+    // contact's device, so the owner must rotate the MasterKey. Also set by
+    // "It wasn't me" (devices.notMe). Cleared by `rotation.finalizeRotation`.
     masterKeyRotationRequired: v.optional(v.boolean()),
     // Set when the social-recovery material must be renewed (new generation):
     // after a MasterKey rotation, or a cancelled request that already
@@ -141,10 +148,10 @@ export default defineSchema({
     // Cleared if the phone number is changed afterward.
     phoneNumberVerifiedAt: v.optional(v.number()),
 
-    // Billing tier. Absent = "free". Flipped to "lifetime" only by the
-    // RevenueCat webhook (`billing.fulfillStorePurchase`) after a successful
-    // in-app purchase; never set client-side. Drives the storage quota (see
-    // lib/plans.ts).
+    // Billing tier. Absent = "free". Written only by the RevenueCat webhook
+    // (billing.ts): "lifetime" after an in-app purchase, back to "free" when
+    // it is refunded or restored onto another account; never set
+    // client-side. Drives the storage quota (see lib/plans.ts).
     plan: v.optional(planValidator),
     // Legacy: Stripe Customer id of buyers from the former web Checkout. No
     // longer written; kept so existing rows still validate.
@@ -178,7 +185,9 @@ export default defineSchema({
     amountCents: v.number(),
     currency: v.string(),
     plan: planValidator,
-    status: v.literal("paid"),
+    // "refunded" once the store refunds it (RevenueCat CANCELLATION), back to
+    // "paid" if Apple reverses the refund.
+    status: v.union(v.literal("paid"), v.literal("refunded")),
     createdAt: v.number(),
   })
     .index("by_revenuecat_transaction", ["revenueCatTransactionId"])
@@ -371,6 +380,21 @@ export default defineSchema({
     windowEndsAt: v.number(),
     // createdAt + 7 days: pending / approved_1 expire.
     expiresAt: v.number(),
+    // D4 code exchange, one entry per contact (commit-then-reveal, see
+    // recoveryCode in @keeplas/crypto/social). Every field is write-once.
+    // Absent on requests opened before it: the device adds it on open.
+    codeExchange: v.optional(
+      v.array(
+        v.object({
+          contactId: v.id("trusted_contacts"),
+          // H(device key ‖ device nonce), from the recovering device.
+          commitment: v.string(),
+          contactNonce: v.optional(v.string()),
+          // Revealed by the device once it holds `contactNonce`.
+          deviceNonce: v.optional(v.string()),
+        }),
+      ),
+    ),
     // G sealed to `newDevicePublicKey`, set at release.
     wrappedGateKey: v.optional(v.string()),
     releasedAt: v.optional(v.number()),
@@ -460,6 +484,26 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_push_token", ["pushToken"]),
 
+  // Server half of a browser's device PIN (device_pins.ts). The browser keeps
+  // the MasterKey wrapped under HKDF(Argon2id(PIN, deviceSalt), secret) and
+  // never sends the salt, so this row alone cannot open anything, and the
+  // browser's copy alone cannot be brute-forced offline: `secret` is released
+  // only to the enrolling session, after a correct PIN proof, and the row is
+  // deleted after PIN_WIPE_THRESHOLD wrong ones. Ends with its session.
+  device_pins: defineTable({
+    userId: v.id("users"),
+    sessionId: v.id("authSessions"),
+    // SHA-256 hex of the PIN proof (HKDF of Argon2id(PIN, deviceSalt)).
+    proofHash: v.string(),
+    // 32 random bytes (base64), mixed into the wrap key.
+    secret: v.string(),
+    failCount: v.number(),
+    lockedUntil: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_session", ["sessionId"]),
+
   // Short-lived QR handoff from a signed-in phone to a new browser. Convex
   // only relays ciphertext: the MasterKey envelope is sealed by the phone to
   // the browser's ephemeral ML-KEM key. Each row is purged at `expiresAt`
@@ -534,6 +578,9 @@ export default defineSchema({
     // Rows without verifiedAt are pending enrollments and may be replaced.
     verifiedAt: v.optional(v.number()),
     lastUsedAt: v.optional(v.number()),
+    // Time step (30 s counter) of the last accepted code: a code at or before
+    // it is refused, so each code works once. Unset on rows that predate it.
+    lastUsedCounter: v.optional(v.number()),
     // Wrong codes in the current lockout window (reset on success).
     failedAttempts: v.optional(v.number()),
     lastFailedAt: v.optional(v.number()),
@@ -733,6 +780,12 @@ export default defineSchema({
     // separately on the memorial page above the categorized items.
     isReleaseIntroduction: v.optional(v.boolean()),
 
+    // Bytes this row counts for in `storage_usage`, stamped whenever its
+    // sealed strings change (lib/storage_usage.ts), so a later change
+    // subtracts exactly what was added. Absent on rows not written since the
+    // counter exists: computed from the row then.
+    storedBytes: v.optional(v.number()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -741,7 +794,14 @@ export default defineSchema({
     .index("by_status", ["vaultId", "status"])
     .index("by_user", ["userId"])
     .index("by_user_status", ["userId", "status"])
-    .index("by_trigger", ["triggerType", "status"]),
+    .index("by_trigger", ["triggerType", "status"])
+    // Due time-based items only (release.processScheduledReleases): the range
+    // stops at now, so future-dated letters are never read by the cron.
+    .index("by_trigger_release_date", [
+      "triggerType",
+      "status",
+      "triggerConfig.releaseDate",
+    ]),
 
   vault_item_versions: defineTable({
     itemId: v.id("vault_items"),
@@ -866,6 +926,34 @@ export default defineSchema({
     .index("by_item", ["itemId"])
     .index("by_user", ["userId"]),
 
+  // Bytes each owner stores, against the plan quota (lib/plans.ts): item
+  // rows, edit history, recipient-key rows and file blobs. Kept in step by
+  // every write (lib/storage_usage.ts) so the quota never reads item or
+  // version documents. "archive" = archived items + history; recipient keys
+  // count as active whatever their item's status.
+  storage_usage: defineTable({
+    userId: v.id("users"),
+    activeBytes: v.number(),
+    archiveBytes: v.number(),
+    // Present while the counter of an account that predates it is being
+    // built (migrations.backfillStorageUsage): the byte counts are partial.
+    // Resumes after item `afterItem` (creation time), inside `item` when its
+    // history is being read.
+    backfill: v.optional(
+      v.object({
+        afterItem: v.optional(v.number()),
+        item: v.optional(
+          v.object({
+            id: v.id("vault_items"),
+            afterVersion: v.optional(v.number()),
+            // Blobs of this item already counted (one count per blob).
+            seen: v.array(storageRefValidator),
+          }),
+        ),
+      }),
+    ),
+  }).index("by_user", ["userId"]),
+
   // Owner of each stored blob, bound when it is first attached (to an item or
   // as an avatar): a handle bound to another account is refused, and only the
   // owner's deletions remove it (lib/storage.ts claimBlob / deleteBlob). Also
@@ -919,6 +1007,11 @@ export default defineSchema({
     // identity key later changes, the recomputed fingerprint differs from the
     // pin and the owner is blocked from wrapping until they explicitly re-pin.
     pinnedIdentityFingerprint: v.optional(v.string()),
+    // The owner's HMAC over the pin (key derived from their MasterKey, see
+    // packages/crypto/src/sig/contact-trust.ts). The server cannot forge it,
+    // so a rewritten pin is refused client-side. Absent on legacy pins, which
+    // clients upgrade on their next verify.
+    pinnedIdentityMac: v.optional(v.string()),
 
     invitationStatus: v.union(
       v.literal("pending"),

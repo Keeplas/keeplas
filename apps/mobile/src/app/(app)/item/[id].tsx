@@ -47,6 +47,8 @@ import { contactSupport } from "@/lib/support";
 import { NoteView } from "@/features/notes/note-view";
 import { isEmptyNote } from "@keeplas/export/rich-text";
 import { toast } from "@/lib/toast";
+import { useStorageFullPrompt } from "@/features/billing/storage-full";
+import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -66,6 +68,7 @@ import { outboxLabel } from "@/features/outbox/outbox";
 import { usePendingAttachments } from "@/features/vault/use-pending-attachments";
 
 export default function ItemDetails() {
+  useNoScreenCapture();
   const { id } = useLocalSearchParams<{ id: string }>();
   const itemId = id as Id<"vault_items">;
   const router = useRouter();
@@ -80,6 +83,7 @@ export default function ItemDetails() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const { items } = useVaultData();
   const recategorizeItem = useRecategorize();
+  const storageFull = useStorageFullPrompt();
   const { colors } = useTheme();
   const [selected, setSelected] = useState(0);
   const [pages, setPages] = useState(0);
@@ -293,9 +297,11 @@ export default function ItemDetails() {
   });
   async function recategorize(choice: CategoryChoice) {
     if (!raw || !opened) return;
-    await recategorizeItem(raw, opened, choice).catch(() =>
-      toast({ variant: "error", title: t("common.genericError") }),
-    );
+    await recategorizeItem(raw, opened, choice).catch((error: unknown) => {
+      if (!storageFull.handle(error)) {
+        toast({ variant: "error", title: t("common.genericError") });
+      }
+    });
   }
 
   const archived = raw?.status === "archived";
@@ -659,6 +665,7 @@ export default function ItemDetails() {
 
       {categorySheet}
       {sheets}
+      {storageFull.sheet}
     </Screen>
   );
 }

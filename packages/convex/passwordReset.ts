@@ -6,7 +6,7 @@ import {
 import { action, internalQuery, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
-import { constantTimeStringEquals } from "./lib/crypto";
+import { verifierMatches } from "./lib/crypto";
 import { auditContextValidator, verifyAuditContext } from "./audit";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { assertStrongPassword } from "./lib/password";
@@ -74,7 +74,7 @@ export const verifyRecoveryPhraseInternal = internalQuery({
     if (!user || !user.recoveryPhraseHash) return null;
     // SECURITY: constant-time compare; `phraseHash` carries the client-computed
     // salted Argon2id verifier (derivePhraseVerifier), never the raw phrase.
-    if (!constantTimeStringEquals(user.recoveryPhraseHash, args.phraseHash)) {
+    if (!(await verifierMatches(user.recoveryPhraseHash, args.phraseHash))) {
       return null;
     }
     return user._id as Id<"users">;

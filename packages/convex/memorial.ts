@@ -58,6 +58,24 @@ async function resolveApprovedRelease(
 }
 
 /**
+ * The item when it was released to this contact and the owner still shares
+ * it (not archived, not private), else null. Every memorial read goes through
+ * it, so an item and its files can never disagree.
+ */
+async function releasedItem(
+  ctx: QueryCtx,
+  access: ApprovedRelease,
+  itemId: Id<"vault_items">,
+) {
+  if (!access.itemIds.includes(itemId)) return null;
+  const item = await ctx.db.get(itemId);
+  if (!item || item.status === "archived" || item.accessLevel === "private") {
+    return null;
+  }
+  return item;
+}
+
+/**
  * Build the encrypted, contact-readable shape of a released item: its
  * ciphertext fields plus the DEK wrapped to THIS contact (joined from
  * vault_item_recipient_keys). `readable` is false for legacy aes_256_gcm items
@@ -66,23 +84,19 @@ async function resolveApprovedRelease(
  */
 async function shapeItem(
   ctx: QueryCtx,
-  itemId: Id<"vault_items">,
+  item: Doc<"vault_items">,
   contactId: Id<"trusted_contacts">,
 ) {
-  const item = await ctx.db.get(itemId);
-  if (!item) return null;
-  if (item.status === "archived" || item.accessLevel === "private") return null;
-
   const recRow = await ctx.db
     .query("vault_item_recipient_keys")
     .withIndex("by_item_contact", (q) =>
-      q.eq("itemId", itemId).eq("contactId", contactId),
+      q.eq("itemId", item._id).eq("contactId", contactId),
     )
     .first();
 
   const firstFile = await ctx.db
     .query("vault_item_files")
-    .withIndex("by_item", (q) => q.eq("itemId", itemId))
+    .withIndex("by_item", (q) => q.eq("itemId", item._id))
     .first();
 
   return {
@@ -127,8 +141,9 @@ export const getReleasedVaultForMe = query({
     const items = [];
     const allIntros = [];
     for (const itemId of access.itemIds) {
-      const shaped = await shapeItem(ctx, itemId, args.contactId);
-      if (!shaped) continue;
+      const item = await releasedItem(ctx, access, itemId);
+      if (!item) continue;
+      const shaped = await shapeItem(ctx, item, args.contactId);
       if (shaped.isReleaseIntroduction) {
         allIntros.push(shaped);
       } else {
@@ -158,11 +173,11 @@ export const getReleasedItemForMe = query({
   },
   handler: async (ctx, args) => {
     const access = await resolveApprovedRelease(ctx, args.contactId);
-    if (!access || !access.itemIds.includes(args.itemId)) return null;
+    if (!access) return null;
+    const released = await releasedItem(ctx, access, args.itemId);
+    if (!released) return null;
 
-    const item = await shapeItem(ctx, args.itemId, args.contactId);
-    if (!item) return null;
-
+    const item = await shapeItem(ctx, released, args.contactId);
     const owner = ownerDisplay(await ctx.db.get(access.contact.userId));
     return { owner, item };
   },
@@ -180,7 +195,7 @@ export const getMemorialItemFiles = query({
   },
   handler: async (ctx, args) => {
     const access = await resolveApprovedRelease(ctx, args.contactId);
-    if (!access || !access.itemIds.includes(args.itemId)) return [];
+    if (!access || !(await releasedItem(ctx, access, args.itemId))) return [];
 
     const files = await ctx.db
       .query("vault_item_files")
@@ -191,9 +206,10 @@ export const getMemorialItemFiles = query({
 });
 
 /**
- * Short-lived signed URL for a released item's ciphertext blob. Verifies the
- * file belongs to an item released to this contact. Routes through the storage
- * abstraction (never ctx.storage.* directly).
+ * Download URL of a released item's ciphertext blob (it never expires: see
+ * lib/storage.ts getBlobDownloadUrl). Verifies the file belongs to an item
+ * still released to this contact. Routes through the storage abstraction
+ * (never ctx.storage.* directly).
  */
 export const getMemorialItemFileUrl = query({
   args: {
@@ -205,7 +221,7 @@ export const getMemorialItemFileUrl = query({
     if (!access) return null;
 
     const file = await ctx.db.get(args.fileId);
-    if (!file || !access.itemIds.includes(file.itemId)) return null;
+    if (!file || !(await releasedItem(ctx, access, file.itemId))) return null;
 
     return await getBlobDownloadUrl(ctx, file.storageId);
   },

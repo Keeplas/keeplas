@@ -22,7 +22,7 @@ import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 import { maskPhone, normalizeE164 } from "./lib/phone";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { endSessions } from "./lib/sessions";
-import { assertPhoneAvailable, commitPhoneChange } from "./phone_verification";
+import { commitPhoneChange, phoneTakenByOther } from "./phone_verification";
 import { RECOVERY_REQUEST_TTL_MS, RECOVERY_WINDOW_MS } from "./recovery";
 import { refuseOnReviewAccount } from "./store_review";
 
@@ -96,6 +96,10 @@ const isReady = (row: Doc<"number_change_requests">) =>
   Date.now() >= row.windowEndsAt &&
   !isExpired(row);
 
+const refused = (
+  error: "NO_ACCOUNT" | "REQUEST_IN_PROGRESS" | "NUMBER_TAKEN",
+) => ({ ok: false as const, error });
+
 const claimArgs = {
   requestId: v.id("number_change_requests"),
   claimToken: v.string(),
@@ -104,6 +108,9 @@ const claimArgs = {
 /**
  * Start a request, signed out. Rate-limited per IP and per old number; one
  * open request per account. Returns the claim secret the phone keeps.
+ * A refusal that depends on the accounts (unknown old number, request in
+ * progress, new number taken) is returned, not thrown: a throw would roll
+ * back the rate-limit rows, leaving number sweeps unthrottled.
  */
 export const submit = mutation({
   args: {
@@ -136,9 +143,10 @@ export const submit = mutation({
       .query("users")
       .withIndex("by_phone", (q) => q.eq("phoneNumber", oldPhone))
       .first();
-    if (!user) throw new ConvexError("NO_ACCOUNT");
+    if (!user) return refused("NO_ACCOUNT");
     // A demo account is shared by every reviewer: one reviewer's request
-    // would alert the others' phones and leave a banner on Home.
+    // would alert the others' phones and leave a banner on Home. Thrown: a
+    // review number is public (review notes), so this tells nothing.
     await refuseOnReviewAccount(ctx, user._id);
     await enforceIpRateLimit(
       ctx,
@@ -147,10 +155,10 @@ export const submit = mutation({
       SUBMIT_MAX_PER_PHONE,
       DAY_MS,
     );
-    if (await openRequest(ctx, user._id)) {
-      throw new ConvexError("REQUEST_IN_PROGRESS");
+    if (await openRequest(ctx, user._id)) return refused("REQUEST_IN_PROGRESS");
+    if (await phoneTakenByOther(ctx, newPhone, user._id)) {
+      return refused("NUMBER_TAKEN");
     }
-    await assertPhoneAvailable(ctx, newPhone, user._id);
 
     const claimToken = `${crypto.randomUUID()}${crypto.randomUUID()}`;
     const now = Date.now();
@@ -201,7 +209,7 @@ export const submit = mutation({
       accountCreatedAt: user._creationTime,
       windowEndsAt,
     });
-    return { requestId, claimToken, windowEndsAt };
+    return { ok: true as const, requestId, claimToken, windowEndsAt };
   },
 });
 

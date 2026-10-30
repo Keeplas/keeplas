@@ -8,7 +8,7 @@ import {
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { auditedMutation } from "./audit";
-import { requireAuth } from "./helpers";
+import { requireAuth, requireFullAuth } from "./helpers";
 import {
   grantCurrentSessionProof,
   requireSessionProof,
@@ -16,6 +16,7 @@ import {
 import { normalizeE164 } from "./lib/phone";
 import { sha256Hex } from "./lib/crypto";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 import { refuseOnReviewAccount } from "./store_review";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
@@ -30,16 +31,18 @@ const RATE_LIMIT_MAX = 3;
  * the code row. Rate-limited to 3 requests per rolling hour. Refuses if the
  * number is identical to the user's current verified one.
  *
- * Replacing a verified number needs this session to have proved the current
- * one or opened the vault (session_proofs.ts): otherwise a synced passkey
- * could swap in a new number and pass for its owner on WhatsApp.
+ * The number becomes a login method, so the session must clear every step-up
+ * gate first (a password alone must not add one). Replacing a verified
+ * number also needs this session to have proved the current one or opened
+ * the vault (session_proofs.ts): otherwise a synced passkey could swap in a
+ * new number and pass for its owner on WhatsApp.
  */
 export const requestVerification = mutation({
   args: {
     phoneNumber: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     await refuseOnReviewAccount(ctx, userId);
     const phone = normalizeE164(args.phoneNumber);
     if (!phone) throw new ConvexError("A valid phone number is required");
@@ -62,6 +65,14 @@ export const requestVerification = mutation({
     if (recent.length >= RATE_LIMIT_MAX) {
       throw new ConvexError("Too many verification attempts. Try again later.");
     }
+    // Per destination too, across accounts: farmed accounts must not send a
+    // stream of codes to someone else's number.
+    await enforceIpRateLimit(
+      ctx,
+      "phone_verification_to",
+      phone,
+      RATE_LIMIT_MAX,
+    );
 
     for (const stale of recent) {
       if (stale.expiresAt > now) {
@@ -99,15 +110,24 @@ export async function assertPhoneAvailable(
   phone: string,
   userId: Id<"users">,
 ): Promise<void> {
-  const owner = await ctx.db
-    .query("users")
-    .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
-    .first();
-  if (owner && owner._id !== userId) {
+  if (await phoneTakenByOther(ctx, phone, userId)) {
     throw new ConvexError(
       "This phone number is already linked to another account.",
     );
   }
+}
+
+/** Whether another account than `userId` holds `phone`. */
+export async function phoneTakenByOther(
+  ctx: QueryCtx,
+  phone: string,
+  userId: Id<"users">,
+): Promise<boolean> {
+  const owner = await ctx.db
+    .query("users")
+    .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
+    .first();
+  return owner !== null && owner._id !== userId;
 }
 
 /**
@@ -182,7 +202,7 @@ export const verifyCode = auditedMutation({
     code: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const candidates = await ctx.db
       .query("phone_verification_codes")
       .withIndex("by_user", (q) => q.eq("userId", userId))

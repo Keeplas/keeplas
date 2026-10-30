@@ -55,6 +55,19 @@ export default function ConnectWithPhonePage() {
               )}
             </span>
           </div>
+          {state.phase === "waiting" ? (
+            <div className="flex flex-col gap-[2px]">
+              <span className="text-caption text-text-muted">
+                {t("codeLabel")}
+              </span>
+              <span className="text-h2 tabular-nums text-text-primary">
+                {`${state.code.slice(0, 3)} ${state.code.slice(3)}`}
+              </span>
+              <span className="text-body-sm text-text-muted">
+                {t("codeDetail")}
+              </span>
+            </div>
+          ) : null}
           <label className="flex gap-[12px]">
             <Checkbox
               checked={flow.trusted}

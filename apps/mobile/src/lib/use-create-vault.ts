@@ -34,7 +34,7 @@ export function useCreateVault() {
       onPhase: (phase: "generating" | "saving") => void,
     ) => {
       onPhase("generating");
-      material.current ??= await createVaultMaterial();
+      material.current ??= await createVaultMaterial(userId);
       const m = material.current;
 
       // Keep the setup screens reachable once the account has a vault.

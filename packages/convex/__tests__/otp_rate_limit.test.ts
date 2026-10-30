@@ -1,6 +1,7 @@
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 import {
   asUser,
   asUserSession,
@@ -43,10 +44,12 @@ const flows: Flow[] = [
     table: "email_auth_codes",
     request: async (t) => {
       await t.run((ctx) => ctx.db.insert("users", { email: EMAIL }));
+      const _audit = await signedAudit();
       return () =>
         t.mutation(api.email_auth.requestEmailAuthOtp, {
           email: EMAIL,
           intent: "signin",
+          _audit,
         });
     },
   },
@@ -119,4 +122,36 @@ describe.each(flows)("$name OTP rate limit", ({ table, request }) => {
       expect(code.expiresAt > now).toBe(code._id === newest._id);
     }
   });
+});
+
+// The per-account budget alone let many farmed accounts send codes to one
+// victim's number or address: each destination has its own budget too.
+describe("verification codes per destination", () => {
+  const destinations = [
+    {
+      name: "phone",
+      send: (t: TestConvex, userId: Id<"users">) =>
+        asUser(t, userId).mutation(api.phone_verification.requestVerification, {
+          phoneNumber: PHONE,
+        }),
+    },
+    {
+      name: "email",
+      send: (t: TestConvex, userId: Id<"users">) =>
+        asUser(t, userId).mutation(api.email_verification.requestVerification, {
+          email: EMAIL,
+        }),
+    },
+  ];
+
+  it.each(destinations)(
+    "refuses a 4th $name code within an hour across accounts",
+    async ({ send }) => {
+      const t = makeT();
+      const account = () => t.run((ctx) => ctx.db.insert("users", {}));
+      for (let i = 0; i < 3; i++) await send(t, await account());
+
+      await expect(send(t, await account())).rejects.toThrow("Too many");
+    },
+  );
 });

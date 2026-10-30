@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -28,11 +28,17 @@ const CANCELLABLE: MyRequest["status"][] = [
 
 const AVATAR_COLORS = Object.values(palette.category);
 
-/** Each trusted contact asked about a recovery request, and their answer. */
+/**
+ * Each trusted contact asked about a recovery request, and their answer.
+ * `pending` shows what to tell a contact who hasn't answered yet (the
+ * recovering phone's verification code).
+ */
 export function RecoveryDecisions({
   contacts,
+  pending,
 }: {
   contacts: MyRequest["contacts"];
+  pending?: (contact: MyRequest["contacts"][number]) => ReactNode;
 }) {
   const { t, language } = useI18n();
   return contacts.map((contact, index) => (
@@ -53,7 +59,9 @@ export function RecoveryDecisions({
           <Text variant="body-sm" color="text.muted">
             {`${formatDate(contact.decidedAt, language)} · ${formatTime(contact.decidedAt, language)}`}
           </Text>
-        ) : null}
+        ) : (
+          (pending?.(contact) ?? null)
+        )}
       </View>
       <StatusChip
         label={

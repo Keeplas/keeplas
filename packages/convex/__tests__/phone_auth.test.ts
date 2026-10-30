@@ -3,7 +3,12 @@ import { api, internal } from "../_generated/api";
 import { SIGNUP_ATTESTATION_REQUIRED } from "../attestation";
 import { INVALID_CODE, OTP_MAX_ATTEMPTS } from "../lib/otp";
 import { CODE_REQUESTS_PER_IP } from "../phone_auth";
-import { makeT, signedAudit, type TestConvex } from "./test.helpers";
+import {
+  makeT,
+  signedAudit,
+  signedAuditFrom,
+  type TestConvex,
+} from "./test.helpers";
 
 const TEST_PHONE = "+33600000001";
 const REAL_PHONE = "+33612345678";
@@ -36,18 +41,27 @@ describe("account existence and the per-IP cap", () => {
   // Unknown numbers: one per request, so the per-number cap never applies.
   const unknownPhone = (i: number) => `+3361000${String(i).padStart(4, "0")}`;
 
-  it("answers an unknown number on sign-in instead of throwing", async () => {
+  // Uniform answer: an anonymous caller can't tell a number has no account,
+  // and no WhatsApp message goes to it.
+  it("answers an unknown number on sign-in like a known one, sending nothing", async () => {
     const t = makeT();
     await expect(requestSignin(t, REAL_PHONE)).resolves.toEqual({
-      sent: false,
-      error: "No account found for this phone number. Sign up to create one.",
+      sent: true,
     });
     expect(await scheduledCount(t)).toBe(0);
   });
 
+  // Only an attested app (M09-9) learns that a number is taken.
   it("answers a taken number on sign-up instead of throwing", async () => {
     const t = makeT();
     await seedPhoneUser(t, REAL_PHONE);
+    await t.run((ctx) =>
+      ctx.db.insert("signup_attestations", {
+        phoneNumber: REAL_PHONE,
+        platform: "ios",
+        expiresAt: Date.now() + 60_000,
+      }),
+    );
     await expect(
       t.mutation(api.phone_auth.requestPhoneAuthOtp, {
         phoneNumber: REAL_PHONE,
@@ -64,8 +78,8 @@ describe("account existence and the per-IP cap", () => {
   it("caps requests per IP, unknown numbers included", async () => {
     const t = makeT();
     for (let i = 0; i < CODE_REQUESTS_PER_IP; i++) {
-      await expect(requestSignin(t, unknownPhone(i))).resolves.toMatchObject({
-        sent: false,
+      await expect(requestSignin(t, unknownPhone(i))).resolves.toEqual({
+        sent: true,
       });
     }
     await expect(
@@ -240,5 +254,47 @@ describe("store review phone numbers", () => {
       await requestSignin(t, REVIEW_PHONE);
       expect(await scheduledCount(t)).toBe(1);
     }
+  });
+});
+
+// The sign-in code request is public. The app seals the caller's IP
+// (`_audit`): it is throttled per IP and per (number, IP), so nobody can
+// make every number receive codes or use up the owner's own budget.
+describe("sign-in code request limits", () => {
+  const TOO_MANY = "Too many verification attempts";
+
+  function requestFrom(t: TestConvex, phoneNumber: string, ip: string) {
+    return signedAuditFrom(ip).then((_audit) =>
+      t.mutation(api.phone_auth.requestPhoneAuthOtp, {
+        phoneNumber,
+        intent: "signin",
+        _audit,
+      }),
+    );
+  }
+
+  it("throttles one caller across numbers, unknown ones included", async () => {
+    const t = makeT();
+    for (let n = 0; n < 10; n++) {
+      await requestFrom(t, `+3361234560${n}`, "10.0.0.1");
+    }
+
+    await expect(requestFrom(t, "+33612345699", "10.0.0.1")).rejects.toThrow(
+      "Too many requests",
+    );
+  });
+
+  it("does not let one caller use up a number's codes", async () => {
+    const t = makeT();
+    await seedPhoneUser(t, REAL_PHONE);
+    for (let i = 0; i < 3; i++) await requestFrom(t, REAL_PHONE, "10.0.0.1");
+    await expect(requestFrom(t, REAL_PHONE, "10.0.0.1")).rejects.toThrow(
+      TOO_MANY,
+    );
+
+    // The owner, from their own connection, still gets a code.
+    await expect(requestFrom(t, REAL_PHONE, "10.0.0.2")).resolves.toEqual({
+      sent: true,
+    });
   });
 });

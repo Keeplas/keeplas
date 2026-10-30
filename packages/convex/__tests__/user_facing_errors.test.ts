@@ -321,14 +321,6 @@ describe("account errors", () => {
     const t = makeT();
     const userId = await seedUser(t);
     await expectConvexError(
-      asUser(t, userId).mutation(api.users.completeLegalInfo, {
-        birthday: Date.now() - 30 * YEAR_MS,
-        country: "France",
-        _audit: await signedAudit(),
-      }),
-      "2-letter ISO-3166-1 code",
-    );
-    await expectConvexError(
       asUser(t, userId).mutation(api.users.updateLegalResidence, {
         country: "France",
         _audit: await signedAudit(),

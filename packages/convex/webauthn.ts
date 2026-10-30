@@ -16,10 +16,17 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
-import { auditedMutation, createAuditLog } from "./audit";
+import {
+  auditContextValidator,
+  auditedMutation,
+  createAuditLog,
+  verifyAuditContext,
+} from "./audit";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 import { requireEnv } from "./lib/require_env";
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
+const AUTHENTICATION_CHALLENGES_PER_HOUR = 30;
 
 /**
  * Require user verification (PIN / biometric / device passcode) on every
@@ -202,51 +209,58 @@ export const finishRegistration = mutation({
   },
 });
 
+/**
+ * Signed out: a challenge for a discoverable-passkey sign-in (the `passkey`
+ * provider in auth.ts consumes it). Every call writes a row, so it needs the
+ * sealed audit envelope and is throttled per IP; abandoned challenges are
+ * swept daily (`sweepExpiredChallenges`). No account hint is taken: listing
+ * an email's credentials would tell anyone which addresses have an account.
+ */
 export const startAuthentication = mutation({
-  args: { email: v.optional(v.string()) },
-  handler: async (ctx, { email }) => {
-    let allowCredentials: {
-      id: string;
-      transports?: AuthenticatorTransportFuture[];
-    }[] = [];
-    let resolvedUserId: Id<"users"> | undefined;
-    const trimmed = email?.trim().toLowerCase();
-
-    if (trimmed) {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("email", (q) => q.eq("email", trimmed))
-        .first();
-      if (user) {
-        resolvedUserId = user._id;
-        const credentials = await ctx.db
-          .query("passkey_credentials")
-          .withIndex("by_user", (q) => q.eq("userId", user._id))
-          .collect();
-        allowCredentials = credentials.map((c) => ({
-          id: c.credentialId,
-          transports: c.transports as
-            AuthenticatorTransportFuture[] | undefined,
-        }));
-      }
-    }
-
+  args: { _audit: auditContextValidator },
+  handler: async (ctx, { _audit }) => {
+    await verifyAuditContext(_audit);
+    await enforceIpRateLimit(
+      ctx,
+      "webauthn_authentication",
+      _audit.ip,
+      AUTHENTICATION_CHALLENGES_PER_HOUR,
+    );
     const options = await generateAuthenticationOptions({
       rpID: getRpId(),
       // Require user verification (PIN/biometric), not just possession.
       userVerification: REQUIRED_USER_VERIFICATION,
-      allowCredentials:
-        allowCredentials.length > 0 ? allowCredentials : undefined,
     });
 
     await persistChallenge(
       ctx,
       options.challenge,
       "authentication",
-      resolvedUserId,
-      trimmed,
+      undefined,
+      undefined,
     );
     return options;
+  },
+});
+
+const SWEEP_BATCH = 500;
+
+/** Daily cron: delete expired challenges nobody completed. */
+export const sweepExpiredChallenges = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const expired = await ctx.db
+      .query("webauthn_challenges")
+      .withIndex("by_expiry", (q) => q.lt("expiresAt", Date.now()))
+      .take(SWEEP_BATCH);
+    for (const row of expired) await ctx.db.delete(row._id);
+    if (expired.length === SWEEP_BATCH) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.webauthn.sweepExpiredChallenges,
+        {},
+      );
+    }
   },
 });
 

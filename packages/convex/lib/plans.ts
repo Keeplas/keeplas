@@ -17,8 +17,9 @@ export type Plan = "free" | "lifetime";
 export const LIFETIME_ENTITLEMENT_ID = "lifetime";
 
 /**
- * Encrypted-storage ceiling per plan, in bytes. Enforced server-side before
- * persisting `vault_item_files` rows (see vault_items.ts) and surfaced to the
+ * Encrypted-storage ceiling per plan, in bytes: everything the owner stores
+ * (items, history, recipient keys, files — lib/storage_usage.ts). Enforced
+ * server-side on the writes that grow it (vault_items.ts) and surfaced to the
  * Usage page via `getUsageStats`.
  *   Free     = 100 MB
  *   Lifetime = 10 GB

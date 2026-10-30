@@ -26,8 +26,13 @@ async function setup() {
     expiresAt: Date.now() + 120_000,
   };
   const keyHash = await pairingKeyHash(browser.publicKey);
-  const qr = buildPairingQr({ sessionId: "abc123", keyHash, origin: ORIGIN });
-  return { session, qr, keyHash };
+  const qr = buildPairingQr({
+    sessionId: "abc123",
+    keyHash,
+    origin: ORIGIN,
+    qrSecret: browser.qrSecret,
+  });
+  return { session, qr, keyHash, qrSecret: browser.qrSecret };
 }
 
 const deps = (getSession: (id: string) => Promise<PairingSession | null>) => ({
@@ -76,7 +81,7 @@ describe("evaluatePairingQr", () => {
   });
 
   it("treats junk, other origins and malformed session ids as invalid", async () => {
-    const { session, keyHash } = await setup();
+    const { session, keyHash, qrSecret } = await setup();
     const ok = deps(async () => session);
     await expect(evaluatePairingQr("hello", ok)).resolves.toEqual({
       kind: "invalid",
@@ -85,11 +90,17 @@ describe("evaluatePairingQr", () => {
       sessionId: "abc123",
       keyHash,
       origin: "https://keep1as.com",
+      qrSecret,
     });
     await expect(evaluatePairingQr(phishing, ok)).resolves.toEqual({
       kind: "invalid",
     });
-    const qr = buildPairingQr({ sessionId: "bad", keyHash, origin: ORIGIN });
+    const qr = buildPairingQr({
+      sessionId: "bad",
+      keyHash,
+      origin: ORIGIN,
+      qrSecret,
+    });
     const throwing = deps(async () => {
       throw new Error("ArgumentValidationError");
     });

@@ -35,6 +35,8 @@
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_CONTACTS",
         "android.permission.WRITE_CONTACTS",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.DETECT_SCREEN_CAPTURE",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
