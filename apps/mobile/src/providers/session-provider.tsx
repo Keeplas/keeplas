@@ -17,6 +17,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { forgetDeviceVault, hasDeviceVault } from "@/crypto/device-vault";
 import {
   deviceDraftFiles,
+  keepDraftsOutOfBackups,
   sqliteDraftDb,
   sqliteFormDraftDb,
 } from "@/features/capture/draft-db";
@@ -80,6 +81,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!userId) return;
+    keepDraftsOutOfBackups();
     void draftStore.attach(userId, sqliteDraftDb, deviceDraftFiles);
     void attachFormDrafts(userId, sqliteFormDraftDb);
   }, [userId]);

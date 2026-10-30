@@ -45,6 +45,7 @@
     "expo-notifications": "~57.0.23",
     "expo-print": "~57.0.2",
     "expo-router": "~57.0.27",
+    "expo-screen-capture": "~57.0.4",
     "expo-secure-store": "~57.0.4",
     "expo-sharing": "~57.0.23",
     "expo-splash-screen": "~57.0.10",

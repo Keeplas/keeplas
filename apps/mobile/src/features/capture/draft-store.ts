@@ -2,7 +2,8 @@
  * The captures being prepared (M07-2 scan, M07-3 voice, M07-7 / M07-8
  * compose). Each one is a draft kept on this phone until it is saved or
  * deleted: the text in the encrypted database, the files in the app's own
- * documents folder. Nothing reaches the server before it is sealed.
+ * documents folder (kept out of backups, see draft-db.ts). Nothing reaches
+ * the server before it is sealed.
  */
 import { useSyncExternalStore } from "react";
 import { isEmptyNote } from "@keeplas/export/rich-text";
