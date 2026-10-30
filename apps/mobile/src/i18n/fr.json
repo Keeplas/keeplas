@@ -425,6 +425,11 @@
     "allow": "Activer",
     "notNow": "Plus tard"
   },
+  "storageFull": {
+    "title": "Stockage plein",
+    "body": "Cette modification ne rentre pas dans vos 100 Mo. Rien n'a été perdu. Passez à Lifetime pour 10 Go.",
+    "bodyLifetime": "Cette modification ne rentre pas dans vos 10 Go. Rien n'a été perdu."
+  },
   "upgrade": {
     "title": "Passer à Lifetime",
     "titleWithPrice": "Passer à Lifetime · {price}",

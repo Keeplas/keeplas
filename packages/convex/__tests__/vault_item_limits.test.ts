@@ -10,9 +10,10 @@ import {
   type TestConvex,
 } from "./test.helpers";
 
-// Recipient-key rows sit outside the storage quota. One call must not be able
-// to write thousands of them (the same contact repeated) or megabyte-sized
-// "wraps": one row per contact, of an ML-KEM envelope's size (gap28).
+// Re-wraps and sharing changes write recipient-key rows without a quota
+// check. One call must not be able to write thousands of them (the same
+// contact repeated) or megabyte-sized "wraps": one row per contact, of an
+// ML-KEM envelope's size (gap28).
 
 const SEALED = JSON.stringify({ ciphertext: "Y2lwaA==", iv: "aXY=" });
 // A real ML-KEM-768 + AES-GCM envelope is ~1.6 KB.

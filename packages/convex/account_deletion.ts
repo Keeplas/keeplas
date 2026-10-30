@@ -8,6 +8,7 @@ import { getUserByPhone, optionalAuth, requireFullAuth } from "./helpers";
 import { normalizeE164 } from "./lib/phone";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { deleteBlob } from "./lib/storage";
+import { deleteRecipientKeys } from "./lib/storage_usage";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const DELETION_GRACE_MS = 7 * DAY_MS;
@@ -225,16 +226,16 @@ type Step = (
 
 async function dropContactLinks(
   ctx: MutationCtx,
-  contactId: Id<"trusted_contacts">,
+  contact: Doc<"trusted_contacts">,
 ): Promise<number> {
-  let deleted = 0;
-  for (const key of await ctx.db
+  const contactId = contact._id;
+  const keys = await ctx.db
     .query("vault_item_recipient_keys")
     .withIndex("by_contact", (q) => q.eq("contactId", contactId))
-    .collect()) {
-    await ctx.db.delete(key._id);
-    deleted += 1;
-  }
+    .collect();
+  // The keys are the owner's rows, counted in the owner's storage usage.
+  await deleteRecipientKeys(ctx, contact.userId, keys);
+  let deleted = keys.length;
   for (const share of await ctx.db
     .query("recovery_secret_shares")
     .withIndex("by_contact", (q) => q.eq("contactId", contactId))
@@ -272,6 +273,7 @@ const SIMPLE_TABLES = [
   "devices",
   "device_pins",
   "storage_blobs",
+  "storage_usage",
   "totp_secrets",
   "auth_session_totp",
   "login_otp_codes",
@@ -332,7 +334,7 @@ const STEPS: Step[] = [
       .take(limit);
     let deleted = 0;
     for (const contact of asContact) {
-      deleted += await dropContactLinks(ctx, contact._id);
+      deleted += await dropContactLinks(ctx, contact);
       await ctx.db.patch(contact._id, {
         invitationStatus: "revoked",
         contactUserId: undefined,
@@ -424,7 +426,7 @@ const STEPS: Step[] = [
       .take(limit);
     let deleted = 0;
     for (const contact of contacts) {
-      deleted += await dropContactLinks(ctx, contact._id);
+      deleted += await dropContactLinks(ctx, contact);
       await ctx.db.delete(contact._id);
       deleted += 1;
     }

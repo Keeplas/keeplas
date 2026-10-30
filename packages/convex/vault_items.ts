@@ -13,14 +13,12 @@ import {
   requireFullAuth,
   getUserVault,
   getActiveItems,
-  getStorageUsage,
   requireItemOwnership,
   requireOwnRecipients,
   resolveItemRecipients,
 } from "./helpers";
 import { auditedMutation } from "./audit";
 import { completeHandoff } from "./capture_handoffs";
-import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 import { contactHasWraps } from "./lib/contact_key";
 import {
   claimUpload,
@@ -30,9 +28,23 @@ import {
   getBlobSize,
   sizeBucket,
   storageRefValidator,
+  storedFileBytes,
   sweepUnclaimedBlobs,
   type StorageRef,
 } from "./lib/storage";
+import {
+  adjustStorageUsage,
+  assertWithinStorageQuota,
+  bucketOf,
+  countedItemBytes,
+  deleteRecipientKeys,
+  filesBytes,
+  itemBytes,
+  keysBytes,
+  moveStorageUsage,
+  patchCountedItem,
+  versionBytes,
+} from "./lib/storage_usage";
 import { internal } from "./_generated/api";
 
 const triggerTypeValidator = v.union(
@@ -64,8 +76,9 @@ type RecipientKey = { contactId: Id<"trusted_contacts">; wrappedDek: string };
 
 /**
  * The wraps to store: one per contact, each of an envelope's size. Every wrap
- * is its own row, outside the storage quota, so repeated contacts or
- * oversized "wraps" would let one call write thousands of rows / megabytes.
+ * is its own row, so repeated contacts or oversized "wraps" would let one
+ * call write thousands of rows / megabytes (and, past the quota check, let a
+ * re-wrap or sharing change grow usage without bound).
  * A repeated contact keeps its first wrap (all wrap the same DEK to the same
  * key) rather than failing: rotation re-sends the rows an item already has.
  */
@@ -399,27 +412,6 @@ async function measureFiles(
   return measured;
 }
 
-/**
- * Reject an upload that would push the user past their plan's storage ceiling
- * (Free 100 MB / Lifetime 10 GB — see lib/plans.ts). Throws
- * `ConvexError({ code: "STORAGE_QUOTA_EXCEEDED" })` (a ConvexError survives
- * production redaction), which the client maps to an upgrade prompt.
- */
-async function assertWithinStorageQuota(
-  ctx: MutationCtx,
-  userId: Id<"users">,
-  files: { sizeBucket: number }[],
-): Promise<void> {
-  if (files.length === 0) return;
-  const incoming = files.reduce((sum, f) => sum + f.sizeBucket, 0);
-  const user = await ctx.db.get(userId);
-  const plan = getUserPlan(user ?? { plan: undefined });
-  const { activeBytes, archiveBytes } = await getStorageUsage(ctx, userId);
-  if (activeBytes + archiveBytes + incoming > PLAN_QUOTA_BYTES[plan]) {
-    throw new ConvexError({ code: "STORAGE_QUOTA_EXCEEDED" });
-  }
-}
-
 async function insertFiles(
   ctx: MutationCtx,
   itemId: Id<"vault_items">,
@@ -503,7 +495,19 @@ export const createItem = auditedMutation({
     const recipientKeys = boundedRecipientKeys(args.recipientKeys ?? []);
 
     const files = await measureFiles(ctx, userId, args.files ?? []);
-    await assertWithinStorageQuota(ctx, userId, files);
+    const content = {
+      encryptedMeta: args.encryptedMeta,
+      encryptedTitle: args.encryptedTitle,
+      encryptedContent: args.encryptedContent,
+      encryptedLinks: args.encryptedLinks,
+      ownerWrappedDek: args.ownerWrappedDek,
+    };
+    const storedBytes = itemBytes(content);
+    const growth =
+      storedBytes +
+      files.reduce((sum, f) => sum + f.sizeBucket, 0) +
+      keysBytes(recipientKeys);
+    await assertWithinStorageQuota(ctx, userId, growth);
 
     const recipientMode = args.recipientMode ?? "default";
     const sharedWithContacts = args.sharedWithContacts ?? [];
@@ -539,16 +543,13 @@ export const createItem = auditedMutation({
       vaultId: args.vaultId,
       userId,
       folderId: args.folderId,
-      encryptedMeta: args.encryptedMeta,
-      encryptedTitle: args.encryptedTitle,
-      encryptedContent: args.encryptedContent,
-      encryptedLinks: args.encryptedLinks,
+      ...content,
+      storedBytes,
       encryptionType: args.encryptionType ?? "aes_256_gcm",
       sharedWithContacts,
       sharedWithGroups,
       pendingRecipients,
       recipientMode,
-      ownerWrappedDek: args.ownerWrappedDek,
       accessLevel,
       status: "active",
       triggerType: args.triggerType,
@@ -572,6 +573,7 @@ export const createItem = auditedMutation({
     }
 
     await insertFiles(ctx, itemId, userId, files, 0, now);
+    await adjustStorageUsage(ctx, userId, { activeBytes: growth });
 
     await ctx.db.patch(args.vaultId, {
       encryptedItemsCount: vault.encryptedItemsCount + 1,
@@ -593,16 +595,24 @@ const CONTENT_FIELDS = [
   "encryptedMeta",
 ] as const;
 
-async function saveVersion(
-  ctx: MutationCtx,
+function itemFiles(ctx: QueryCtx, itemId: Id<"vault_items">) {
+  return ctx.db
+    .query("vault_item_files")
+    .withIndex("by_item", (q) => q.eq("itemId", itemId))
+    .collect();
+}
+
+/**
+ * The item's current state as a history entry. Its blobs are those of the
+ * live file rows: they count once, where the live row is, until a row is
+ * detached (see {@link detachFile}).
+ */
+function snapshotOf(
   item: Doc<"vault_items">,
+  files: Doc<"vault_item_files">[],
   now: number,
 ) {
-  const files = await ctx.db
-    .query("vault_item_files")
-    .withIndex("by_item", (q) => q.eq("itemId", item._id))
-    .collect();
-  await ctx.db.insert("vault_item_versions", {
+  return {
     itemId: item._id,
     userId: item.userId,
     encryptedTitle: item.encryptedTitle,
@@ -618,8 +628,36 @@ async function saveVersion(
     })),
     savedAt: item.updatedAt,
     replacedAt: now,
+  };
+}
+
+async function saveVersion(
+  ctx: MutationCtx,
+  version: ReturnType<typeof snapshotOf>,
+) {
+  await ctx.db.insert("vault_item_versions", version);
+  await adjustStorageUsage(ctx, version.userId, {
+    archiveBytes: versionBytes(version),
   });
-  return files;
+}
+
+/**
+ * Remove a file row after a version took it: its blob stays, now left to
+ * the history.
+ */
+async function detachFile(
+  ctx: MutationCtx,
+  item: Doc<"vault_items">,
+  file: Doc<"vault_item_files">,
+) {
+  await ctx.db.delete(file._id);
+  await moveStorageUsage(
+    ctx,
+    item.userId,
+    storedFileBytes(file),
+    bucketOf(item),
+    "archiveBytes",
+  );
 }
 
 function requireNotArchived(item: Doc<"vault_items">) {
@@ -679,23 +717,10 @@ export const updateItem = auditedMutation({
     });
 
     const now = Date.now();
-    const editsContent =
-      removeFileIds.length > 0 ||
-      CONTENT_FIELDS.some((field) => args[field] !== undefined);
-    if (editsContent) {
-      requireNotArchived(item);
-      const files = await saveVersion(ctx, item, now);
-      for (const fileId of removeFileIds) {
-        if (!files.some((file) => file._id === fileId)) {
-          throw new Error("File not found");
-        }
-        await ctx.db.delete(fileId);
-      }
-    }
-    const patch: Record<string, unknown> = { updatedAt: now };
+    const patch: Partial<Doc<"vault_items">> = { updatedAt: now };
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) {
-        patch[key] = value;
+        (patch as Record<string, unknown>)[key] = value;
       }
     }
 
@@ -705,14 +730,45 @@ export const updateItem = auditedMutation({
       patch.accessLevel = "trusted_only";
     }
 
-    await ctx.db.patch(itemId, patch);
+    const existingKeys =
+      recipientKeys === undefined
+        ? []
+        : await ctx.db
+            .query("vault_item_recipient_keys")
+            .withIndex("by_item", (q) => q.eq("itemId", itemId))
+            .collect();
+
+    const editsContent =
+      removeFileIds.length > 0 ||
+      CONTENT_FIELDS.some((field) => args[field] !== undefined);
+    if (editsContent) {
+      requireNotArchived(item);
+      const files = await itemFiles(ctx, itemId);
+      const version = snapshotOf(item, files, now);
+      // Only content edits are checked: re-wraps (key rotation) and sharing
+      // changes must go through even over quota.
+      await assertWithinStorageQuota(
+        ctx,
+        userId,
+        versionBytes(version) +
+          itemBytes({ ...item, ...patch }) -
+          countedItemBytes(item) +
+          (recipientKeys === undefined
+            ? 0
+            : keysBytes(recipientKeys) - keysBytes(existingKeys)),
+      );
+      await saveVersion(ctx, version);
+      for (const fileId of removeFileIds) {
+        const file = files.find((f) => f._id === fileId);
+        if (!file) throw new Error("File not found");
+        await detachFile(ctx, item, file);
+      }
+    }
+
+    await patchCountedItem(ctx, item, patch);
 
     if (recipientKeys !== undefined) {
-      const existing = await ctx.db
-        .query("vault_item_recipient_keys")
-        .withIndex("by_item", (q) => q.eq("itemId", itemId))
-        .collect();
-      await Promise.all(existing.map((row) => ctx.db.delete(row._id)));
+      await deleteRecipientKeys(ctx, userId, existingKeys);
       await Promise.all(
         recipientKeys.map((rk) =>
           ctx.db.insert("vault_item_recipient_keys", {
@@ -723,6 +779,9 @@ export const updateItem = auditedMutation({
           }),
         ),
       );
+      await adjustStorageUsage(ctx, userId, {
+        activeBytes: keysBytes(recipientKeys),
+      });
     }
   },
 });
@@ -851,6 +910,7 @@ export const addRecipientKeys = auditedMutation({
     const everyone = sharedWithEveryone(item);
     const now = Date.now();
     const added = new Set<Id<"trusted_contacts">>();
+    const inserts: RecipientKey[] = [];
 
     for (const rk of boundedRecipientKeys(args.recipientKeys)) {
       // Only a contact owed a wrap: deferred on this item, or any of the
@@ -871,16 +931,20 @@ export const addRecipientKeys = auditedMutation({
           q.eq("itemId", args.itemId).eq("contactId", rk.contactId),
         )
         .first();
-      if (!existing) {
-        await ctx.db.insert("vault_item_recipient_keys", {
-          itemId: args.itemId,
-          contactId: rk.contactId,
-          wrappedDek: rk.wrappedDek,
-          createdAt: now,
-        });
-      }
+      if (!existing) inserts.push(rk);
       added.add(rk.contactId);
     }
+
+    await assertWithinStorageQuota(ctx, userId, keysBytes(inserts));
+    for (const rk of inserts) {
+      await ctx.db.insert("vault_item_recipient_keys", {
+        itemId: args.itemId,
+        contactId: rk.contactId,
+        wrappedDek: rk.wrappedDek,
+        createdAt: now,
+      });
+    }
+    await adjustStorageUsage(ctx, userId, { activeBytes: keysBytes(inserts) });
 
     if ([...added].some((cid) => pending.has(cid))) {
       await ctx.db.patch(args.itemId, {
@@ -907,8 +971,8 @@ export const backfillItemTitle = auditedMutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
-    await requireItemOwnership(ctx, args.itemId, userId);
-    await ctx.db.patch(args.itemId, {
+    const item = await requireItemOwnership(ctx, args.itemId, userId);
+    await patchCountedItem(ctx, item, {
       encryptedTitle: args.encryptedTitle,
       title: undefined,
       updatedAt: Date.now(),
@@ -977,9 +1041,9 @@ export const backfillItemMeta = auditedMutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
-    await requireItemOwnership(ctx, args.itemId, userId);
+    const item = await requireItemOwnership(ctx, args.itemId, userId);
     if (args.encryptedMeta !== undefined) {
-      await ctx.db.patch(args.itemId, {
+      await patchCountedItem(ctx, item, {
         encryptedMeta: args.encryptedMeta,
         category: undefined,
       });
@@ -990,9 +1054,13 @@ export const backfillItemMeta = auditedMutation({
         throw new Error("File not found");
       }
       const size = await getBlobSize(ctx, file.storageId);
+      const bucket = sizeBucket(size ?? file.size ?? 0);
+      await adjustStorageUsage(ctx, userId, {
+        [bucketOf(item)]: bucket - storedFileBytes(file),
+      });
       await ctx.db.patch(file._id, {
         encryptedMeta: update.encryptedMeta,
-        sizeBucket: sizeBucket(size ?? file.size ?? 0),
+        sizeBucket: bucket,
         name: undefined,
         mimeType: undefined,
         size: undefined,
@@ -1046,21 +1114,20 @@ export const addItemFiles = auditedMutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
-    await requireItemOwnership(ctx, args.itemId, userId);
+    const item = await requireItemOwnership(ctx, args.itemId, userId);
     if (args.files.length === 0) return;
 
     const files = await measureFiles(ctx, userId, args.files);
-    await assertWithinStorageQuota(ctx, userId, files);
+    const growth = filesBytes(files);
+    await assertWithinStorageQuota(ctx, userId, growth);
 
-    const existing = await ctx.db
-      .query("vault_item_files")
-      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
-      .collect();
+    const existing = await itemFiles(ctx, args.itemId);
     const nextOrder =
       existing.reduce((max, f) => Math.max(max, f.order), -1) + 1;
 
     const now = Date.now();
     await insertFiles(ctx, args.itemId, userId, files, nextOrder, now);
+    await adjustStorageUsage(ctx, userId, { [bucketOf(item)]: growth });
 
     await ctx.db.patch(args.itemId, { updatedAt: now });
   },
@@ -1090,8 +1157,11 @@ export const removeItemFile = auditedMutation({
     }
 
     const now = Date.now();
-    await saveVersion(ctx, item, now);
-    await ctx.db.delete(args.fileId);
+    await saveVersion(
+      ctx,
+      snapshotOf(item, await itemFiles(ctx, args.itemId), now),
+    );
+    await detachFile(ctx, item, file);
     await ctx.db.patch(args.itemId, { updatedAt: now });
   },
 });
@@ -1112,6 +1182,17 @@ export const resolveRecipientsForItem = query({
   },
 });
 
+/** An item's row and files, moved between active and archive usage. */
+async function moveItemUsage(
+  ctx: MutationCtx,
+  item: Doc<"vault_items">,
+  to: "activeBytes" | "archiveBytes",
+) {
+  const bytes =
+    countedItemBytes(item) + filesBytes(await itemFiles(ctx, item._id));
+  await moveStorageUsage(ctx, item.userId, bytes, bucketOf(item), to);
+}
+
 async function archiveOwnedItem(
   ctx: MutationCtx,
   itemId: Id<"vault_items">,
@@ -1125,6 +1206,7 @@ async function archiveOwnedItem(
     archivedFromStatus: item.status,
     archivedAt: now,
   });
+  await moveItemUsage(ctx, item, "archiveBytes");
   const vault = await ctx.db.get(item.vaultId);
   if (vault) {
     await ctx.db.patch(item.vaultId, {
@@ -1180,6 +1262,7 @@ export const unarchiveItem = auditedMutation({
       archivedFromStatus: undefined,
       archivedAt: undefined,
     });
+    await moveItemUsage(ctx, item, "activeBytes");
     const vault = await ctx.db.get(item.vaultId);
     if (vault) {
       await ctx.db.patch(item.vaultId, {
@@ -1209,10 +1292,28 @@ export const restoreItemVersion = auditedMutation({
     }
 
     const now = Date.now();
-    const current = await saveVersion(ctx, item, now);
+    const current = await itemFiles(ctx, args.itemId);
+    const snapshot = snapshotOf(item, current, now);
+    const restored = {
+      encryptedTitle: version.encryptedTitle,
+      encryptedContent: version.encryptedContent,
+      encryptedMeta: version.encryptedMeta,
+      encryptedLinks: version.encryptedLinks,
+      updatedAt: now,
+    };
+    // A restore keeps the current state as history, like an edit; its files
+    // already count (live or in the history).
+    await assertWithinStorageQuota(
+      ctx,
+      userId,
+      versionBytes(snapshot) +
+        itemBytes({ ...item, ...restored }) -
+        countedItemBytes(item),
+    );
+    await saveVersion(ctx, snapshot);
     const kept = new Set(version.files.map((file) => file.storageId));
     for (const file of current) {
-      if (!kept.has(file.storageId)) await ctx.db.delete(file._id);
+      if (!kept.has(file.storageId)) await detachFile(ctx, item, file);
     }
     const present = new Set(current.map((file) => file.storageId));
     for (const file of version.files) {
@@ -1227,14 +1328,16 @@ export const restoreItemVersion = auditedMutation({
         order: file.order,
         createdAt: now,
       });
+      // Back from the history to a live row.
+      await moveStorageUsage(
+        ctx,
+        userId,
+        storedFileBytes(file),
+        "archiveBytes",
+        bucketOf(item),
+      );
     }
-    await ctx.db.patch(args.itemId, {
-      encryptedTitle: version.encryptedTitle,
-      encryptedContent: version.encryptedContent,
-      encryptedMeta: version.encryptedMeta,
-      encryptedLinks: version.encryptedLinks,
-      updatedAt: now,
-    });
+    await patchCountedItem(ctx, item, restored);
   },
 });
 

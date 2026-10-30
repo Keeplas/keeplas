@@ -1,7 +1,6 @@
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
-import { storedFileBytes } from "./lib/storage";
 
 export const TOTP_REQUIRED_ERROR = "TOTP_REQUIRED";
 export const LOGIN_OTP_REQUIRED_ERROR = "LOGIN_OTP_REQUIRED";
@@ -225,7 +224,7 @@ export async function getActiveItems(ctx: QueryCtx, userId: Id<"users">) {
 
 /**
  * Attachments on the user's active (non-archived) items, for the per-kind
- * breakdown in `getUsageStats`. Quota and totals use `getStorageUsage`.
+ * breakdown in `getUsageStats`. Quota and totals use `readStorageUsage`.
  */
 export async function getActiveVaultFiles(ctx: QueryCtx, userId: Id<"users">) {
   const items = await getActiveItems(ctx, userId);
@@ -235,45 +234,6 @@ export async function getActiveVaultFiles(ctx: QueryCtx, userId: Id<"users">) {
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .collect();
   return allFiles.filter((f) => activeItemIds.has(f.itemId));
-}
-
-export async function getStorageUsage(
-  ctx: QueryCtx,
-  userId: Id<"users">,
-): Promise<{ activeBytes: number; archiveBytes: number }> {
-  const items = await ctx.db
-    .query("vault_items")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
-    .collect();
-  const itemById = new Map(items.map((item) => [item._id, item]));
-  const files = await ctx.db
-    .query("vault_item_files")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
-    .collect();
-  const counted = new Set<string>();
-  let activeBytes = 0;
-  let archiveBytes = 0;
-  for (const file of files) {
-    const item = itemById.get(file.itemId);
-    if (!item) continue;
-    counted.add(file.storageId);
-    // Release introductions count like any item: their flag is set by the
-    // client, so excluding them would let any upload skip the quota.
-    if (item.status === "archived") archiveBytes += storedFileBytes(file);
-    else activeBytes += storedFileBytes(file);
-  }
-  const versions = await ctx.db
-    .query("vault_item_versions")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
-    .collect();
-  for (const version of versions) {
-    for (const file of version.files) {
-      if (counted.has(file.storageId)) continue;
-      counted.add(file.storageId);
-      archiveBytes += storedFileBytes(file);
-    }
-  }
-  return { activeBytes, archiveBytes };
 }
 
 /**

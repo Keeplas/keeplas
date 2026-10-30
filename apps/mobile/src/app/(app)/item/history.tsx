@@ -26,6 +26,7 @@ import {
 } from "@/lib/files";
 import { formatBytes, formatDate, formatTime } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { useStorageFullPrompt } from "@/features/billing/storage-full";
 import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -61,6 +62,7 @@ export default function ItemHistory() {
   const { raw, opened } = useOpenedItem(itemId);
   const versions = useQuery(api.vault_items.getItemVersions, { itemId });
   const restore = useAuditedMutation(api.vault_items.restoreItemVersion);
+  const storageFull = useStorageFullPrompt();
   const [list, setList] = useState<OpenedVersion[]>();
   const [shown, setShown] = useState<OpenedVersion | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -135,9 +137,11 @@ export default function ItemHistory() {
                 setShown(null);
                 router.back();
               })
-              .catch(() =>
-                toast({ variant: "error", title: t("common.genericError") }),
-              ),
+              .catch((error: unknown) => {
+                if (!storageFull.handle(error)) {
+                  toast({ variant: "error", title: t("common.genericError") });
+                }
+              }),
         },
       ],
     );
@@ -221,6 +225,8 @@ export default function ItemHistory() {
             ) : null}
           </>
         ) : null}
+        {/* Nested in the sheet so iOS presents it over this modal. */}
+        {storageFull.sheet}
       </BottomSheet>
     </Screen>
   );

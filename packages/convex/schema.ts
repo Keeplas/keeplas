@@ -775,6 +775,12 @@ export default defineSchema({
     // separately on the memorial page above the categorized items.
     isReleaseIntroduction: v.optional(v.boolean()),
 
+    // Bytes this row counts for in `storage_usage`, stamped whenever its
+    // sealed strings change (lib/storage_usage.ts), so a later change
+    // subtracts exactly what was added. Absent on rows not written since the
+    // counter exists: computed from the row then.
+    storedBytes: v.optional(v.number()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -914,6 +920,34 @@ export default defineSchema({
   })
     .index("by_item", ["itemId"])
     .index("by_user", ["userId"]),
+
+  // Bytes each owner stores, against the plan quota (lib/plans.ts): item
+  // rows, edit history, recipient-key rows and file blobs. Kept in step by
+  // every write (lib/storage_usage.ts) so the quota never reads item or
+  // version documents. "archive" = archived items + history; recipient keys
+  // count as active whatever their item's status.
+  storage_usage: defineTable({
+    userId: v.id("users"),
+    activeBytes: v.number(),
+    archiveBytes: v.number(),
+    // Present while the counter of an account that predates it is being
+    // built (migrations.backfillStorageUsage): the byte counts are partial.
+    // Resumes after item `afterItem` (creation time), inside `item` when its
+    // history is being read.
+    backfill: v.optional(
+      v.object({
+        afterItem: v.optional(v.number()),
+        item: v.optional(
+          v.object({
+            id: v.id("vault_items"),
+            afterVersion: v.optional(v.number()),
+            // Blobs of this item already counted (one count per blob).
+            seen: v.array(storageRefValidator),
+          }),
+        ),
+      }),
+    ),
+  }).index("by_user", ["userId"]),
 
   // Owner of each stored blob, bound when it is first attached (to an item or
   // as an avatar): a handle bound to another account is refused, and only the

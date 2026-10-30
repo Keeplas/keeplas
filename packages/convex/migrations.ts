@@ -6,7 +6,14 @@ import { internalMutation, type MutationCtx } from "./_generated/server";
 import { SECURITY_LOG_RETENTION_MS, WIPE_ACTION } from "./account_deletion";
 import { folderItems } from "./folders";
 import { resolveItemRecipients } from "./helpers";
+import { batchArgs, batchPage, scheduleNextBatch } from "./lib/batch";
 import { claimBlob, deleteAllBlobs, type StorageRef } from "./lib/storage";
+import {
+  continueStorageBackfill,
+  deleteRecipientKeys,
+  hasStorageUsage,
+  startStorageBackfill,
+} from "./lib/storage_usage";
 import { isLegacyVerifier, verifierDigest } from "./lib/crypto";
 
 /**
@@ -38,6 +45,7 @@ export const wipeAllData = internalMutation({
       "trusted_contacts",
       "vault_item_files",
       "storage_blobs",
+      "storage_usage",
       "vault_item_recipient_keys",
       "recipient_groups",
       "vault_items",
@@ -282,7 +290,7 @@ export const dropFolderGrants = internalMutation({
             q.eq("itemId", item._id).eq("contactId", grant.contactId),
           )
           .first();
-        if (row) await ctx.db.delete(row._id);
+        if (row) await deleteRecipientKeys(ctx, item.userId, [row]);
       }
       await ctx.db.delete(grant._id);
     }
@@ -451,5 +459,46 @@ export const digestRecoveryVerifiers = internalMutation({
         { cursor: continueCursor },
       );
     }
+  },
+});
+
+/**
+ * One-shot backfill of `storage_usage` (lib/storage_usage.ts) for accounts
+ * that predate it: starts building the counter of every vault owner who has
+ * none, each in its own chain of `backfillStorageUsageStep`, so a large
+ * history never exceeds one transaction's read limits. Walks `vaults` a page
+ * at a time, rescheduling itself until done. Idempotent (an owner with a
+ * counter, complete or being built, is skipped). Until an owner's counter is
+ * complete, the quota counts their attachments only. Run once after
+ * deploying the counter:
+ *   npx convex run migrations:backfillStorageUsage        # dev
+ *   npx convex run migrations:backfillStorageUsage --prod # prod
+ */
+export const backfillStorageUsage = internalMutation({
+  args: batchArgs,
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("vaults")
+      .paginate(batchPage(100, args.cursor));
+    let started = 0;
+    for (const vault of page.page) {
+      if (await hasStorageUsage(ctx, vault.userId)) continue;
+      await startStorageBackfill(ctx, vault.userId, 0);
+      started++;
+    }
+    await scheduleNextBatch(
+      ctx,
+      page,
+      internal.migrations.backfillStorageUsage,
+    );
+    return { scanned: page.page.length, started };
+  },
+});
+
+/** One step of an owner's counter build (see backfillStorageUsage). */
+export const backfillStorageUsageStep = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    await continueStorageBackfill(ctx, userId);
   },
 });
