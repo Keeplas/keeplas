@@ -115,7 +115,7 @@ async function seedAdmin(t: TestConvex) {
 }
 
 async function submitRequest(t: TestConvex, newPhone = NEW) {
-  return t.mutation(api.number_change.submit, {
+  const result = await t.mutation(api.number_change.submit, {
     oldPhone: OLD,
     newPhone,
     name: "Ada Lovelace",
@@ -123,6 +123,8 @@ async function submitRequest(t: TestConvex, newPhone = NEW) {
     message: "Phone stolen in the metro.",
     _audit: await signedAudit(),
   });
+  if (!result.ok) throw new Error(result.error);
+  return result;
 }
 
 afterEach(() => {
@@ -519,11 +521,29 @@ describe("B / D / F — lost number, no 24 words: support + 72 h", () => {
         name: "X",
         _audit: await signedAudit(),
       }),
-    ).rejects.toThrow("NO_ACCOUNT");
+    ).resolves.toEqual({ ok: false, error: "NO_ACCOUNT" });
     await expect(submitRequest(t, OLD)).rejects.toThrow("SAME_NUMBER");
-    await expect(submitRequest(t, ATTACKER)).rejects.toThrow("already linked");
+    await expect(submitRequest(t, ATTACKER)).rejects.toThrow("NUMBER_TAKEN");
     await submitRequest(t);
     await expect(submitRequest(t)).rejects.toThrow("REQUEST_IN_PROGRESS");
+  });
+
+  // A refusal is returned, not thrown, so the probe still counts (a throw
+  // rolls the rate-limit row back): number sweeps stay throttled per IP.
+  it("counts refused requests toward the per-IP limit", async () => {
+    const t = makeT();
+    await seedOwner(t);
+    const _audit = await signedAudit();
+    const probe = (oldPhone: string) =>
+      t.mutation(api.number_change.submit, {
+        oldPhone,
+        newPhone: NEW,
+        name: "X",
+        _audit,
+      });
+    for (let n = 0; n < 5; n++) await probe(`+3360000000${n}`);
+
+    await expect(probe(OLD)).rejects.toThrow("Too many requests");
   });
 
   it("completes only once approved and past 72 h, then signs in on the new number", async () => {

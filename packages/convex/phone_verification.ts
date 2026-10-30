@@ -99,13 +99,22 @@ export async function assertPhoneAvailable(
   phone: string,
   userId: Id<"users">,
 ): Promise<void> {
+  if (await phoneTakenByOther(ctx, phone, userId)) {
+    throw new Error("This phone number is already linked to another account.");
+  }
+}
+
+/** Whether another account than `userId` holds `phone`. */
+export async function phoneTakenByOther(
+  ctx: QueryCtx,
+  phone: string,
+  userId: Id<"users">,
+): Promise<boolean> {
   const owner = await ctx.db
     .query("users")
     .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
     .first();
-  if (owner && owner._id !== userId) {
-    throw new Error("This phone number is already linked to another account.");
-  }
+  return owner !== null && owner._id !== userId;
 }
 
 /**
