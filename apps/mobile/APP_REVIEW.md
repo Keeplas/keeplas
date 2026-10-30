@@ -36,6 +36,7 @@ As of 29 October 2026.
 - [ ] Upload a new iOS build, version 1.0.0: the encryption declaration only applies to builds made after it. It must include the UK review numbers fix and the store review audit fixes.
 - [ ] Android: upload the launch AAB (it must include the same fixes), then create the `keeplas_lifetime` product in the Play Console. Play refuses the product until an AAB with billing is on a track.
 - [ ] Deploy the backend of the store review audit fixes (`pnpm deploy:convex`) before the new builds reach reviewers: error messages, review-number limits and the review tooling depend on it.
+- [ ] Right after that deploy, run `pnpm review:clear` on +447700900101, +447700900102 and +447700900103: it pauses Alex's and Sam's Life check and turns their cloud backup off, which the first seed missed. Then `pnpm review:status`.
 - [ ] Capture the six store screenshots on a real phone, in English and French, and render them ([`store-screenshots/`](./store-screenshots/)). The old set showed Figma mockups with screens the app doesn't have (Apple 2.3.3).
 - [ ] Fix the store descriptions in AFFiNE before pasting them: sharing is chosen per item, not per category. EN "• For each item, choose who receives it."; FR "• Pour chaque élément, choisissez qui le recevra."
 - [ ] Fill in ASC and the Play Console: review notes, App Privacy, Data safety, deletion URL, Play App content declarations ([checklist](#before-each-submission)).
@@ -173,8 +174,9 @@ The contacts have vaults of their own, shared with nobody (they have no trusted 
 
 - **Settings:**
   - Free plan, so reviewers can try the Lifetime purchase in the sandbox;
-  - Life check quarterly, with travel mode on until 26 November 2026;
-  - cloud backup turned off, so reviewers' phones don't turn it on and each new reviewer goes straight to the recovery kit.
+  - Life check quarterly (owner), and travel mode on all three accounts for 180 days (the maximum), so no check-in or "Are you okay?" screen appears during a review;
+  - cloud backup turned off on all three, so reviewers' phones don't turn it on and each new reviewer goes straight to the recovery kit;
+  - number and email locked: the server refuses a number change or an added email on every `REVIEW_PHONES` account, sign-up numbers included.
 - **Contacts:**
   - invited by phone only, so no message reached anyone;
   - they accepted, and their keys are pinned on the owner's side.
@@ -195,9 +197,11 @@ To seed again, for example after a reviewer changed the demo vault:
 ## Every submission
 
 1. `pnpm review:status` → **Ready for review**.
-   - It also checks that no earlier reviewer changed the demo accounts: the 24 words still open them, no device alert is pending, no key rotation is flagged, cloud backup is off, the owner is still on the Free plan, no deletion is scheduled and the language is English. Each problem names its fix. Pending device alerts, cloud backup and language: `pnpm review:clear <number>` (only the `REVIEW_PHONES` numbers). A new kit, a key rotation, a purchase or a deletion: re-seed ([above](#demo-accounts)).
+   - It also checks that no earlier reviewer changed the demo accounts: the 24 words still open them; no device alert is pending; no key rotation is flagged; cloud backup is off; no email was added; the language is English; travel mode lasts at least 14 more days; no Life check, contact access request or recovery request is in progress; the owner is still on the Free plan with no deletion scheduled; Alex and Sam still have their seeded items and no contacts. Each problem names its fix:
+     - `pnpm review:clear <number>` (only the `REVIEW_PHONES` numbers): device alerts, cloud backup, email, language, travel mode (set again for 180 days), open requests;
+     - re-seed ([above](#demo-accounts)): a new kit, a key rotation, a purchase, a deletion, a released vault, or changed items or contacts on Alex or Sam.
    - If a reviewer used a sign-up number last time, free it first: `pnpm review:reset +447700900104` (or `+447700900105`).
-   - The owner's travel mode pauses the Life check, so no check-in or escalation runs during the review. It lasts 30 days: after 26 November 2026, sign in to the demo account and turn it on again (Settings → Life check).
+   - Travel mode pauses the Life check on the three demo accounts. `status` warns 14 days before it ends; `pnpm review:clear` sets it again.
 2. Paste the notes below into ASC and the Play Console, with the current code and words from Infisical, and each store's own sign-up number.
 3. Each new sign-in to the demo owner raises a new-device alert on the phones already signed in to it, such as an earlier reviewer's. The notes tell reviewers to tap "It was me".
    - If you sign in to the demo account yourself during a review, never answer "It wasn't me": that revokes the reviewer's session.
@@ -228,7 +232,7 @@ SIGN IN TO THE DEMO ACCOUNT
    <24 WORDS>
 5. The vault opens on Home. If the system asks to allow notifications, either answer works. If a "New device detected" screen appears, it is another reviewer's phone: tap "It was me".
 
-Other reviewers use this demo account too. Please leave it as it is: don't buy Lifetime, delete it, create a new recovery kit, turn cloud backup on or use "Lost your number?" on it. Try those on the account you create below.
+Other reviewers use this demo account too. Please leave it as it is: don't buy Lifetime, delete it, create a new recovery kit, turn cloud backup on or use "Lost your number?" on it. Try those on the account you create below. The review numbers can't change their number or email, including the account you create.
 
 TRY SIGN-UP
 Sign out first (Settings > Sign out). Tap "Get started" and use United Kingdom <SIGN-UP NUMBER> with the same code <REVIEW_CODE>. Real users receive their code on WhatsApp.
