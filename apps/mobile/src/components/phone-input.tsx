@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type Ref } from "react";
 import {
   FlatList,
   Modal,
@@ -36,6 +36,7 @@ export function PhoneInput({
   onChangeText,
   onSubmit,
   invalid = false,
+  ref,
 }: {
   country: CountryCode;
   onCountryChange: (country: CountryCode) => void;
@@ -43,6 +44,8 @@ export function PhoneInput({
   onChangeText: (value: string) => void;
   onSubmit?: () => void;
   invalid?: boolean;
+  /** The number field, so the previous field's "next" key can focus it. */
+  ref?: Ref<TextInput>;
 }) {
   const { colors } = useTheme();
   const { t, language } = useI18n();
@@ -83,6 +86,7 @@ export function PhoneInput({
         style={[styles.divider, { backgroundColor: colors["border.default"] }]}
       />
       <TextInput
+        ref={ref}
         accessibilityLabel={t("phone.label")}
         value={value}
         onChangeText={(next) => {

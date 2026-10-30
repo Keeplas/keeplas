@@ -29,6 +29,7 @@ import {
   type FileUrl,
 } from "@/features/vault/use-decrypted-attachment";
 import {
+  contactKeyBlockedToast,
   useEveryoneRecipients,
   useWrapForContacts,
 } from "@/features/vault/use-recipients";
@@ -209,11 +210,13 @@ export default function ItemDetails() {
         });
       }
       setSheet(null);
-    } catch {
+    } catch (error) {
       toast({
         variant: "error",
-        title: t("item.shareFailedTitle"),
-        description: t("item.shareFailedBody"),
+        ...(contactKeyBlockedToast(error, t) ?? {
+          title: t("item.shareFailedTitle"),
+          description: t("item.shareFailedBody"),
+        }),
       });
     } finally {
       setSharing(false);

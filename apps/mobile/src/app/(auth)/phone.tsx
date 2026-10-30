@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import type { TextInput } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useConvex } from "convex/react";
 
@@ -32,6 +33,7 @@ export default function PhoneScreen() {
   const params = useLocalSearchParams<{ intent?: PhoneIntent }>();
   const intent: PhoneIntent = params.intent === "signin" ? "signin" : "signup";
   const phone = usePhoneField();
+  const phoneInput = useRef<TextInput>(null);
   const [name, setName] = useState("");
   const requestCode = useRequestPhoneCode();
   const convex = useConvex();
@@ -101,6 +103,70 @@ export default function PhoneScreen() {
           right={<LanguageSegment />}
         />
       }
+      // The phone pad has no Return key: the CTA, the error it may raise and
+      // the terms it accepts ride above the keyboard.
+      footer={
+        <>
+          {error ? (
+            <Text variant="body-sm" color="status.revoked">
+              {error}
+            </Text>
+          ) : null}
+          {switchTo ? (
+            <Button
+              variant="text"
+              label={t(
+                switchTo === "signup"
+                  ? "phone.createAccount"
+                  : "phone.signInInstead",
+              )}
+              onPress={() => {
+                setError(null);
+                setSwitchTo(null);
+                router.setParams({ intent: switchTo });
+              }}
+            />
+          ) : null}
+          <Button
+            label={t("phone.cta")}
+            chevron
+            loading={busy}
+            onPress={submit}
+          />
+          {intent === "signin" ? (
+            <Button
+              variant="secondary"
+              label={t("lostNumber.title")}
+              onPress={() => router.push("/lost-number")}
+            />
+          ) : null}
+          {intent === "signup" ? (
+            <Text variant="body-sm" color="text.muted" align="center">
+              {t("legal.agreeBefore")}
+              <Text
+                variant="body-sm"
+                color="text.link"
+                accessibilityRole="link"
+                style={linkStyle}
+                onPress={() => openSitePage("terms", language)}
+              >
+                {t("legal.terms")}
+              </Text>
+              {t("legal.agreeAnd")}
+              <Text
+                variant="body-sm"
+                color="text.link"
+                accessibilityRole="link"
+                style={linkStyle}
+                onPress={() => openSitePage("privacy", language)}
+              >
+                {t("legal.privacy")}
+              </Text>
+              {t("legal.agreeAfter")}
+            </Text>
+          ) : null}
+        </>
+      }
     >
       <Text variant="display">
         {t(intent === "signup" ? "phone.title" : "phone.signInTitle")}
@@ -119,64 +185,13 @@ export default function PhoneScreen() {
             autoComplete="given-name"
             textContentType="givenName"
             returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => phoneInput.current?.focus()}
           />
         </>
       ) : null}
       <Text variant="label">{t("phone.label")}</Text>
-      <PhoneInput {...phone.inputProps} onSubmit={submit} />
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
-      {switchTo ? (
-        <Button
-          variant="text"
-          label={t(
-            switchTo === "signup"
-              ? "phone.createAccount"
-              : "phone.signInInstead",
-          )}
-          onPress={() => {
-            setError(null);
-            setSwitchTo(null);
-            router.setParams({ intent: switchTo });
-          }}
-        />
-      ) : null}
-      <Button label={t("phone.cta")} chevron loading={busy} onPress={submit} />
-      {intent === "signin" ? (
-        <Button
-          variant="secondary"
-          label={t("lostNumber.title")}
-          onPress={() => router.push("/lost-number")}
-        />
-      ) : null}
-      {intent === "signup" ? (
-        <Text variant="body-sm" color="text.muted" align="center">
-          {t("legal.agreeBefore")}
-          <Text
-            variant="body-sm"
-            color="text.link"
-            accessibilityRole="link"
-            style={linkStyle}
-            onPress={() => openSitePage("terms", language)}
-          >
-            {t("legal.terms")}
-          </Text>
-          {t("legal.agreeAnd")}
-          <Text
-            variant="body-sm"
-            color="text.link"
-            accessibilityRole="link"
-            style={linkStyle}
-            onPress={() => openSitePage("privacy", language)}
-          >
-            {t("legal.privacy")}
-          </Text>
-          {t("legal.agreeAfter")}
-        </Text>
-      ) : null}
+      <PhoneInput ref={phoneInput} {...phone.inputProps} onSubmit={submit} />
       <Callout icon="shield-check" text={t("phone.reassure")} />
     </Screen>
   );

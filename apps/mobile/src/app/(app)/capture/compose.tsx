@@ -21,7 +21,6 @@ import { Screen } from "@/components/screen";
 import { BottomSheet } from "@/components/sheet";
 import { Callout, IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { ContactKeyBlocked } from "@/crypto/contact-keys";
 import { INBOX } from "@/crypto/item-meta";
 import { PermissionSheet, SHEET_CLOSE_MS } from "@/features/capture/add-sheet";
 import { captureDepth } from "@/features/capture/capture-depth";
@@ -48,7 +47,10 @@ import {
   useCategoryLabel,
 } from "@/features/vault/category-sheet";
 import { itemVisual } from "@/features/vault/item-visual";
-import { useEveryoneRecipients } from "@/features/vault/use-recipients";
+import {
+  contactKeyBlockedToast,
+  useEveryoneRecipients,
+} from "@/features/vault/use-recipients";
 import { useVaultData } from "@/features/vault/vault-data";
 import { deleteFile } from "@/lib/files";
 import { formatDuration } from "@/lib/format";
@@ -205,15 +207,11 @@ export default function ComposeCapture() {
       );
       showSecuring(entryId);
     } catch (error) {
-      const blocked = error instanceof ContactKeyBlocked;
       toast({
         variant: "error",
-        title: blocked
-          ? t("capture.contactKeyTitle", { name: error.contactName ?? "" })
-          : t("common.genericError"),
-        description: blocked
-          ? t("capture.contactKeyBody", { name: error.contactName ?? "" })
-          : undefined,
+        ...(contactKeyBlockedToast(error, t) ?? {
+          title: t("common.genericError"),
+        }),
       });
       setBusy(false);
     }
@@ -298,7 +296,7 @@ export default function ComposeCapture() {
           trailing={
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t("common.cancel")}
+              accessibilityLabel={t("itemEdit.removeFile", { name: file.name })}
               hitSlop={10}
               onPress={() => draftStore.removeFile(file.uri)}
             >
@@ -586,7 +584,7 @@ export default function ComposeCapture() {
         {select(t("capture.categoryLabel"), categoryLabel(filedAs), () =>
           setSheet("category"),
         )}
-        {select(t("capture.whoCanSee"), access, () => setSheet("access"))}
+        {select(t("item.shareTitle"), access, () => setSheet("access"))}
         <Callout icon="shield-check" text={t("capture.neverSees")} />
         {sheets}
       </Screen>
@@ -666,7 +664,7 @@ export default function ComposeCapture() {
               <Image source={{ uri }} style={styles.pageImage} />
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={t("capture.page", { n: index + 1 })}
+                accessibilityLabel={t("capture.removePage", { n: index + 1 })}
                 hitSlop={12}
                 onPress={() =>
                   draftStore.update({

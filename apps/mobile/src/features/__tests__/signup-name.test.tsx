@@ -38,7 +38,18 @@ jest.mock("@/providers/theme-provider", () => ({
   useTheme: () => ({ colors: {} }),
 }));
 jest.mock("@/components/screen", () => ({
-  Screen: ({ children }: { children: React.ReactNode }) => children,
+  Screen: ({
+    children,
+    footer,
+  }: {
+    children: React.ReactNode;
+    footer?: React.ReactNode;
+  }) => (
+    <>
+      {children}
+      {footer}
+    </>
+  ),
 }));
 jest.mock("@/components/text", () => ({
   Text: jest.requireActual("react-native").Text,
@@ -55,7 +66,16 @@ jest.mock("@/components/button", () => {
 });
 jest.mock("@/components/app-header", () => ({ AppHeader: () => null }));
 jest.mock("@/components/language", () => ({ LanguageSegment: () => null }));
-jest.mock("@/components/phone-input", () => ({ PhoneInput: () => null }));
+const mockFocusPhone = jest.fn();
+jest.mock("@/components/phone-input", () => {
+  const { useImperativeHandle } = jest.requireActual("react");
+  return {
+    PhoneInput: ({ ref }: { ref?: React.Ref<{ focus: () => void }> }) => {
+      useImperativeHandle(ref, () => ({ focus: mockFocusPhone }));
+      return null;
+    },
+  };
+});
 jest.mock("@/components/stepper", () => ({ RequiredSteps: () => null }));
 jest.mock("@/components/surfaces", () => ({ Callout: () => null }));
 jest.mock("@/features/code-verification", () => {
@@ -97,6 +117,12 @@ describe("sign-up asks for the first name", () => {
       pathname: "/verify",
       params: { phone: "+14165550123", intent: "signup", name: "Marie" },
     });
+  });
+
+  it("moves on to the phone number from the first name's next key", () => {
+    rtl.render(<PhoneScreen />);
+    rtl.fireEvent(rtl.screen.getByLabelText("home.firstName"), "submitEditing");
+    expect(mockFocusPhone).toHaveBeenCalled();
   });
 
   it("does not ask for it on sign-in", async () => {
