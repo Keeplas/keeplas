@@ -22,7 +22,7 @@
     "@keeplas/backend": "workspace:^",
     "@keeplas/crypto": "workspace:^",
     "@keeplas/export": "workspace:^",
-    "@op-engineering/op-sqlite": "^18.2.5",
+    "@op-engineering/op-sqlite": "^19.0.2",
     "@react-native-community/datetimepicker": "9.1.0",
     "convex": "^1.48.0",
     "expo": "~57.0.29",
