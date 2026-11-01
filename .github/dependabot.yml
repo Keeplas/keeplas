@@ -7,14 +7,37 @@ updates:
       interval: monthly
     open-pull-requests-limit: 5
     groups:
-      # Batch routine updates into a single PR to cut review noise
+      # Batch routine updates into a single PR to cut review noise. Majors stay
+      # one per PR so a single breaking change doesn't block the whole batch.
       minor-and-patch:
         update-types:
           - minor
           - patch
-      # Fold scattered dev-dependency bumps (vite, plugin-react, …) into one PR
-      dev-dependencies:
-        dependency-type: development
+    # The Expo SDK pins these versions together: they move only through an SDK
+    # upgrade (`npx expo install expo@^<sdk> --fix`), never one at a time.
+    # Keep in sync with `npx expo install --check` in apps/mobile.
+    ignore:
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
+      - dependency-name: "babel-preset-expo"
+      - dependency-name: "jest-expo"
+      - dependency-name: "jest"
+      - dependency-name: "@types/jest"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "@types/react"
+      - dependency-name: "@types/react-dom"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-keyboard-controller"
+      - dependency-name: "react-native-reanimated"
+      - dependency-name: "react-native-safe-area-context"
+      - dependency-name: "react-native-screens"
+      - dependency-name: "react-native-svg"
+      - dependency-name: "react-native-view-shot"
+      - dependency-name: "react-native-webview"
+      - dependency-name: "react-native-worklets"
+      - dependency-name: "@react-native-community/datetimepicker"
 
   - package-ecosystem: github-actions
     directory: /
