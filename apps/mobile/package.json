@@ -29,7 +29,7 @@
     "expo-asset": "~57.0.20",
     "expo-audio": "~57.0.5",
     "expo-camera": "~57.0.6",
-    "expo-constants": "~57.0.22",
+    "expo-constants": "~58.0.14",
     "expo-contacts": "~57.0.8",
     "expo-dev-client": "~57.0.20",
     "expo-device": "~57.0.2",
