@@ -28,7 +28,8 @@ import {
 
 // Phase 5 (F3, D3, D4): owner recovery with trust contacts. Real crypto on
 // every side; Convex only relays sealed shares and holds G under KMS.
-//   pending → approved_1 → approved_2 → released → rotated
+//   pending → approved_2 (threshold met) → released → rotated
+//   legacy 2-approval generations: pending → approved_1 → approved_2 → …
 //   cancel · reject · expire
 
 type Contact = {
@@ -68,7 +69,15 @@ async function seedContact(
   return { userId, contactId, kem, identity };
 }
 
-async function setupOwner(t: TestConvex, contactCount = 3) {
+/**
+ * `legacy`: sealed by an app from before 1-of-n recovery, which sends no
+ * threshold, so the server keeps that generation at 2 approvals.
+ */
+async function setupOwner(
+  t: TestConvex,
+  contactCount = 3,
+  { legacy = false }: { legacy?: boolean } = {},
+) {
   const ownerId = await t.run((ctx) =>
     ctx.db.insert("users", { name: "Alex" }),
   );
@@ -93,6 +102,7 @@ async function setupOwner(t: TestConvex, contactCount = 3) {
       wrappedShare: string;
     }[],
     gateKey: setup.gateKey,
+    threshold: legacy ? undefined : setup.threshold,
     _audit: await signedAudit(),
   });
   return { ownerId, owner, contacts, masterKey };
@@ -224,9 +234,66 @@ describe("owner recovery", () => {
     vi.useRealTimers();
   });
 
-  it("goes pending → approved_1 → approved_2 → released → rotated and restores the MasterKey", async () => {
+  it("a single trust contact restores the vault: pending → approved_2 → released", async () => {
     const t = makeT();
-    const { ownerId, contacts, masterKey } = await setupOwner(t);
+    const { ownerId, owner, contacts, masterKey } = await setupOwner(t, 1);
+    expect(
+      (await owner.query(api.recovery.getHealth, {}))?.trustContacts,
+    ).toMatchObject({ configured: true, upgradeRequired: false });
+    const request = await startRequest(t, ownerId);
+    const { requestId, device, devicePublicKey, newDevice } = request;
+    expect(
+      (await newDevice.query(api.recovery.getMyRequest, {}))?.approvalsRequired,
+    ).toBe(1);
+
+    await contactApproves(t, ownerId, contacts[0], request);
+    expect(await statusOf(t, requestId)).toBe("approved_2");
+
+    vi.advanceTimersByTime(RECOVERY_WINDOW_MS);
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(await statusOf(t, requestId)).toBe("released");
+    const pkg = (await newDevice.query(api.recovery.getReleasePackage, {
+      requestId,
+    }))!;
+    expect(pkg.threshold).toBe(1);
+    expect(
+      await openSocialRecovery({
+        threshold: pkg.threshold,
+        ownerUserId: ownerId,
+        generation: pkg.generation,
+        requestId,
+        devicePublicKey,
+        deviceSecretKey: device.secretKey,
+        wrappedGateKey: pkg.wrappedGateKey,
+        socialEnvelope: pkg.socialEnvelope,
+        approvals: pkg.approvals,
+      }),
+    ).toEqual(masterKey);
+  });
+
+  it("closes approvals once one of several contacts approved", async () => {
+    const t = makeT();
+    const { ownerId, contacts } = await setupOwner(t);
+    const request = await startRequest(t, ownerId);
+    await contactApproves(t, ownerId, contacts[1], request);
+    expect(await statusOf(t, request.requestId)).toBe("approved_2");
+    expect(
+      await asUser(t, contacts[0].userId).query(
+        api.recovery.getRequestsForMe,
+        {},
+      ),
+    ).toEqual([]);
+  });
+
+  it("legacy 2-approval generation: pending → approved_1 → approved_2 → released → rotated, upgraded to 1-of-n on renewal", async () => {
+    const t = makeT();
+    const { ownerId, owner, contacts, masterKey } = await setupOwner(t, 3, {
+      legacy: true,
+    });
+    // Still works as sealed; the owner's phone re-seals it to 1-of-n.
+    expect(
+      (await owner.query(api.recovery.getHealth, {}))?.trustContacts,
+    ).toMatchObject({ configured: true, upgradeRequired: true });
     const request = await startRequest(t, ownerId);
     const { requestId, device, devicePublicKey, newDevice } = request;
     expect(await statusOf(t, requestId)).toBe("pending");
@@ -252,7 +319,9 @@ describe("owner recovery", () => {
     const pkg = (await newDevice.query(api.recovery.getReleasePackage, {
       requestId,
     }))!;
+    expect(pkg.threshold).toBe(2);
     const restored = await openSocialRecovery({
+      threshold: pkg.threshold,
       ownerUserId: ownerId,
       generation: pkg.generation,
       requestId,
@@ -280,10 +349,15 @@ describe("owner recovery", () => {
         wrappedShare: string;
       }[],
       gateKey: renewed.gateKey,
+      threshold: renewed.threshold,
       completesRequestId: requestId,
       _audit: await signedAudit(),
     });
     expect(await statusOf(t, requestId)).toBe("rotated");
+    expect(
+      (await newDevice.query(api.recovery.getHealth, {}))?.trustContacts
+        .upgradeRequired,
+    ).toBe(false);
     const rows = await t.run(async (ctx) => ({
       shares: await ctx.db.query("recovery_secret_shares").collect(),
       gates: await ctx.db.query("gate_keys").collect(),
@@ -302,9 +376,30 @@ describe("owner recovery", () => {
     expect(gates[0].kmsCiphertext).toMatch(/^local:v1:/);
   });
 
-  it("releases at once when the 2nd approval comes after the window", async () => {
+  it("does not ask to upgrade a legacy seal while a request depends on it", async () => {
+    const t = makeT();
+    const { ownerId, owner } = await setupOwner(t, 2, { legacy: true });
+    await startRequest(t, ownerId);
+    expect(
+      (await owner.query(api.recovery.getHealth, {}))?.trustContacts
+        .upgradeRequired,
+    ).toBe(false);
+  });
+
+  it("releases at once when the approval comes after the window", async () => {
     const t = makeT();
     const { ownerId, contacts } = await setupOwner(t);
+    const request = await startRequest(t, ownerId);
+    vi.advanceTimersByTime(RECOVERY_WINDOW_MS + 1);
+    expect(await statusOf(t, request.requestId)).toBe("pending");
+    await contactApproves(t, ownerId, contacts[0], request);
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(await statusOf(t, request.requestId)).toBe("released");
+  });
+
+  it("legacy: releases at once when the 2nd approval comes after the window", async () => {
+    const t = makeT();
+    const { ownerId, contacts } = await setupOwner(t, 3, { legacy: true });
     const request = await startRequest(t, ownerId);
     const { requestId } = request;
     await contactApproves(t, ownerId, contacts[0], request);
@@ -336,7 +431,6 @@ describe("owner recovery", () => {
     const request = await startRequest(t, ownerId);
     const { requestId } = request;
     await contactApproves(t, ownerId, contacts[0], request);
-    await contactApproves(t, ownerId, contacts[1], request);
     await owner.mutation(api.recovery.cancel, { _audit: await signedAudit() });
     expect(await statusOf(t, requestId)).toBe("cancelled");
 
@@ -370,7 +464,11 @@ describe("owner recovery", () => {
     const phone = asUserSession(t, ownerId, phoneSession);
 
     const mine = await phone.query(api.recovery.getMyRequest, {});
-    expect(mine).toMatchObject({ requestId, status: "approved_1" });
+    expect(mine).toMatchObject({
+      requestId,
+      status: "approved_2",
+      approvalsRequired: 1,
+    });
     expect(mine!.windowEndsAt - mine!.createdAt).toBe(RECOVERY_WINDOW_MS);
     expect(mine!.contacts.map((c) => c.decision)).toEqual([
       "approve",
@@ -445,12 +543,10 @@ describe("owner recovery", () => {
     ).rejects.toThrow();
   });
 
-  it("expires after 7 days without 2 approvals", async () => {
+  it("expires after 7 days without an approval", async () => {
     const t = makeT();
-    const { ownerId, contacts } = await setupOwner(t);
-    const request = await startRequest(t, ownerId);
-    const { requestId } = request;
-    await contactApproves(t, ownerId, contacts[0], request);
+    const { ownerId } = await setupOwner(t);
+    const { requestId } = await startRequest(t, ownerId);
     vi.advanceTimersByTime(RECOVERY_REQUEST_TTL_MS);
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     expect(await statusOf(t, requestId)).toBe("expired");
@@ -494,12 +590,28 @@ describe("owner recovery", () => {
     expect(targets.every((c) => c.hasWraps)).toBe(true);
   });
 
-  it("refuses a request with fewer than 2 contacts set up (M09-6)", async () => {
+  it("refuses a request without any contact set up (M09-6)", async () => {
     const t = makeT();
     const ownerId = await t.run((ctx) => ctx.db.insert("users", {}));
     await expect(startRequest(t, ownerId)).rejects.toThrow(
-      "FEWER_THAN_2_CONTACTS",
+      "NO_TRUST_CONTACT_SET_UP",
     );
+  });
+
+  it("refuses a setup claiming a threshold other than 1 or 2", async () => {
+    const t = makeT();
+    const ownerId = await t.run((ctx) => ctx.db.insert("users", {}));
+    const contact = await seedContact(t, ownerId, 0);
+    await expect(
+      asUser(t, ownerId).action(api.recovery_node.setup, {
+        generation: 1,
+        socialEnvelope: "x",
+        shares: [{ contactId: contact.contactId, wrappedShare: "s" }],
+        gateKey: Buffer.alloc(32, 1).toString("base64"),
+        threshold: 3,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("Invalid recovery threshold");
   });
 
   it("allows one request at a time and one answer per contact", async () => {
@@ -613,7 +725,9 @@ describe("owner recovery", () => {
 
   it("upgrades a request opened before code commitments (legacy)", async () => {
     const t = makeT();
-    const { ownerId, contacts, masterKey } = await setupOwner(t);
+    const { ownerId, contacts, masterKey } = await setupOwner(t, 3, {
+      legacy: true,
+    });
     const legacy = await openRequest(t, ownerId);
     // Contact 0 approved with the old code before the upgrade shipped.
     const [old] = await asUser(t, contacts[0].userId).query(
@@ -664,6 +778,7 @@ describe("owner recovery", () => {
     }))!;
     expect(
       await openSocialRecovery({
+        threshold: pkg.threshold,
         ownerUserId: ownerId,
         generation: pkg.generation,
         requestId: legacy.requestId,
@@ -720,6 +835,7 @@ describe("owner recovery", () => {
         contactCount: 0,
         eligibleCount: 0,
         renewalRequired: false,
+        upgradeRequired: false,
       },
       recoveryKit: true,
       activeDevices: 0,
@@ -730,7 +846,6 @@ describe("owner recovery", () => {
     const t = makeT();
     const unsealedId = await t.run((ctx) => ctx.db.insert("users", {}));
     await seedContact(t, unsealedId, 10);
-    await seedContact(t, unsealedId, 11);
     expect(
       await asUser(t, unsealedId).query(
         api.trusted_contacts.getContactsReady,
@@ -738,7 +853,7 @@ describe("owner recovery", () => {
       ),
     ).toBe(false);
 
-    const { owner } = await setupOwner(t, 2);
+    const { owner } = await setupOwner(t, 1);
     expect(await owner.query(api.trusted_contacts.getContactsReady, {})).toBe(
       true,
     );
@@ -809,7 +924,6 @@ describe("recovery_node hardening", () => {
     const request = await startRequest(t, ownerId);
     const { requestId } = request;
     await contactApproves(t, ownerId, contacts[0], request);
-    await contactApproves(t, ownerId, contacts[1], request);
 
     // KMS outage when the window closes: the scheduled release fails.
     const kek = process.env.GATE_KEY_LOCAL_KEK;

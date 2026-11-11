@@ -24,16 +24,24 @@ import { contactHasWraps } from "./lib/contact_key";
 /**
  * Owner recovery with trust contacts (v2 workflow 7, F3, D3, D4).
  *
- *   pending → approved_1 → approved_2 → released → rotated
+ *   pending → approved_2 (threshold met) → released → rotated
+ *   legacy 2-of-n: pending → approved_1 → approved_2 → released → rotated
  *   any active → cancelled (owner) · rejected (a contact) · expired (7 days)
  *
- * G is released (sealed to the new device key) by `recovery_node.release`
- * only once 2 contacts approved AND the 72 h window has elapsed.
+ * A single trust contact is enough (1-of-n), so an owner is never blocked
+ * for lack of a second one. G is released (sealed to the new device key) by
+ * `recovery_node.release` only once the generation's threshold of contacts
+ * approved AND the 72 h window has elapsed.
  */
 
 export const RECOVERY_WINDOW_MS = 72 * 60 * 60 * 1000;
 export const RECOVERY_REQUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-export const RECOVERY_THRESHOLD = 2;
+export const RECOVERY_THRESHOLD = 1;
+/**
+ * Threshold of generations sealed before 1-of-n recovery (no `threshold` on
+ * the envelope). They keep working; the owner's phone re-seals them to 1-of-n.
+ */
+const LEGACY_RECOVERY_THRESHOLD = 2;
 const ML_KEM_768_PUBLIC_KEY_LENGTH = 1580; // base64 of 1184 bytes
 // Code exchange values: base64 of 32 bytes (nonces, SHA-256 commitments).
 const CODE_VALUE_LENGTH = 44;
@@ -69,6 +77,21 @@ async function currentEnvelope(ctx: QueryCtx, userId: Id<"users">) {
     .query("social_envelopes")
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .first();
+}
+
+/** Approvals a generation's shares need. */
+const thresholdOf = (envelope: Doc<"social_envelopes"> | null) =>
+  envelope?.threshold ?? LEGACY_RECOVERY_THRESHOLD;
+
+/** Approvals a request needs: the threshold of the generation it opened. */
+async function approvalsRequired(
+  ctx: QueryCtx,
+  request: Doc<"recovery_requests">,
+) {
+  const envelope = await currentEnvelope(ctx, request.userId);
+  return thresholdOf(
+    envelope?.generation === request.generation ? envelope : null,
+  );
 }
 
 async function sharesOf(
@@ -172,6 +195,7 @@ export const storeSetup = internalMutation({
         wrappedShare: v.string(),
       }),
     ),
+    threshold: v.optional(v.number()),
     gateKeyCiphertext: v.string(),
     completesRequestId: v.optional(v.id("recovery_requests")),
     _audit: auditContextValidator,
@@ -186,14 +210,21 @@ export const storeSetup = internalMutation({
     const eligible = new Set(
       (await eligibleTrustContacts(ctx, userId)).map((c) => c._id),
     );
+    const threshold = args.threshold ?? LEGACY_RECOVERY_THRESHOLD;
+    if (
+      threshold !== RECOVERY_THRESHOLD &&
+      threshold !== LEGACY_RECOVERY_THRESHOLD
+    ) {
+      throw new ConvexError("Invalid recovery threshold");
+    }
     const contactIds = new Set(args.shares.map((s) => s.contactId));
     if (
       contactIds.size !== args.shares.length ||
-      args.shares.length < RECOVERY_THRESHOLD ||
+      args.shares.length < threshold ||
       args.shares.some((s) => !eligible.has(s.contactId))
     ) {
       throw new ConvexError(
-        "Recovery needs at least 2 accepted trust contacts",
+        `Recovery needs at least ${threshold} accepted trust contact${threshold > 1 ? "s" : ""}`,
       );
     }
 
@@ -228,6 +259,7 @@ export const storeSetup = internalMutation({
       userId,
       generation: args.generation,
       envelope: args.socialEnvelope,
+      threshold,
       createdAt: now,
     });
     for (const share of args.shares) {
@@ -258,6 +290,7 @@ export const storeSetup = internalMutation({
       metadata: JSON.stringify({
         generation: args.generation,
         contacts: args.shares.length,
+        threshold,
         completesRequestId: args.completesRequestId ?? null,
       }),
       ipAddress: args._audit.ip,
@@ -287,8 +320,8 @@ export const start = auditedMutation({
     const shares = envelope
       ? await sharesOf(ctx, userId, envelope.generation)
       : [];
-    if (!envelope || shares.length < RECOVERY_THRESHOLD) {
-      throw new ConvexError("FEWER_THAN_2_CONTACTS");
+    if (!envelope || shares.length < thresholdOf(envelope)) {
+      throw new ConvexError("NO_TRUST_CONTACT_SET_UP");
     }
     if (await activeRequest(ctx, userId)) {
       throw new ConvexError("A recovery request is already in progress");
@@ -396,6 +429,7 @@ export const getMyRequest = query({
       createdAt: request.createdAt,
       windowEndsAt: request.windowEndsAt,
       expiresAt: request.expiresAt,
+      approvalsRequired: await approvalsRequired(ctx, request),
       contacts,
     };
   },
@@ -696,7 +730,12 @@ export const approve = auditedMutation({
       signature: args.signature,
       createdAt: now,
     });
-    const status = request.status === "pending" ? "approved_1" : "approved_2";
+    // Rejections close the request, so every decision so far is an approval.
+    const approvals = (await approvalsOf(ctx, request._id)).length;
+    const status =
+      approvals >= (await approvalsRequired(ctx, request))
+        ? "approved_2"
+        : "approved_1";
     await ctx.db.patch(request._id, { status });
     // The window may already be over: release right away.
     if (status === "approved_2" && now >= request.windowEndsAt) {
@@ -838,6 +877,7 @@ export const getReleasePackage = query({
     );
     return {
       generation: request.generation,
+      threshold: thresholdOf(envelope),
       newDevicePublicKey: request.newDevicePublicKey,
       wrappedGateKey: request.wrappedGateKey,
       socialEnvelope: envelope.envelope,
@@ -865,11 +905,19 @@ export async function trustContactsHealth(ctx: QueryCtx, user: Doc<"users">) {
     eligible.length >= RECOVERY_THRESHOLD &&
     (eligible.length !== shares.length ||
       eligible.some((c) => !shared.has(c._id)));
+  const configured = !!envelope && shares.length >= thresholdOf(envelope);
   return {
-    configured: shares.length >= RECOVERY_THRESHOLD,
+    configured,
     contactCount: shares.length,
     eligibleCount: eligible.length,
     renewalRequired: !!user.socialRecoveryRenewalRequired || contactsChanged,
+    // A legacy 2-of-n generation still works; the owner's phone re-seals it
+    // so a single contact is enough. Not while a request depends on it: a new
+    // generation would drop the shares that request is sealed to.
+    upgradeRequired:
+      configured &&
+      thresholdOf(envelope) > RECOVERY_THRESHOLD &&
+      !(await activeRequest(ctx, user._id)),
   };
 }
 

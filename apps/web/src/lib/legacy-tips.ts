@@ -66,7 +66,7 @@ export const LEGACY_TIPS: ReadonlyArray<LegacyTip> = [
     iconKey: "group",
     tone: "info",
     title: "Trusted contacts unlock continuity",
-    body: "Add at least 2 trusted contacts. They confirm if something happens to you, so your vault reaches the right people, without ever holding a key to it.",
+    body: "Add a trusted contact (two is safer). They confirm if something happens to you, so your vault reaches the right people, without ever holding a key to it.",
     learnHref: "/docs/trusted-contacts",
   },
   {

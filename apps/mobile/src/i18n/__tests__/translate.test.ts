@@ -119,12 +119,12 @@ describe("plurals", () => {
 
   it("falls back to the plain form when a language has no _one form", () => {
     // English has no singular here ("1 of 2 approvals received").
-    expect(translate("en", "socialRecovery.approvals", { count: 1 })).toBe(
-      "1 of 2 approvals received",
-    );
-    expect(translate("fr", "socialRecovery.approvals", { count: 1 })).toBe(
-      "1 validation reçue sur 2",
-    );
+    expect(
+      translate("en", "socialRecovery.approvals", { count: 1, required: 2 }),
+    ).toBe("1 of 2 approvals received");
+    expect(
+      translate("fr", "socialRecovery.approvals", { count: 1, required: 2 }),
+    ).toBe("1 validation reçue sur 2");
   });
 
   it("gives every _one form a plain form, and French every English _one", () => {
