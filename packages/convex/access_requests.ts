@@ -4,6 +4,7 @@ import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import {
   countQuorumVotes,
+  requiredConfirmations,
   createNotification,
   requireAuth,
   requireFullAuth,
@@ -71,7 +72,8 @@ export const getAccessRequests = query({
  * Mark the vault owner as unreachable from a trusted contact's account.
  * The first call from a given contact creates the request; subsequent calls
  * from other contacts append to `contactsInitiated`. When the count reaches
- * the quorum threshold (2), the 72h grace window opens.
+ * the quorum (the owner's threshold, capped at the people who can vote), the
+ * 72h grace window opens.
  */
 export const markUserUnreachable = auditedMutation({
   action: "access_request.unreachable_marked",
@@ -130,8 +132,11 @@ export const markUserUnreachable = auditedMutation({
       .query("life_check_configs")
       .withIndex("by_user", (q) => q.eq("userId", contact.userId))
       .first();
-    const threshold =
-      ownerConfig?.confirmationThreshold ?? DEFAULT_CONFIRMATION_THRESHOLD;
+    const threshold = await requiredConfirmations(
+      ctx,
+      contact.userId,
+      ownerConfig?.confirmationThreshold ?? DEFAULT_CONFIRMATION_THRESHOLD,
+    );
     const GRACE_MS = 72 * 60 * 60 * 1000;
     const now = Date.now();
 

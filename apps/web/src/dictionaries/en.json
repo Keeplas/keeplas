@@ -1034,12 +1034,11 @@
     },
     "recoveryNetwork": {
       "title": "Recovery Network",
-      "help": "Tracks whether your continuity protocol can run. The big number is how many guardians have accepted out of the {threshold} needed to confirm you are unreachable (your quorum). Below quorum, nothing can be released. At quorum, it works but a single missing guardian breaks it. Above quorum, you have buffer.",
+      "help": "Tracks whether your continuity protocol can run. The big number is how many guardians have accepted out of the {threshold} needed to run it. With none, nothing can be released. One guardian can handle everything alone; each extra guardian is a buffer in case one can't be reached.",
       "quorum": "quorum",
       "stepLabel": "Confirmations needed to start the release",
       "state": {
         "unprotected": "Unprotected: invite your first guardian",
-        "atRisk": "At risk: {count} more to reach quorum",
         "quorumMet": "Quorum met: add more for redundancy",
         "resilientOne": "Resilient: {count} guardian of buffer",
         "resilientMany": "Resilient: {count} guardians of buffer"
@@ -1047,13 +1046,13 @@
       "accepted": "Accepted",
       "pendingInvites": "Pending invites"
     },
-    "oneGuardianWarning": {
-      "title": "One guardian is not enough",
-      "body": "Only {name} is accepted so far. Invite at least one more. At least 2 trust contacts must confirm you are unreachable before the grace window opens, so a single guardian can never start the release."
+    "secondContactTip": {
+      "title": "One contact is enough, two is safer",
+      "body": "{name} can handle everything alone: helping you get back in and confirming you can't be reached. Invite a second contact in case {name} is unavailable."
     },
     "emptyState": {
       "title": "No trusted contacts yet",
-      "description": "Add at least 2 people who can help you get back in or receive your vault.",
+      "description": "Add someone who can help you get back in or receive your vault. One is enough, two is safer.",
       "action": "Add a contact"
     },
     "trustContacts": {
@@ -1303,11 +1302,11 @@
         },
         "trustedContacts": {
           "title": "Trusted Contacts",
-          "description": "At least two trust contacts hold encrypted shards of your master key. They confirm your unavailability and reconstruct the vault when needed. Recipients receive your pre-assigned content separately."
+          "description": "Your trust contacts (one is enough, two are recommended) hold encrypted shards of your master key. They confirm your unavailability and reconstruct the vault when needed. Recipients receive your pre-assigned content separately."
         },
         "recovery": {
           "title": "Recovery & Inheritance",
-          "description": "Two paths: 24-word phrase for self-service recovery, Shamir social recovery via trust contacts when the phrase is lost or after you become unreachable. Default threshold: 2 trusted contacts."
+          "description": "Two paths: 24-word phrase for self-service recovery, Shamir social recovery via trust contacts when the phrase is lost or after you become unreachable. A single trusted contact is enough."
         },
         "insights": {
           "title": "Reflect & Prepare",
@@ -1324,7 +1323,7 @@
         },
         "shamir": {
           "title": "Shamir secret sharing",
-          "body": "Your master key is split into 4 cryptographic shards: one device shard and up to three trusted-contact shards. Recovery starts working from 2 trusted contacts with the default threshold. Reconstruction always happens on your contacts' devices, never on Keeplas servers."
+          "body": "Your master key is split into 4 cryptographic shards: one device shard and up to three trusted-contact shards. Recovery works from a single trusted contact. Reconstruction always happens on your contacts' devices, never on Keeplas servers."
         },
         "auditLog": {
           "title": "Hash-chained audit log",
@@ -1503,7 +1502,7 @@
           "title": "Trust contact",
           "body": "Helps you recover access if you lose your phone, confirms you are unreachable, and receives the items you assigned to them once your vault is released. Never holds a key to your vault.",
           "bullets": {
-            "min": "Minimum 2 trust contacts for recovery",
+            "min": "1 trust contact is enough for recovery (2 recommended)",
             "noCap": "No cap: invite as many as you need",
             "receives": "Receives only the items you assign, after the vault unlocks",
             "moments": "Active role at three moments: invitation, escalation, recovery"
@@ -1531,7 +1530,7 @@
       },
       "threshold": {
         "heading": "How many contacts must agree?",
-        "body": "You choose the recovery threshold during onboarding. Threshold 2 is the default and works from 2 trusted contacts. Threshold 3 is stricter and requires 3 ready contacts.",
+        "body": "Any single trusted contact can approve your account recovery. For Life Check, you choose how many contacts must confirm you're unreachable: 2 by default, never more than you have, so a lone contact confirms alone.",
         "link": "Recovery model"
       },
       "manageLink": "Manage your contacts",
@@ -1640,7 +1639,7 @@
       },
       "threshold": {
         "heading": "The recovery threshold",
-        "intro": "During onboarding, you split your Master Key into 4 Shamir shares: one device shard and up to three trusted-contact shards. You choose the threshold: the minimum number that must collaborate to reconstruct it. With 2 trusted contacts, keep the threshold at 2; a threshold of 3 needs 3 ready contacts.",
+        "intro": "You choose how many trusted contacts must confirm you are unreachable before your vault is released. It never exceeds the number of contacts you have: with a single contact, that contact confirms alone. Recovering your own account always needs just one contact's approval.",
         "options": {
           "two": {
             "label": "Easiest",
@@ -1651,7 +1650,7 @@
             "body": "Requires three ready contacts. Stronger against a colluding pair, but less forgiving."
           }
         },
-        "note": "Default is 2 trusted contacts, the easiest recovery path while still requiring at least two distinct people. If your contacts face a higher collusion risk (e.g. all from the same family or workplace), use threshold 3 only after 3 contacts are ready."
+        "note": "Default is 2 trusted contacts when you have them: the easiest path that still requires two distinct people. With only one contact, one confirmation is enough. If your contacts face a higher collusion risk (e.g. all from the same family or workplace), use threshold 3 only after 3 contacts are ready."
       },
       "postmortem": {
         "heading": "Post-mortem flow, step by step",
@@ -1708,7 +1707,7 @@
             "body": "the Shamir interpolation that rebuilds the master key happens entirely in the contact's browser. The master key never touches a server, by construction."
           }
         },
-        "callout": "Trade-off worth knowing: with threshold = 2, two colluding contacts can both confirm unreachability AND open the vault. The Life Check escalation + the 72h grace window are the only extra safeguards. If you anticipate that risk (e.g. all your contacts share a household), raise your threshold at onboarding."
+        "callout": "Trade-off worth knowing: a single contact can approve your account recovery, and with one contact (or a threshold of 1) a single person can confirm you're unreachable. The Life Check escalation and the 72h grace window, during which you can cancel, are the extra safeguards. If you anticipate that risk, add more contacts and raise your threshold."
       },
       "shardUse": {
         "heading": "How a contact uses their shard",
@@ -1850,8 +1849,8 @@
         "p3": "The implication you should understand clearly: there is no « reset password and recover » path. The two real recovery paths are the 24-word phrase (self-service) and Shamir social recovery via your trusted contacts (when the phrase is lost). That's the whole shape of the system."
       },
       "trustedContacts": {
-        "p1": "Trusted contacts are the people who can collectively unlock your continuity if you lose your phrase or become unreachable. They don't hold your phrase. They hold cryptographic shards of your master key, generated through Shamir secret sharing. A configurable threshold (2 trusted contacts by default) must agree before recovery proceeds, and reconstruction always happens on their devices, never on Keeplas servers.",
-        "p2": "Pick at least two. A third contact adds resilience if you choose the stricter threshold. Pick people in different households, ideally different cities, who would actually pick up the phone in a hard week.",
+        "p1": "Trusted contacts are the people who can collectively unlock your continuity if you lose your phrase or become unreachable. They don't hold your phrase. They hold cryptographic shards of your master key, generated through Shamir secret sharing. A single trusted contact can approve your recovery, a configurable number (2 by default, never more than you have) must confirm you're unreachable before a release, and reconstruction always happens on their devices, never on Keeplas servers.",
+        "p2": "One is enough to start; two is safer, so one can step in when the other can't. A third contact adds resilience if you choose the stricter threshold. Pick people in different households, ideally different cities, who would actually pick up the phone in a hard week.",
         "link": "Read the trusted contacts deep-dive"
       },
       "quantumSafe": {

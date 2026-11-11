@@ -331,7 +331,7 @@ export default defineSchema({
   // OWNER RECOVERY WITH TRUST CONTACTS (v2 workflow 7, F3)
   // ═══════════════════════════════════════════════
   //
-  // A random Recovery Secret RS is split 2-of-n between trust contacts; a
+  // A random Recovery Secret RS is shared 1-of-n between trust contacts; a
   // random gate key G is held under KMS; the social envelope is
   // AES-GCM(HKDF(RS ‖ G), MasterKey). One current generation per user; a new
   // setup replaces the previous rows.
@@ -341,6 +341,9 @@ export default defineSchema({
     userId: v.id("users"),
     generation: v.number(),
     envelope: v.string(),
+    // Approvals needed to rebuild RS (1). Absent on generations sealed before
+    // 1-of-n recovery, which are 2-of-n: LEGACY_RECOVERY_THRESHOLD.
+    threshold: v.optional(v.number()),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
 
@@ -366,6 +369,8 @@ export default defineSchema({
     generation: v.number(),
     // ML-KEM-768 public key of the recovering device.
     newDevicePublicKey: v.string(),
+    // approved_1: some approvals, below the generation's threshold (legacy
+    // 2-of-n only). approved_2: threshold met, waiting for the window.
     status: v.union(
       v.literal("pending"),
       v.literal("approved_1"),

@@ -27,10 +27,15 @@ export function contactsCanRecover(health: Health | undefined): boolean {
   );
 }
 
+/**
+ * Seal (or re-seal) as soon as one contact is ready: a single contact can
+ * recover the account. A legacy 2-approval seal still works but is re-sealed
+ * so one approval is enough.
+ */
 export function needsSocialRecoverySetup(
   health: Health | undefined,
   targets: Targets | undefined,
 ): boolean {
-  if (!health || !targets || targets.contacts.length < 2) return false;
-  return !contactsCanRecover(health);
+  if (!health || !targets || targets.contacts.length === 0) return false;
+  return !contactsCanRecover(health) || health.trustContacts.upgradeRequired;
 }

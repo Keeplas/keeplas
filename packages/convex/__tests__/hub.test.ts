@@ -12,20 +12,18 @@ function contactsReadyDone(
 }
 
 describe("hub contacts-ready floor", () => {
-  it("is not done with a single ready trust contact", async () => {
+  it("is not done without a ready trust contact", async () => {
     const t = makeT();
     const owner = await seedUser(t);
-    await seedTrustContact(t, owner, { n: 2 });
 
     const hub = await asUser(t, owner).query(api.hub.getHubData, {});
     expect(contactsReadyDone(hub)).toBe(false);
   });
 
-  it("is done with two ready trust contacts", async () => {
+  it("is done with a single ready trust contact", async () => {
     const t = makeT();
     const owner = await seedUser(t);
     await seedTrustContact(t, owner, { n: 2 });
-    await seedTrustContact(t, owner, { n: 3 });
 
     const hub = await asUser(t, owner).query(api.hub.getHubData, {});
     expect(contactsReadyDone(hub)).toBe(true);

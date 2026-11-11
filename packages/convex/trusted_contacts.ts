@@ -10,10 +10,12 @@ import {
 import { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import {
+  countVotingPeople,
   createNotification,
   optionalAuth,
   requireAuth,
   requireFullAuth,
+  requiredConfirmations,
   resolveItemRecipients,
 } from "./helpers";
 import { auditedMutation, type ActorIdentity } from "./audit";
@@ -39,11 +41,11 @@ import {
 import { trustContactsHealth } from "./recovery";
 
 /**
- * Minimum trust contacts for a working continuity setup. A single guardian is
- * useless: the unreachability quorum needs ≥2 votes. Exported so the Hub can
- * reflect the same floor in its continuity score.
+ * Minimum trust contacts for a working continuity setup. A single contact
+ * can handle everything (recovery, unreachability confirmation), so owners
+ * are never blocked; a second one is only recommended.
  */
-export const MIN_TRUST_CONTACTS_FOR_RECOVERY = 2;
+export const MIN_TRUST_CONTACTS_FOR_RECOVERY = 1;
 
 /**
  * Get all trusted contacts for the authenticated user, each with `hasWraps`
@@ -102,8 +104,7 @@ export async function acceptedContacts(ctx: QueryCtx, userId: Id<"users">) {
 
 /**
  * A contact is ready once it has accepted and published its public key.
- * The quorum needs ≥ MIN_TRUST_CONTACTS_FOR_RECOVERY ready contacts — a lone
- * guardian must not light the readiness signal green.
+ * The quorum needs ≥ MIN_TRUST_CONTACTS_FOR_RECOVERY ready contacts.
  */
 export function hasReadyTrustQuorum(
   contacts: Doc<"trusted_contacts">[],
@@ -130,8 +131,8 @@ export const getContactsReady = query({
 
 /**
  * How many distinct people must confirm the owner can't be reached before
- * their vault is released, and how many accepted people could. Below the
- * threshold nothing can ever be released, so the owner is warned.
+ * their vault is released, and how many accepted people could. Without
+ * anyone to confirm nothing can ever be released, so the owner is warned.
  */
 export const getReleaseQuorum = query({
   args: {},
@@ -141,15 +142,13 @@ export const getReleaseQuorum = query({
       .query("life_check_configs")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
-    // Distinct humans, like the quorum count in markUserUnreachable.
-    const people = new Set(
-      (await acceptedContacts(ctx, userId)).flatMap((c) =>
-        c.contactUserId ? [c.contactUserId] : [],
-      ),
-    );
     return {
-      required: config?.confirmationThreshold ?? DEFAULT_CONFIRMATION_THRESHOLD,
-      available: people.size,
+      required: await requiredConfirmations(
+        ctx,
+        userId,
+        config?.confirmationThreshold ?? DEFAULT_CONFIRMATION_THRESHOLD,
+      ),
+      available: await countVotingPeople(ctx, userId),
     };
   },
 });
@@ -1096,8 +1095,11 @@ export const getVaultsWhereIAmContact = query({
         ownerName: owner.name,
         ownerEmail: owner.email,
         ownerPhone: owner.phone,
-        confirmationThreshold:
+        confirmationThreshold: await requiredConfirmations(
+          ctx,
+          contact.userId,
           ownerConfig?.confirmationThreshold ?? DEFAULT_CONFIRMATION_THRESHOLD,
+        ),
         ownerCycleStatus: activeCycle?.status ?? null,
         released: !!releaseReq,
         releasedItemCount,

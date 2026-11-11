@@ -1034,12 +1034,11 @@
     },
     "recoveryNetwork": {
       "title": "Réseau de récupération",
-      "help": "Indique si votre protocole de continuité peut fonctionner. Le grand nombre correspond au nombre de gardiens ayant accepté, sur les {threshold} nécessaires pour confirmer que vous êtes injoignable (votre quorum). En dessous du quorum, rien ne peut être transmis. Au quorum, cela fonctionne mais un seul gardien manquant le compromet. Au-dessus du quorum, vous disposez d'une marge.",
+      "help": "Indique si votre protocole de continuité peut fonctionner. Le grand nombre correspond au nombre de gardiens ayant accepté, sur les {threshold} nécessaires pour le faire fonctionner. Sans aucun, rien ne peut être transmis. Un seul gardien peut tout gérer ; chaque gardien supplémentaire est une marge si l'un d'eux est injoignable.",
       "quorum": "quorum",
       "stepLabel": "Confirmations nécessaires pour lancer la transmission",
       "state": {
         "unprotected": "Non protégé : invitez votre premier gardien",
-        "atRisk": "À risque : {count} de plus pour atteindre le quorum",
         "quorumMet": "Quorum atteint : ajoutez-en pour plus de redondance",
         "resilientOne": "Résilient : {count} gardien de marge",
         "resilientMany": "Résilient : {count} gardiens de marge"
@@ -1047,13 +1046,13 @@
       "accepted": "Acceptés",
       "pendingInvites": "Invitations en attente"
     },
-    "oneGuardianWarning": {
-      "title": "Un seul gardien ne suffit pas",
-      "body": "Seul {name} a accepté pour l'instant. Invitez-en au moins un autre. Au moins 2 contacts de confiance doivent confirmer que vous êtes injoignable avant l'ouverture de la fenêtre de grâce : un gardien seul ne peut jamais lancer la transmission."
+    "secondContactTip": {
+      "title": "Un contact suffit, deux c'est plus sûr",
+      "body": "{name} peut tout gérer seul : vous aider à revenir et confirmer que vous êtes injoignable. Invitez un deuxième contact au cas où {name} serait indisponible."
     },
     "emptyState": {
       "title": "Aucun contact de confiance",
-      "description": "Ajoutez au moins 2 personnes qui peuvent vous aider à revenir ou recevoir votre coffre.",
+      "description": "Ajoutez une personne qui peut vous aider à revenir ou recevoir votre coffre. Une seule suffit, deux c'est plus sûr.",
       "action": "Ajouter un contact"
     },
     "trustContacts": {
@@ -1303,11 +1302,11 @@
         },
         "trustedContacts": {
           "title": "Contacts de confiance",
-          "description": "Au moins deux contacts de confiance détiennent des parts chiffrées de votre clé maîtresse. Ils confirment votre indisponibilité et reconstruisent le coffre si nécessaire. Les bénéficiaires reçoivent séparément le contenu que vous leur avez attribué."
+          "description": "Vos contacts de confiance (un seul suffit, deux sont recommandés) détiennent des parts chiffrées de votre clé maîtresse. Ils confirment votre indisponibilité et reconstruisent le coffre si nécessaire. Les bénéficiaires reçoivent séparément le contenu que vous leur avez attribué."
         },
         "recovery": {
           "title": "Récupération & Héritage",
-          "description": "Deux voies : la phrase de 24 mots pour une récupération en autonomie, et la récupération sociale Shamir via les contacts de confiance lorsque la phrase est perdue ou que vous devenez injoignable. Seuil par défaut : 2 contacts de confiance."
+          "description": "Deux voies : la phrase de 24 mots pour une récupération en autonomie, et la récupération sociale Shamir via les contacts de confiance lorsque la phrase est perdue ou que vous devenez injoignable. Un seul contact de confiance suffit."
         },
         "insights": {
           "title": "Réfléchir & Préparer",
@@ -1324,7 +1323,7 @@
         },
         "shamir": {
           "title": "Partage de secret Shamir",
-          "body": "Votre clé maîtresse est divisée en 4 parts cryptographiques : une part appareil et jusqu'à trois parts de contacts de confiance. La récupération fonctionne dès 2 contacts de confiance avec le seuil par défaut. La reconstruction a toujours lieu sur les appareils de vos contacts, jamais sur les serveurs Keeplas."
+          "body": "Votre clé maîtresse est divisée en 4 parts cryptographiques : une part appareil et jusqu'à trois parts de contacts de confiance. La récupération fonctionne dès un seul contact de confiance. La reconstruction a toujours lieu sur les appareils de vos contacts, jamais sur les serveurs Keeplas."
         },
         "auditLog": {
           "title": "Journal d'audit chaîné par hachage",
@@ -1503,7 +1502,7 @@
           "title": "Contact de confiance",
           "body": "Vous aide à récupérer l'accès si vous perdez votre téléphone, confirme que vous êtes injoignable, et reçoit les éléments que vous lui avez attribués une fois votre coffre ouvert. Ne détient jamais de clé de votre coffre.",
           "bullets": {
-            "min": "Minimum 2 contacts de confiance pour la récupération",
+            "min": "1 contact de confiance suffit pour la récupération (2 recommandés)",
             "noCap": "Aucune limite : invitez-en autant que nécessaire",
             "receives": "Reçoit uniquement les éléments que vous lui attribuez, après l'ouverture du coffre",
             "moments": "Rôle actif à trois moments : invitation, escalade, récupération"
@@ -1531,7 +1530,7 @@
       },
       "threshold": {
         "heading": "Combien de contacts doivent être d'accord ?",
-        "body": "Vous choisissez le seuil de récupération lors de l'intégration. Le seuil 2 est la valeur par défaut et fonctionne dès 2 contacts de confiance. Le seuil 3 est plus strict et exige 3 contacts prêts.",
+        "body": "N'importe lequel de vos contacts de confiance peut approuver seul la récupération de votre compte. Pour le Life Check, vous choisissez combien de contacts doivent confirmer que vous êtes injoignable : 2 par défaut, jamais plus que vous n'en avez, donc un contact unique confirme seul.",
         "link": "Modèle de récupération"
       },
       "manageLink": "Gérer vos contacts",
@@ -1640,7 +1639,7 @@
       },
       "threshold": {
         "heading": "Le seuil de récupération",
-        "intro": "Lors de l'intégration, vous divisez votre clé maîtresse en 4 parts Shamir : une part appareil et jusqu'à trois parts de contacts de confiance. Vous choisissez le seuil : le nombre minimum qui doit collaborer pour la reconstruire. Avec 2 contacts de confiance, gardez le seuil à 2 ; un seuil de 3 nécessite 3 contacts prêts.",
+        "intro": "Vous choisissez combien de contacts de confiance doivent confirmer que vous êtes injoignable avant la transmission de votre coffre. Ce nombre ne dépasse jamais celui de vos contacts : avec un seul contact, il confirme seul. La récupération de votre propre compte ne demande toujours que l'approbation d'un seul contact.",
         "options": {
           "two": {
             "label": "Le plus simple",
@@ -1651,7 +1650,7 @@
             "body": "Nécessite trois contacts prêts. Plus solide contre une paire qui colluderait, mais moins indulgent."
           }
         },
-        "note": "La valeur par défaut est 2 contacts de confiance : c'est la voie de récupération la plus simple tout en exigeant au moins deux personnes distinctes. Si vos contacts présentent un risque de collusion plus élevé (par ex. tous de la même famille ou du même lieu de travail), n'utilisez le seuil 3 qu'une fois 3 contacts prêts."
+        "note": "La valeur par défaut est 2 contacts de confiance lorsque vous en avez au moins deux : la voie la plus simple qui exige tout de même deux personnes distinctes. Avec un seul contact, une confirmation suffit. Si vos contacts présentent un risque de collusion plus élevé (par ex. tous de la même famille ou du même lieu de travail), n'utilisez le seuil 3 qu'une fois 3 contacts prêts."
       },
       "postmortem": {
         "heading": "Déroulé post-mortem, étape par étape",
@@ -1708,7 +1707,7 @@
             "body": "l'interpolation Shamir qui reconstruit la clé maîtresse a lieu entièrement dans le navigateur du contact. La clé maîtresse ne touche jamais un serveur, par construction."
           }
         },
-        "callout": "Compromis à connaître : avec un seuil = 2, deux contacts qui colluderaient peuvent à la fois confirmer l'injoignabilité ET ouvrir le coffre. L'escalade du Life Check + le délai de grâce de 72 h sont les seules protections supplémentaires. Si vous anticipez ce risque (par ex. tous vos contacts vivent sous le même toit), relevez votre seuil lors de l'intégration."
+        "callout": "Compromis à connaître : un seul contact peut approuver la récupération de votre compte, et avec un seul contact (ou un seuil de 1) une seule personne peut confirmer que vous êtes injoignable. L'escalade du Life Check et le délai de grâce de 72 h, pendant lequel vous pouvez annuler, sont les protections supplémentaires. Si vous anticipez ce risque, ajoutez des contacts et relevez votre seuil."
       },
       "shardUse": {
         "heading": "Comment un contact utilise sa part",
@@ -1850,8 +1849,8 @@
         "p3": "L'implication à bien comprendre : il n'existe aucune voie de « réinitialiser le mot de passe et récupérer ». Les deux vraies voies de récupération sont la phrase de 24 mots (en autonomie) et la récupération sociale Shamir via vos contacts de confiance (quand la phrase est perdue). C'est toute la forme du système."
       },
       "trustedContacts": {
-        "p1": "Les contacts de confiance sont les personnes qui peuvent collectivement débloquer votre continuité si vous perdez votre phrase ou devenez injoignable. Ils ne détiennent pas votre phrase : ils détiennent des parts cryptographiques de votre clé maîtresse, générées par le partage de secret Shamir. Un seuil configurable (2 contacts de confiance par défaut) doit être d'accord avant que la récupération ne se poursuive, et la reconstruction a toujours lieu sur leurs appareils, jamais sur les serveurs Keeplas.",
-        "p2": "Choisissez-en au moins deux. Un troisième contact ajoute de la résilience si vous optez pour le seuil plus strict. Choisissez des personnes de foyers différents, idéalement de villes différentes, qui décrocheraient vraiment le téléphone lors d'une semaine difficile.",
+        "p1": "Les contacts de confiance sont les personnes qui peuvent collectivement débloquer votre continuité si vous perdez votre phrase ou devenez injoignable. Ils ne détiennent pas votre phrase : ils détiennent des parts cryptographiques de votre clé maîtresse, générées par le partage de secret Shamir. Un seul contact de confiance peut approuver votre récupération, un nombre configurable (2 par défaut, jamais plus que vous n'en avez) doit confirmer que vous êtes injoignable avant toute transmission, et la reconstruction a toujours lieu sur leurs appareils, jamais sur les serveurs Keeplas.",
+        "p2": "Un seul suffit pour commencer ; deux c'est plus sûr, pour que l'un prenne le relais quand l'autre ne peut pas. Un troisième contact ajoute de la résilience si vous optez pour le seuil plus strict. Choisissez des personnes de foyers différents, idéalement de villes différentes, qui décrocheraient vraiment le téléphone lors d'une semaine difficile.",
         "link": "Lire l'analyse approfondie des contacts de confiance"
       },
       "quantumSafe": {

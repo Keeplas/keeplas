@@ -138,6 +138,9 @@ export const setup = action({
       }),
     ),
     gateKey: v.string(),
+    // Approvals the shares need. Absent from apps that predate 1-of-n
+    // recovery: they seal 2-of-n.
+    threshold: v.optional(v.number()),
     completesRequestId: v.optional(v.id("recovery_requests")),
     _audit: auditContextValidator,
   },
@@ -165,9 +168,10 @@ const RELEASE_RETRY_BASE_MS = 60 * 1000;
 const RELEASE_MAX_RETRIES = 6;
 
 /**
- * Scheduled at windowEndsAt, and right after the 2nd approval if the window
- * is already over. Releases G sealed to the new device key, only when 2
- * approvals exist, the window elapsed and nothing was cancelled.
+ * Scheduled at windowEndsAt, and right after the approval that meets the
+ * threshold if the window is already over. Releases G sealed to the new
+ * device key, only when enough approvals exist, the window elapsed and
+ * nothing was cancelled.
  *
  * Nothing else re-triggers a release, so a failure (KMS outage or rate
  * limit) is retried with backoff instead of stranding the recovery in

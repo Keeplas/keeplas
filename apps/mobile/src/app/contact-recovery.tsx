@@ -39,7 +39,7 @@ import { radius } from "@/theme";
 // The code exchange runs while contacts can still answer.
 const EXCHANGING = ["pending", "approved_1"];
 
-/** M02-1 / M02-2 / M02-4: start, monitor and finish 2-of-3 recovery. */
+/** M02-1 / M02-2 / M02-4: start, monitor and finish contact recovery. */
 export default function ContactRecovery() {
   const router = useRouter();
   const { t } = useI18n();
@@ -153,6 +153,7 @@ export default function ContactRecovery() {
         wrappedGateKey: releasePackage.wrappedGateKey,
         socialEnvelope: releasePackage.socialEnvelope,
         approvals: releasePackage.approvals,
+        threshold: releasePackage.threshold,
       }).finally(() => key.secretKey.fill(0));
       // The old words may be what was lost: new ones (never shown) give
       // this phone a RootKey, so the cloud backup is sealed again.
@@ -209,6 +210,9 @@ export default function ContactRecovery() {
   const approvals =
     request?.contacts.filter((contact) => contact.decision === "approve")
       .length ?? 0;
+  // 1 today; 2 for a request on a legacy 2-of-n seal.
+  const required = request?.approvalsRequired ?? 1;
+  const received = Math.min(approvals, required);
   const rejected = request?.contacts.find(
     (contact) => contact.decision === "reject",
   );
@@ -285,14 +289,17 @@ export default function ContactRecovery() {
           <Card>
             <Text variant="label">
               {t("socialRecovery.approvals", {
-                count: Math.min(approvals, 2),
+                count: received,
+                required,
               })}
             </Text>
-            <ProgressBar value={Math.min(approvals, 2) / 2} />
+            <ProgressBar value={received / required} />
             <Text variant="body-sm" color="text.muted">
-              {approvals >= 2
+              {received >= required
                 ? t("socialRecovery.approvalsDone")
-                : t("socialRecovery.approvalsLeft", { count: 2 - approvals })}
+                : t("socialRecovery.approvalsLeft", {
+                    count: required - received,
+                  })}
             </Text>
           </Card>
           <Card>
