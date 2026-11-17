@@ -179,7 +179,7 @@ The contacts have vaults of their own, shared with nobody (they have no trusted 
   - cloud backup turned off on all three, so reviewers' phones don't turn it on and each new reviewer goes straight to the recovery kit;
   - number and email locked: the server refuses a number change or an added email on every `REVIEW_PHONES` account, sign-up numbers included.
 - **Contacts:**
-  - invited by phone only, so no message reached anyone;
+  - invited by phone only, and no WhatsApp goes to a `REVIEW_PHONES` number, so no message reached anyone;
   - they accepted, and their keys are pinned on the owner's side.
 - **Never create another kit on a demo account.** A new kit replaces that account's words, and the ones in the review notes stop opening it.
 
@@ -233,7 +233,7 @@ SIGN IN TO THE DEMO ACCOUNT
    <24 WORDS>
 5. The vault opens on Home. If the system asks to allow notifications, either answer works. If a "New device detected" screen appears, it is another reviewer's phone: tap "It was me".
 
-Other reviewers use this demo account too. Please leave it as it is: don't buy Lifetime, delete it, create a new recovery kit or turn cloud backup on. Try those on the account you create below. The review numbers can't change their number or email, including the account you create, and invitations sent from them are not delivered by WhatsApp or email.
+Other reviewers use this demo account too. Please leave it as it is: don't buy Lifetime, delete it, create a new recovery kit or turn cloud backup on. Try those on the account you create below. The demo numbers can't change their number or email, including the account you create. Invitations work as for any account: invite your own email or phone number to receive one.
 
 TRY SIGN-UP
 Sign out first (Settings > Sign out). Tap "Get started" and use United Kingdom <SIGN-UP NUMBER> with the same code <REVIEW_CODE>. Real users receive their code on WhatsApp.

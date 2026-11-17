@@ -1595,7 +1595,7 @@
       "imageTooLarge": "This image is too large. Choose one under 5 MB.",
       "tooYoung": "You must be at least 18 to use Keeplas.",
       "invalidBirthday": "This date of birth isn't valid.",
-      "reviewAccount": "This account is for app review: its number and email can't be changed."
+      "demoAccount": "This is a shared demo account: its number and email can't be changed."
     }
   },
   "setupPin": {
