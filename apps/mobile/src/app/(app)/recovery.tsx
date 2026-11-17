@@ -5,17 +5,9 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { Button } from "@/components/button";
-import { ProgressBar } from "@/components/controls";
-import { Icon } from "@/components/icon";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
-import {
-  Callout,
-  Card,
-  InfoRow,
-  ListRow,
-  StatusChip,
-} from "@/components/surfaces";
+import { Callout, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { RecoveryRequestCard } from "@/features/recovery-request";
 import { useRecoveryWays, WaysBackCard } from "@/features/recovery-ways";
@@ -73,31 +65,12 @@ export default function RecoveryCenter() {
             : "recoveryCenter.contactsBody",
         )}
       </Text>
-      {targets && targets.contacts.length < 2 ? (
+      {targets && targets.contacts.length === 0 ? (
         <>
-          <Card>
-            <View style={styles.between}>
-              <Text variant="label">{t("recoveryCenter.trustContacts")}</Text>
-              <Text variant="label" color="status.pending">
-                {t("recoveryCenter.ofTwo", { n: targets.contacts.length })}
-              </Text>
-            </View>
-            <ProgressBar value={targets.contacts.length / 2} />
-            {targets.contacts.map((contact) => (
-              <InfoRow
-                key={contact.contactId}
-                leading={<Icon name="user-circle" size={22} />}
-                title={contact.name}
-                description={t("recoveryCenter.active")}
-              />
-            ))}
-          </Card>
           <Callout
             tone="warning"
             icon="alert-triangle"
-            text={t("recoveryCenter.needTwo", {
-              count: targets.contacts.length,
-            })}
+            text={t("recoveryCenter.needOne")}
           />
           <Button
             label={t("recoveryCenter.addContact")}
@@ -141,5 +114,4 @@ export default function RecoveryCenter() {
 
 const styles = StyleSheet.create({
   chip: { alignItems: "flex-start" },
-  between: { flexDirection: "row", justifyContent: "space-between" },
 });

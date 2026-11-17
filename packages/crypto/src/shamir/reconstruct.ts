@@ -10,8 +10,8 @@ import { gfInterpolate } from "./gf256";
  * Uses Lagrange interpolation over GF(256).
  */
 export async function reconstruct(shares: Uint8Array[]): Promise<Uint8Array> {
-  if (shares.length < 2)
-    throw new Error("Need at least 2 shares to reconstruct");
+  if (shares.length < 1)
+    throw new Error("Need at least 1 share to reconstruct");
 
   // All shares must have the same length
   const shareLen = shares[0].length;

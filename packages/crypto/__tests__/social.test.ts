@@ -16,8 +16,9 @@ import {
   recoveryCommitment,
 } from "../src/social";
 
-// Phase 5 (F3): RS split 2-of-n between contacts, G held by Keeplas, social
-// envelope under HKDF(RS ‖ G). Neither side opens the MasterKey alone.
+// Phase 5 (F3): RS shared 1-of-n between contacts (any one contact is
+// enough), G held by Keeplas, social envelope under HKDF(RS ‖ G). Neither
+// side opens the MasterKey alone.
 
 const OWNER = "owner1";
 const REQUEST = "request1";
@@ -66,8 +67,12 @@ async function scenario(contactCount = 3) {
     devicePublicKey,
     gateKeyAad(REQUEST),
   );
-  const open = (approvals: Awaited<ReturnType<typeof approve>>[]) =>
+  const open = (
+    approvals: Awaited<ReturnType<typeof approve>>[],
+    threshold = setup.threshold,
+  ) =>
     openSocialRecovery({
+      threshold,
       ownerUserId: OWNER,
       generation: 1,
       requestId: REQUEST,
@@ -81,28 +86,31 @@ async function scenario(contactCount = 3) {
 }
 
 describe("social recovery", () => {
-  it("restores the MasterKey with any 2 of 3 contacts plus G", async () => {
-    const { masterKey, contacts, approve, open } = await scenario();
+  it("restores the MasterKey with any single contact plus G", async () => {
+    const { masterKey, contacts, setup, approve, open } = await scenario();
+    expect(setup.threshold).toBe(1);
+    for (const c of contacts) {
+      expect(await open([await approve(c)])).toEqual(masterKey);
+    }
+  });
+
+  it("works with exactly 1 contact", async () => {
+    const { masterKey, contacts, approve, open } = await scenario(1);
+    expect(await open([await approve(contacts[0])])).toEqual(masterKey);
+  });
+
+  it("works when several contacts approved", async () => {
+    const { masterKey, contacts, approve, open } = await scenario(5);
     expect(
-      await open([await approve(contacts[0]), await approve(contacts[2])]),
-    ).toEqual(masterKey);
-    expect(
-      await open([await approve(contacts[1]), await approve(contacts[0])]),
+      await open([await approve(contacts[4]), await approve(contacts[1])]),
     ).toEqual(masterKey);
   });
 
-  it("works with exactly 2 contacts", async () => {
-    const { masterKey, contacts, approve, open } = await scenario(2);
-    expect(
-      await open([await approve(contacts[0]), await approve(contacts[1])]),
-    ).toEqual(masterKey);
-  });
-
-  it("refuses one approval, or the same contact twice", async () => {
+  it("refuses no approval, or one under a legacy 2-approval generation", async () => {
     const { contacts, approve, open } = await scenario();
+    await expect(open([])).rejects.toThrow("Not enough valid");
     const a = await approve(contacts[0]);
-    await expect(open([a])).rejects.toThrow("Not enough valid");
-    await expect(open([a, a])).rejects.toThrow("Not enough valid");
+    await expect(open([a, a], 2)).rejects.toThrow("Not enough valid");
   });
 
   it("ignores an approval with a forged signature", async () => {
@@ -111,27 +119,18 @@ describe("social recovery", () => {
       ...(await approve(contacts[1])),
       contactIdentityPublicKey: generateIdentityKeyPair().publicKey,
     };
-    await expect(open([await approve(contacts[0]), forged])).rejects.toThrow(
-      "Not enough valid",
-    );
+    await expect(open([forged])).rejects.toThrow("Not enough valid");
   });
 
-  it("works with any number of contacts, any 2 of them", async () => {
-    const { masterKey, contacts, approve, open } = await scenario(5);
-    expect(
-      await open([await approve(contacts[4]), await approve(contacts[1])]),
-    ).toEqual(masterKey);
-  });
-
-  it("refuses fewer than 2 contacts", async () => {
+  it("refuses a setup without any contact", async () => {
     await expect(
       createSocialRecovery({
         masterKey: new Uint8Array(32),
         userId: OWNER,
         generation: 1,
-        contacts: [contact("a")],
+        contacts: [],
       }),
-    ).rejects.toThrow("at least 2");
+    ).rejects.toThrow("at least 1");
   });
 
   it("never puts RS, G or the MasterKey in a contact share", async () => {

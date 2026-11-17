@@ -187,6 +187,38 @@ export async function countQuorumVotes(
 }
 
 /**
+ * Distinct people who can confirm an owner is unreachable: accepted
+ * contacts backed by an account, one per human (like countQuorumVotes).
+ */
+export async function countVotingPeople(
+  ctx: QueryCtx,
+  ownerId: Id<"users">,
+): Promise<number> {
+  const contacts = await ctx.db
+    .query("trusted_contacts")
+    .withIndex("by_user", (q) => q.eq("userId", ownerId))
+    .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
+    .collect();
+  return new Set(contacts.flatMap((c) => c.contactUserId ?? [])).size;
+}
+
+/**
+ * Votes needed to confirm an owner is unreachable: their threshold, capped
+ * at the people who can vote, so a single trusted contact is never blocked
+ * waiting for a second one. Never below 1.
+ */
+export async function requiredConfirmations(
+  ctx: QueryCtx,
+  ownerId: Id<"users">,
+  threshold: number,
+): Promise<number> {
+  return Math.max(
+    1,
+    Math.min(threshold, await countVotingPeople(ctx, ownerId)),
+  );
+}
+
+/**
  * Get the user's vault by userId.
  */
 /** The account registered with this E.164 phone number, if any. */

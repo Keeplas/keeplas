@@ -90,12 +90,36 @@ async function scheduled(t: TestConvex, needle: string) {
   return rows.filter((r) => r.name.includes(needle));
 }
 
+describe("the threshold is capped at the people who can vote", () => {
+  it("lets a single trusted contact confirm alone under threshold 2", async () => {
+    const t = makeT();
+    const { owner } = await seedStage2(t);
+    const only = await seedVoter(t, owner, 1);
+
+    const result = await vote(t, only);
+
+    expect(result.quorumReached).toBe(true);
+    expect(await scheduled(t, "releaseAfterConfirmation")).toHaveLength(1);
+  });
+
+  it("still needs 2 votes when 2 people can vote", async () => {
+    const t = makeT();
+    const { owner } = await seedStage2(t);
+    const a = await seedVoter(t, owner, 1);
+    await seedVoter(t, owner, 2);
+
+    expect((await vote(t, a)).quorumReached).toBe(false);
+  });
+});
+
 describe("a revoked contact's vote no longer counts (finding 8)", () => {
   it("does not reach quorum with a vote from a contact revoked since", async () => {
     const t = makeT();
     const { owner } = await seedStage2(t);
     const a = await seedVoter(t, owner, 1);
     const b = await seedVoter(t, owner, 2);
+    // Two people can still vote after the revoke: the threshold stays at 2.
+    await seedVoter(t, owner, 3);
 
     await vote(t, a);
     await revoke(t, owner, a.contactId);

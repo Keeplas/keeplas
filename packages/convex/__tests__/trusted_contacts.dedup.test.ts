@@ -52,6 +52,10 @@ describe("C1 — quorum dedups by distinct human", () => {
     const rowB = await seedTrustContact(t, owner, { n: 3 });
     await t.run((ctx) => ctx.db.patch(rowA, { contactUserId: personUser }));
     await t.run((ctx) => ctx.db.patch(rowB, { contactUserId: personUser }));
+    // A second, distinct person keeps the threshold at 2.
+    const other = await seedTrustContact(t, owner, { n: 4 });
+    const otherUser = await seedUser(t);
+    await t.run((ctx) => ctx.db.patch(other, { contactUserId: otherUser }));
     await seedAwaitingConfirmation(t, owner);
 
     const r1 = await asUser(t, personUser).mutation(

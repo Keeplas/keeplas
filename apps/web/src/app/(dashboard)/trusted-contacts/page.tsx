@@ -38,7 +38,6 @@ const GROUP_STEPS = ["step1", "step2", "step3"] as const;
 
 const NETWORK_DOT = {
   unprotected: "bg-action-danger",
-  atRisk: "bg-status-pending",
   quorumMet: "bg-status-active",
   resilient: "bg-status-active",
 } as const;
@@ -163,14 +162,12 @@ export default function TrustedContactsPage() {
   const threshold = MIN_TRUST_CONTACTS_FOR_RECOVERY;
   const acceptedCount = acceptedTrustContacts.length;
   const quorumPct = (Math.min(acceptedCount, threshold) / threshold) * 100;
-  const networkState: "unprotected" | "atRisk" | "quorumMet" | "resilient" =
-    acceptedCount === 0
+  const networkState: "unprotected" | "quorumMet" | "resilient" =
+    acceptedCount < threshold
       ? "unprotected"
-      : acceptedCount < threshold
-        ? "atRisk"
-        : acceptedCount === threshold
-          ? "quorumMet"
-          : "resilient";
+      : acceptedCount === threshold
+        ? "quorumMet"
+        : "resilient";
 
   return (
     <ShellPage
@@ -218,19 +215,19 @@ export default function TrustedContactsPage() {
         >
           <div className={COLUMNS}>
             <div className="flex flex-col gap-[20px]">
-              {acceptedCount > 0 &&
-                acceptedCount < MIN_TRUST_CONTACTS_FOR_RECOVERY && (
-                  <InfoCallout icon={ICON_PATHS.alertTriangle} tone="warning">
-                    <p className="text-label text-text-primary">
-                      {t("oneGuardianWarning.title")}
-                    </p>
-                    <p>
-                      {t("oneGuardianWarning.body", {
-                        name: acceptedTrustContacts[0].name,
-                      })}
-                    </p>
-                  </InfoCallout>
-                )}
+              {/* One contact is enough; a second is recommended, never required. */}
+              {acceptedCount === 1 && (
+                <InfoCallout icon={ICON_PATHS.people}>
+                  <p className="text-label text-text-primary">
+                    {t("secondContactTip.title")}
+                  </p>
+                  <p>
+                    {t("secondContactTip.body", {
+                      name: acceptedTrustContacts[0].name,
+                    })}
+                  </p>
+                </InfoCallout>
+              )}
 
               {trustContacts.length === 0 ? (
                 <Panel className="flex justify-center">
@@ -299,10 +296,6 @@ export default function TrustedContactsPage() {
                   />
                   {networkState === "unprotected" &&
                     t("recoveryNetwork.state.unprotected")}
-                  {networkState === "atRisk" &&
-                    t("recoveryNetwork.state.atRisk", {
-                      count: threshold - acceptedCount,
-                    })}
                   {networkState === "quorumMet" &&
                     t("recoveryNetwork.state.quorumMet")}
                   {networkState === "resilient" &&

@@ -74,7 +74,7 @@ export const getHubData = query({
     // Action conditions. Guarantees the invariant:
     // priorityActions.every((a) => a.done) ⇔ continuityScore === 100.
     // Note: the contacts-ready axis requires ≥ MIN_TRUST_CONTACTS_FOR_RECOVERY
-    // ready guardians, so a lone contact never completes this axis.
+    // ready contacts (1: a single contact can handle everything).
     const axes = [
       items.length > 0,
       contacts.length > 0,
@@ -112,7 +112,7 @@ export const getHubData = query({
       },
       {
         key: "contacts_ready",
-        label: "Get two trusted contacts ready",
+        label: "Get a trusted contact ready",
         href: "/trusted-contacts",
         done: contactsReady,
       },

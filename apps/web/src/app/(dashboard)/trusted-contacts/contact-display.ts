@@ -25,12 +25,12 @@ export const STATUS_CONFIG: Record<string, ChipStyle & { label: string }> = {
 };
 
 /**
- * Minimum trust contacts for a working continuity setup: the unreachability
- * quorum needs two votes. Mirrors MIN_TRUST_CONTACTS_FOR_RECOVERY in
- * packages/convex/trusted_contacts.ts (Convex constants can't be imported into
- * the web build).
+ * Minimum trust contacts for a working continuity setup: a single contact can
+ * handle everything (a second one is only recommended). Mirrors
+ * MIN_TRUST_CONTACTS_FOR_RECOVERY in packages/convex/trusted_contacts.ts
+ * (Convex constants can't be imported into the web build).
  */
-export const MIN_TRUST_CONTACTS_FOR_RECOVERY = 2;
+export const MIN_TRUST_CONTACTS_FOR_RECOVERY = 1;
 
 export const STALE_VERIFICATION_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000;
 

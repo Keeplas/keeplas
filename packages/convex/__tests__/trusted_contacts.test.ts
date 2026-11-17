@@ -398,6 +398,19 @@ describe("getVaultsWhereIAmContact", () => {
     return { ownerId, contactUser };
   }
 
+  /** More accepted people who can confirm (n from 10 up). */
+  async function addVoters(
+    t: ReturnType<typeof makeT>,
+    ownerId: Id<"users">,
+    count: number,
+  ) {
+    for (let i = 0; i < count; i++) {
+      const voter = await seedUser(t);
+      const id = await seedTrustContact(t, ownerId, { n: 10 + i });
+      await t.run((ctx) => ctx.db.patch(id, { contactUserId: voter }));
+    }
+  }
+
   it("identifies a phone-only owner by their phone, not 'Keeplas user'", async () => {
     const t = makeT();
     const { contactUser } = await seedLink(t, { phoneNumber: "+33612345678" });
@@ -430,6 +443,7 @@ describe("getVaultsWhereIAmContact", () => {
         updatedAt: now,
       }),
     );
+    await addVoters(t, ownerId, 2);
 
     const [vault] = await asUser(t, contactUser).query(
       api.trusted_contacts.getVaultsWhereIAmContact,
@@ -479,7 +493,8 @@ describe("getVaultsWhereIAmContact", () => {
 
   it("defaults the confirmation threshold to 2", async () => {
     const t = makeT();
-    const { contactUser } = await seedLink(t, { name: "Ada" });
+    const { ownerId, contactUser } = await seedLink(t, { name: "Ada" });
+    await addVoters(t, ownerId, 2);
 
     const [vault] = await asUser(t, contactUser).query(
       api.trusted_contacts.getVaultsWhereIAmContact,
@@ -487,6 +502,17 @@ describe("getVaultsWhereIAmContact", () => {
     );
     expect(vault?.confirmationThreshold).toBe(2);
     expect(vault?.ownerPhone).toBeNull();
+  });
+
+  it("caps the threshold when I'm the owner's only contact", async () => {
+    const t = makeT();
+    const { contactUser } = await seedLink(t, { name: "Ada" });
+
+    const [vault] = await asUser(t, contactUser).query(
+      api.trusted_contacts.getVaultsWhereIAmContact,
+      {},
+    );
+    expect(vault?.confirmationThreshold).toBe(1);
   });
 });
 
@@ -536,7 +562,7 @@ describe("getVaultsWhereIAmContact unreachability vote", () => {
 });
 
 describe("getReleaseQuorum", () => {
-  it("counts distinct accepted people against the owner's threshold", async () => {
+  it("caps the owner's threshold at the distinct accepted people", async () => {
     const t = makeT();
     const owner = await seedUser(t);
     const person = await seedUser(t);
@@ -555,6 +581,15 @@ describe("getReleaseQuorum", () => {
       api.trusted_contacts.getReleaseQuorum,
       {},
     );
-    expect(quorum).toEqual({ required: 2, available: 1 });
+    // Threshold 2 by default, but one person can confirm alone.
+    expect(quorum).toEqual({ required: 1, available: 1 });
+  });
+
+  it("warns when nobody can confirm yet", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    expect(
+      await asUser(t, owner).query(api.trusted_contacts.getReleaseQuorum, {}),
+    ).toEqual({ required: 1, available: 0 });
   });
 });
