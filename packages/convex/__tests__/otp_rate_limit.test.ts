@@ -5,6 +5,7 @@ import type { Id } from "../_generated/dataModel";
 import {
   asUser,
   asUserSession,
+  convexNow,
   makeT,
   seedSession,
   signedAudit,
@@ -112,7 +113,7 @@ describe.each(flows)("$name OTP rate limit", ({ table, request }) => {
     const send = await request(t);
     await send();
     await send();
-    const now = Date.now();
+    const now = await convexNow(t);
     const codes = await t.run((ctx) => ctx.db.query(table).collect());
     expect(codes).toHaveLength(2);
     const newest = codes.reduce((a, b) =>

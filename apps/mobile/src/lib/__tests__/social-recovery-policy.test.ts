@@ -4,12 +4,17 @@ import {
   targetKeyMaterial,
 } from "../social-recovery-policy";
 
-const health = (configured: boolean, renewalRequired = false) => ({
+const health = (
+  configured: boolean,
+  renewalRequired = false,
+  upgradeRequired = false,
+) => ({
   trustContacts: {
     configured,
     renewalRequired,
-    contactCount: configured ? 2 : 0,
-    eligibleCount: 2,
+    upgradeRequired,
+    contactCount: configured ? 1 : 0,
+    eligibleCount: 1,
   },
   recoveryKit: false,
   activeDevices: 1,
@@ -38,7 +43,7 @@ describe("contactsCanRecover", () => {
     expect(contactsCanRecover(null)).toBe(false);
   });
 
-  it("is false when 2 contacts accepted but nothing was sealed", () => {
+  it("is false when a contact accepted but nothing was sealed", () => {
     expect(contactsCanRecover(health(false))).toBe(false);
   });
 
@@ -49,6 +54,10 @@ describe("contactsCanRecover", () => {
   it("is true once sealed and current", () => {
     expect(contactsCanRecover(health(true))).toBe(true);
   });
+
+  it("is true for a legacy 2-approval seal still awaiting its upgrade", () => {
+    expect(contactsCanRecover(health(true, false, true))).toBe(true);
+  });
 });
 
 describe("needsSocialRecoverySetup", () => {
@@ -57,12 +66,18 @@ describe("needsSocialRecoverySetup", () => {
     expect(needsSocialRecoverySetup(health(false), undefined)).toBe(false);
   });
 
-  it("never seals with fewer than 2 ready contacts", () => {
-    expect(needsSocialRecoverySetup(health(false), targets(1))).toBe(false);
+  it("never seals without a ready contact", () => {
+    expect(needsSocialRecoverySetup(health(false), targets(0))).toBe(false);
   });
 
-  it("seals when 2 contacts are ready and nothing was sealed", () => {
-    expect(needsSocialRecoverySetup(health(false), targets(2))).toBe(true);
+  it("seals when a single contact is ready and nothing was sealed", () => {
+    expect(needsSocialRecoverySetup(health(false), targets(1))).toBe(true);
+  });
+
+  it("re-seals a legacy 2-approval generation so one contact is enough", () => {
+    expect(
+      needsSocialRecoverySetup(health(true, false, true), targets(2)),
+    ).toBe(true);
   });
 
   it("renews when the contacts changed or a rotation happened", () => {

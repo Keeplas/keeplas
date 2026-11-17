@@ -15,8 +15,9 @@ export async function split(
   totalShares: number = 5,
   threshold: number = 3,
 ): Promise<Uint8Array[]> {
-  if (totalShares < 2) throw new Error("Need at least 2 shares");
-  if (threshold < 2) throw new Error("Threshold must be at least 2");
+  if (totalShares < 1) throw new Error("Need at least 1 share");
+  // Threshold 1 is a degree-0 polynomial: every share carries the secret.
+  if (threshold < 1) throw new Error("Threshold must be at least 1");
   if (threshold > totalShares)
     throw new Error("Threshold cannot exceed total shares");
   if (totalShares > 255) throw new Error("Maximum 255 shares (GF(256) limit)");

@@ -12,6 +12,7 @@ import {
   seedTrustContact,
   seedUser,
   signedAudit,
+  tickPastCommits,
   type TestConvex,
 } from "./test.helpers";
 
@@ -167,6 +168,7 @@ describe("account deletion", () => {
   it("schedules the deletion 7 days out, and can be cancelled", async () => {
     const t = makeT();
     const { userId } = await seedVaultOwner(t);
+    tickPastCommits();
     const { scheduledAt } = await requestDeletion(t, userId);
     expect(scheduledAt - Date.now()).toBe(DELETION_GRACE_MS);
     expect(
@@ -497,6 +499,7 @@ describe("deletion requested outside the app", () => {
     const userId = await seedUser(t);
     await t.run((ctx) => ctx.db.patch(userId, { phoneNumber: PHONE }));
 
+    tickPastCommits();
     const first = await t.mutation(internal.account_deletion.scheduleForPhone, {
       phoneNumber: PHONE,
     });

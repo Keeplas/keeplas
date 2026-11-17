@@ -29,11 +29,48 @@ export function makeT(opts: { enforceLimits?: boolean } = {}): TestConvex {
 }
 
 /**
- * Run the jobs that are due without moving the clock, and stop once nothing
- * fires: later jobs (like the 30-day security-log purge) stay pending.
+ * Run the jobs that are due, and stop once none is: later jobs (like the 30-day
+ * security-log purge) stay pending.
+ *
+ * "Due" follows the Convex clock, not the test's. convex-test pins a function's
+ * Date.now() at or after the last commit, rounded up to the millisecond, so
+ * under frozen fake timers two commits in the same millisecond run the next
+ * function (and its `runAfter(0)` jobs) 1 ms ahead of the test's clock. The
+ * clock moves forward only to a due job's time: any further and a delay over
+ * ~24.8 days, which overflows setTimeout and fires after 1 ms, would run too.
  */
-export function runDueJobs(t: TestConvex) {
-  return t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+export async function runDueJobs(t: TestConvex) {
+  for (;;) {
+    await t.finishInProgressScheduledFunctions();
+    const due = await t.run(async (ctx) => {
+      const now = Date.now();
+      const jobs = await ctx.db.system.query("_scheduled_functions").collect();
+      const times = jobs
+        .filter((job) => job.state.kind === "pending")
+        .map((job) => job.scheduledTime)
+        .filter((time) => time <= now);
+      return times.length > 0 ? Math.min(...times) : null;
+    });
+    if (due === null) return;
+    vi.advanceTimersByTime(Math.max(0, due - Date.now()));
+  }
+}
+
+/**
+ * Tick the frozen clock past the commits made in its current millisecond, so
+ * the next function runs at exactly the test's Date.now() (see runDueJobs).
+ */
+export function tickPastCommits() {
+  vi.advanceTimersByTime(1);
+}
+
+/**
+ * The Convex clock: a transaction's Date.now(), never earlier than that of any
+ * function that ran before it. Can be 1 ms ahead of the test's clock (see
+ * runDueJobs).
+ */
+export function convexNow(t: TestConvex) {
+  return t.run(async () => Date.now());
 }
 
 /** Insert a bare user (all user fields are optional) and return its id. */

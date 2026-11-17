@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, it, expect } from "vitest";
 import { api, internal } from "../_generated/api";
 import {
   asUser,
+  convexNow,
   makeT,
   seedTrustContact,
   seedUser,
@@ -386,7 +387,7 @@ describe("travel mode always ends (finding 38)", () => {
     expect(config?.travelModeEnabled).toBe(true);
     expect(config?.travelModeUntil).toBeGreaterThan(Date.now() + 179 * DAY_MS);
     expect(config?.travelModeUntil).toBeLessThanOrEqual(
-      Date.now() + 180 * DAY_MS,
+      (await convexNow(t)) + 180 * DAY_MS,
     );
   });
 });

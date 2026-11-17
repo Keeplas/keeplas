@@ -46,9 +46,9 @@ describe("Shamir Secret Sharing", () => {
     });
 
     it("rejects invalid parameters", async () => {
-      await expect(split(secret32, 1, 1)).rejects.toThrow();
+      await expect(split(secret32, 0, 1)).rejects.toThrow();
+      await expect(split(secret32, 5, 0)).rejects.toThrow();
       await expect(split(secret32, 5, 6)).rejects.toThrow();
-      await expect(split(secret32, 5, 1)).rejects.toThrow();
       await expect(split(new Uint8Array(0), 5, 3)).rejects.toThrow();
     });
   });
@@ -120,12 +120,8 @@ describe("Shamir Secret Sharing", () => {
       ).rejects.toThrow("Duplicate");
     });
 
-    it("rejects too few shares", async () => {
-      const secret = new Uint8Array(32);
-      crypto.getRandomValues(secret);
-
-      const shares = await split(secret, 5, 3);
-      await expect(reconstruct([shares[0]])).rejects.toThrow("at least 2");
+    it("rejects no share", async () => {
+      await expect(reconstruct([])).rejects.toThrow("at least 1");
     });
 
     it("rejects shares of different lengths", async () => {
@@ -167,6 +163,18 @@ describe("Shamir Secret Sharing", () => {
   });
 
   describe("different threshold configurations", () => {
+    it("works with 1-of-n: any single share is enough", async () => {
+      const secret = new Uint8Array(32);
+      crypto.getRandomValues(secret);
+
+      const shares = await split(secret, 3, 1);
+      for (const share of shares) {
+        expect(await reconstruct([share])).toEqual(secret);
+      }
+      expect(await reconstruct([shares[2], shares[0]])).toEqual(secret);
+      expect(await reconstruct(await split(secret, 1, 1))).toEqual(secret);
+    });
+
     it("works with 2-of-3", async () => {
       const secret = new Uint8Array(32);
       crypto.getRandomValues(secret);
@@ -268,14 +276,12 @@ describe("Shamir Secret Sharing", () => {
 
     it("a single shard reveals nothing (server-absent scenario)", async () => {
       // The server holds no shard at all; even if it could observe ONE contact
-      // shard, a lone share cannot reach the 2-share floor to reconstruct.
+      // shard, a lone share of a 2-of-4 split interpolates to a wrong value.
       const masterKey = new Uint8Array(32);
       crypto.getRandomValues(masterKey);
       const shards = await split(masterKey, 4, 2);
 
-      await expect(reconstruct([shards[CONTACTS[0]]])).rejects.toThrow(
-        "at least 2",
-      );
+      expect(await reconstruct([shards[CONTACTS[0]]])).not.toEqual(masterKey);
     });
   });
 

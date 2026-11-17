@@ -8,15 +8,19 @@ import { hashTranscript, sixDigitCode, utf8 } from "../transcript";
 /**
  * Owner recovery with trust contacts (v2 workflow 7, F3).
  *
- * The MasterKey is never split. A random Recovery Secret RS is split 2-of-n
+ * The MasterKey is never split. A random Recovery Secret RS is shared 1-of-n
  * between the trust contacts (each share sealed to the contact's ML-KEM
- * key); a random gate key G is held by Keeplas under KMS. The social envelope
- * is AES-GCM(HKDF(RS ‖ G), MasterKey). Contacts alone (RS) or Keeplas alone
- * (G) open nothing; G is released to a new device only after 2 signed
- * approvals and the 72 h protection window.
+ * key), so a single contact can help: owners are never blocked for lack of a
+ * second one. A random gate key G is held by Keeplas under KMS. The social
+ * envelope is AES-GCM(HKDF(RS ‖ G), MasterKey). Contacts alone (RS) or
+ * Keeplas alone (G) open nothing; G is released to a new device only after
+ * a signed approval and the 72 h protection window.
+ *
+ * Generations sealed before this change are 2-of-n: their threshold (2) is
+ * kept by the server and passed back to `openSocialRecovery`.
  */
 
-export const RECOVERY_THRESHOLD = 2;
+export const RECOVERY_THRESHOLD = 1;
 const SECRET_BYTES = 32;
 const HKDF_INFO = "keeplas/social-envelope/v1";
 const APPROVAL_CONTEXT = "keeplas-recovery-approval-v1";
@@ -72,6 +76,8 @@ export interface TrustContactKey {
 
 export interface SocialRecoverySetup {
   generation: number;
+  /** Approvals needed to rebuild RS from this generation's shares. */
+  threshold: number;
   /** Gate key G (base64); sent once to Keeplas, which stores it under KMS. */
   gateKey: string;
   socialEnvelope: string;
@@ -80,7 +86,7 @@ export interface SocialRecoverySetup {
 
 /**
  * Owner device: (re)create the recovery material for `generation`. Needs at
- * least 2 trust contacts whose keys were verified (TOFU pin) beforehand.
+ * least 1 trust contact whose key was verified (TOFU pin) beforehand.
  */
 export async function createSocialRecovery(args: {
   masterKey: Uint8Array;
@@ -91,7 +97,7 @@ export async function createSocialRecovery(args: {
   const n = args.contacts.length;
   if (n < RECOVERY_THRESHOLD) {
     throw new Error(
-      `Social recovery needs at least ${RECOVERY_THRESHOLD} trust contacts`,
+      `Social recovery needs at least ${RECOVERY_THRESHOLD} trust contact`,
     );
   }
   const rs = crypto.getRandomValues(new Uint8Array(SECRET_BYTES));
@@ -122,6 +128,7 @@ export async function createSocialRecovery(args: {
     });
     return {
       generation: args.generation,
+      threshold: RECOVERY_THRESHOLD,
       gateKey: uint8ToBase64(g),
       socialEnvelope,
       shares,
@@ -279,10 +286,13 @@ export function verifyRecoveryApproval(args: {
 
 /**
  * Recovering device, once Keeplas released G: verify the approvals,
- * rebuild RS from 2 shares and open the social envelope. Returns the raw
- * MasterKey; the caller then renews the recovery material (new generation).
+ * rebuild RS from `threshold` shares (the generation's, as stored by the
+ * server) and open the social envelope. A wrong threshold only makes the
+ * envelope fail to open. Returns the raw MasterKey; the caller then renews
+ * the recovery material (new generation).
  */
 export async function openSocialRecovery(args: {
+  threshold: number;
   ownerUserId: string;
   generation: number;
   requestId: string;
@@ -304,12 +314,13 @@ export async function openSocialRecovery(args: {
       devicePublicKey: args.devicePublicKey,
     }),
   );
-  if (new Set(valid.map((a) => a.contactId)).size < RECOVERY_THRESHOLD) {
+  const threshold = Math.max(1, args.threshold);
+  if (new Set(valid.map((a) => a.contactId)).size < threshold) {
     throw new Error("Not enough valid contact approvals");
   }
   const shares = await Promise.all(
     valid
-      .slice(0, RECOVERY_THRESHOLD)
+      .slice(0, threshold)
       .map((a) =>
         unwrapBytes(
           a.wrappedShareForDevice,
