@@ -43,8 +43,8 @@ const CASES: [message: string, key: string][] = [
   ],
   ["Birthday is implausibly old", "account.errors.invalidBirthday"],
   [
-    "Review accounts can't change their number or email.",
-    "account.errors.reviewAccount",
+    "Demo accounts can't change their number or email.",
+    "account.errors.demoAccount",
   ],
 ];
 

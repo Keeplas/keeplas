@@ -634,7 +634,7 @@ describe("review accounts keep their number and email", () => {
     );
     expect(error).toBeInstanceOf(ConvexError);
     expect((error as ConvexError<string>).data).toContain(
-      "Review accounts can't change their number or email",
+      "Demo accounts can't change their number or email",
     );
   }
 
@@ -732,7 +732,7 @@ describe("invitations from review accounts", () => {
     };
   }
 
-  it("stay in the app: no WhatsApp or email reaches the person", async () => {
+  it("are delivered like any other account's", async () => {
     process.env.REVIEW_PHONES = DEMO_PHONE;
     const t = makeT();
     const userId = await seedDemoOwner(t);
@@ -740,7 +740,25 @@ describe("invitations from review accounts", () => {
     const { invited, sent } = await inviteSomeone(t, userId);
 
     expect(invited?.invitationStatus).toBe("pending");
-    expect(sent).toHaveLength(0);
+    expect(sent).toHaveLength(2);
+  });
+
+  it("send no WhatsApp to a review number, which no one can receive", async () => {
+    process.env.REVIEW_PHONES = `${DEMO_PHONE},${SIGNUP_PHONE}`;
+    const t = makeT();
+    const userId = await seedDemoOwner(t);
+
+    await asUser(t, userId).mutation(api.trusted_contacts.inviteContact, {
+      name: "Demo contact",
+      phoneNumber: SIGNUP_PHONE,
+      role: "friend",
+      _audit: await signedAudit(),
+    });
+    const jobs = await t.run((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect(),
+    );
+
+    expect(jobs.filter((job) => job.name.includes("Invitation"))).toEqual([]);
   });
 
   it("are still delivered for every other account", async () => {
