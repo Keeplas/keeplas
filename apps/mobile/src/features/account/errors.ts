@@ -17,7 +17,7 @@ const RULES: [needle: string, key: string][] = [
   ["at least 18", "tooYoung"],
   ["implausibly old", "invalidBirthday"],
   // store_review.refuseOnReviewAccount
-  ["review accounts can't change", "reviewAccount"],
+  ["demo accounts can't change", "demoAccount"],
 ];
 
 export function accountErrorKey(

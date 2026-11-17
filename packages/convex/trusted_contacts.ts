@@ -484,9 +484,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * channel took INVITATIONS_PER_DAY from this owner (first invitation, resends,
  * re-invitations after removal or an edit), so a number can't be flooded; the
  * throw rolls the whole invite / resend / edit back.
- * Nothing leaves a review account (REVIEW_PHONES): reviewers try the flow on
- * shared demo accounts, and their test invitations must not reach real
- * people. The invitation still shows in the app.
+ * Invitations from review accounts are delivered like any account's, so App
+ * Review sees the real flow. Only the WhatsApp to a review number is skipped:
+ * those numbers are never assigned, so no one could receive it.
  */
 async function deliverInvitation(
   ctx: MutationCtx,
@@ -499,7 +499,6 @@ async function deliverInvitation(
   },
 ) {
   const inviter = await ctx.db.get(userId);
-  if (isReviewPhone(inviter?.phoneNumber)) return;
   // Keyed by the authenticated owner, not the caller's IP.
   await enforceIpRateLimit(
     ctx,
@@ -536,7 +535,7 @@ async function deliverInvitation(
       { contactId: invite.contactId },
     );
   }
-  if (invite.phoneNumber) {
+  if (invite.phoneNumber && !isReviewPhone(invite.phoneNumber)) {
     await ctx.scheduler.runAfter(0, internal.dispatch.sendInvitationWhatsApp, {
       phoneNumber: invite.phoneNumber,
       inviterName: formatSenderIdentity(inviter),

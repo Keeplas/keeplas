@@ -61,9 +61,7 @@ export async function refuseOnReviewAccount(
 ): Promise<void> {
   const user = await ctx.db.get(userId);
   if (isReviewPhone(user?.phoneNumber)) {
-    throw new ConvexError(
-      "Review accounts can't change their number or email.",
-    );
+    throw new ConvexError("Demo accounts can't change their number or email.");
   }
 }
 
