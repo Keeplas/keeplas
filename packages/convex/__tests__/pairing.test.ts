@@ -13,6 +13,7 @@ import {
   makeT,
   seedUser,
   signedAudit,
+  tickPastCommits,
   type TestConvex,
 } from "./test.helpers";
 
@@ -201,6 +202,7 @@ describe("pairing sessions", () => {
 
     it("refuses a login token older than 60 seconds", async () => {
       const sessionId = await createSession(t);
+      tickPastCommits();
       await approve(t, ownerId, sessionId);
       vi.advanceTimersByTime(LOGIN_TOKEN_TTL_MS + 1);
       await expect(redeem(t, sessionId)).rejects.toThrow(
