@@ -5,6 +5,7 @@
 import { spawnSync } from "node:child_process";
 import { base64ToUint8 } from "@keeplas/crypto/encoding";
 import { derivePhraseVerifier } from "@keeplas/crypto/recovery";
+import { verifierMatches } from "@keeplas/backend/lib/crypto";
 import { listedPhones } from "@keeplas/backend/lib/phone";
 
 // The demo accounts are the first three REVIEW_PHONES numbers (APP_REVIEW.md
@@ -37,17 +38,18 @@ export function readKit(): string[] {
 }
 
 /**
- * Whether `kit` still opens an account: its stored verifier
- * (users.recoveryPhraseHash) is the one the app derives from these words and
- * the account's salt (crypto/vault-keys.ts createKitMaterial). A kit made
- * again on the account gives it new words, and this turns false.
+ * Whether `kit` still opens an account: the verifier the app derives from
+ * these words and the account's salt (crypto/vault-keys.ts createKitMaterial)
+ * matches users.recoveryPhraseHash, compared the way the server does (it
+ * stores a digest of the verifier, or the raw value on legacy rows). A kit
+ * made again on the account gives it new words, and this turns false.
  */
 export async function kitOpens(
   kit: string[],
   verifier: { phraseSalt: string; recoveryPhraseHash: string },
 ): Promise<boolean> {
-  return (
-    (await derivePhraseVerifier(kit, base64ToUint8(verifier.phraseSalt))) ===
-    verifier.recoveryPhraseHash
+  return verifierMatches(
+    verifier.recoveryPhraseHash,
+    await derivePhraseVerifier(kit, base64ToUint8(verifier.phraseSalt)),
   );
 }
