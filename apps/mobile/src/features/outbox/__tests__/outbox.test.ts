@@ -30,6 +30,10 @@ import {
   type OutboxEntry,
 } from "../outbox";
 
+// Real ML-KEM / AES sealing: the first test also pays the cold module load,
+// which exceeded the 5 s default on a shared CI runner.
+jest.setTimeout(30_000);
+
 /** In-memory "disk": plaintext captures in, ciphertext files out. */
 function memoryDisk(inputs: Record<string, Uint8Array>) {
   const written = new Map<string, Uint8Array>();
